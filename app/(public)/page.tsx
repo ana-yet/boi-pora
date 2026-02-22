@@ -2,6 +2,7 @@ import { ContinueReading } from "@/app/components/home/ContinueReading";
 import { Hero } from "../components/home/Hero";
 import { RecommendationRow } from "../components/home/RecommendationRow";
 import { CategoryGrid } from "../components/home/CategoryGrid";
+import { ShortReads } from "../components/home/ShortReads";
 
 export default function HomePage() {
     return (
@@ -10,6 +11,7 @@ export default function HomePage() {
             <ContinueReading />
             <RecommendationRow />
             <CategoryGrid />
+            <ShortReads />
         </div>
     );
 }
