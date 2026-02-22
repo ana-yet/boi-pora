@@ -3,6 +3,9 @@ export function ContinueReading() {
         <section className="mb-16">
             <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-neutral-800 dark:text-white">Continue Reading</h2>
+                <a className="text-primary hover:text-primary-dark text-sm font-medium flex items-center" href="#">
+                    View all <span className="material-icons text-sm ml-1">arrow_forward</span>
+                </a>
             </div>
             <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-card overflow-hidden border border-neutral-100 dark:border-neutral-800 flex flex-col md:flex-row max-w-4xl">
                 <div className="w-full md:w-1/3 relative h-64 md:h-auto">
