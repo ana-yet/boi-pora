@@ -6,7 +6,7 @@ export function Navbar() {
                     {/* Logo */}
                     <div className="flex-shrink-0 flex items-center gap-2">
                         <span className="material-icons text-primary text-3xl">auto_stories</span>
-                        <span className="font-bold text-xl tracking-tight text-neutral-800 dark:text-white">Lumina</span>
+                        <span className="font-bold text-xl tracking-tight text-neutral-800 dark:text-white">Boi Pora</span>
                     </div>
                     {/* Center Links */}
                     <div className="hidden md:flex space-x-10 items-center">
