@@ -24,11 +24,17 @@
   --shadow-book: 0 8px 24px -4px rgba(0, 0, 0, 0.12), 0 4px 8px -4px rgba(0, 0, 0, 0.08);
 
   --animate-shimmer: shimmer 2s ease-in-out infinite;
+  --animate-float: float 6s ease-in-out infinite;
 }
 
 @keyframes shimmer {
   0% { transform: translateX(-100%); }
   100% { transform: translateX(100%); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
 }
 
 @layer base {
