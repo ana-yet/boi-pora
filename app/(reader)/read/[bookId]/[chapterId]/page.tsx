@@ -50,6 +50,22 @@ const CHAPTERS: Record<string, Record<string, ChapterData>> = {
             nextHref: "/read/great-gatsby/chapter-4",
         },
     },
+    "the-midnight-library": {
+        "chapter-1": {
+            bookTitle: "The Midnight Library",
+            chapterLabel: "Chapter 1",
+            chapterNumber: "Chapter One",
+            chapterTitle: "Nineteen Years Before She Decides to Die",
+            paragraphs: [
+                "Nineteen years before she decided to die, Nora Seed sat in the warmth of the small library at Hazeldene School in the town of Bedford. She sat at a table in the corner of the room, by the window, and she stared at the rain as it streamed down the glass. She was wearing a black cardigan and a purple skirt. She had a cup of tea in her hand and a copy of The Bell Jar by Sylvia Plath on the table.",
+                "She was thirty-five years old and she had recently learned that the average person has sixty thousand thoughts per day. Most of those, Nora had come to realise, were negative. And most of those negative thoughts were about herself.",
+                "She had, in her thirty-five years, already lived many lives. She had been a glaciologist. She had been a rock singer in an internationally successful band. She had been a Nobel Prize–winning physicist. She had been an Olympic swimmer. She had been a wife. She had been a mother. She had been a lesbian. She had been a nun. She had been a doctor. She had been a painter. She had been a missionary in Africa. She had been a geologist. She had been a songwriter. She had been a librarian.",
+            ],
+            progress: { currentPage: 1, totalPages: 304, percentage: 0 },
+            prevHref: undefined,
+            nextHref: "/read/the-midnight-library/chapter-2",
+        },
+    },
 };
 
 async function getChapter(

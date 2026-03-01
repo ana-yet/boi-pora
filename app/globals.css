@@ -3,16 +3,28 @@
 @theme {
   --color-primary: #ec7f13;
   --color-primary-dark: #d66e0a;
+  --color-primary-light: #fef3e7;
+  --color-primary-hover: #d66e0a;
   --color-background-light: #f8f7f6;
   --color-background-dark: #221910;
+  --color-background: #f8f7f6;
   --color-surface-light: #ffffff;
   --color-surface-dark: #2d241b;
+  --color-surface: #ffffff;
+  --color-surface-hover: #fdfbf9;
   --color-neutral-100: #fdfbf9;
   --color-neutral-200: #f3eee9;
   --color-neutral-300: #e5ddd5;
   --color-neutral-600: #8c8075;
   --color-neutral-800: #4a4036;
-
+  --color-foreground: #4a4036;
+  --color-muted: #8c8075;
+  --color-muted-light: #a89f95;
+  --color-border: #e5ddd5;
+  --color-border-strong: #8c8075;
+  --color-secondary: #6b5b4f;
+  --color-secondary-hover: #5a4d43;
+  --color-error: #dc2626;
   --color-sepia-bg: #f8f1e3;
   --color-sepia-text: #5b4636;
 
@@ -35,6 +47,17 @@
 @keyframes float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-20px); }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 12px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
 }
 
 @layer base {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import Link from "next/link";
 import { PasswordInput } from "../../_components/PasswordInput";
 
 export function LoginForm() {
@@ -60,12 +61,12 @@ export function LoginForm() {
                         Remember me
                     </span>
                 </label>
-                <a
-                    href="#"
+                <Link
+                    href="/forgot-password"
                     className="text-sm text-primary hover:text-primary-dark font-medium transition-colors"
                 >
                     Forgot password?
-                </a>
+                </Link>
             </div>
 
             {/* Submit */}

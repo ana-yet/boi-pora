@@ -16,17 +16,17 @@ export function Navbar() {
                                 <span className="material-icons text-sm">expand_more</span>
                             </button>
                         </div>
-                        <a className="text-neutral-600 dark:text-neutral-300 hover:text-primary transition-colors font-medium" href="#">My Library</a>
+                        <a className="text-neutral-600 dark:text-neutral-300 hover:text-primary transition-colors font-medium" href="/library">My Library</a>
                         <a className="text-neutral-600 dark:text-neutral-300 hover:text-primary transition-colors font-medium" href="#">Community</a>
                     </div>
                     {/* Right Actions */}
                     <div className="flex items-center gap-4">
-                        <div className="relative hidden sm:block">
+                        <form action="/search" method="get" className="relative hidden sm:block">
                             <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <span className="material-icons text-neutral-400">search</span>
                             </span>
-                            <input className="pl-10 pr-4 py-2 rounded-full border border-transparent bg-white dark:bg-surface-dark focus:bg-white focus:ring-2 focus:ring-primary focus:border-transparent text-sm w-48 transition-all shadow-sm placeholder-neutral-400" placeholder="Search..." type="text" />
-                        </div>
+                            <input name="q" className="pl-10 pr-4 py-2 rounded-full border border-transparent bg-white dark:bg-surface-dark focus:bg-white focus:ring-2 focus:ring-primary focus:border-transparent text-sm w-48 transition-all shadow-sm placeholder-neutral-400" placeholder="Search..." type="search" />
+                        </form>
                         <button className="relative p-1 rounded-full text-neutral-500 hover:text-primary focus:outline-none">
                             <span className="material-icons">notifications_none</span>
                             <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-primary ring-2 ring-white dark:ring-background-dark"></span>

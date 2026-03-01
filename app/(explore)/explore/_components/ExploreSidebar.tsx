@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const discoverLinks = [
-    { label: "Explore", href: "/explore", icon: "explore", active: true },
+    { label: "Explore", href: "/explore", icon: "explore" },
     { label: "Trending", href: "/explore/trending", icon: "trending_up" },
     { label: "New Arrivals", href: "/explore/new", icon: "new_releases" },
 ];
@@ -17,6 +20,8 @@ const categoryLinks = [
 ];
 
 export function ExploreSidebar() {
+    const pathname = usePathname();
+
     return (
         <aside className="w-64 bg-white dark:bg-surface-dark border-r border-neutral-200 dark:border-neutral-800 flex-shrink-0 flex-col h-screen z-20 hidden md:flex">
             <div className="p-8 pb-4">
@@ -30,9 +35,9 @@ export function ExploreSidebar() {
             </div>
 
             <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-                <SidebarSection title="Discover" links={discoverLinks} />
-                <SidebarSection title="Library" links={libraryLinks} />
-                <SidebarSection title="Categories" links={categoryLinks} />
+                <SidebarSection title="Discover" links={discoverLinks} pathname={pathname} />
+                <SidebarSection title="Library" links={libraryLinks} pathname={pathname} />
+                <SidebarSection title="Categories" links={categoryLinks} pathname={pathname} />
             </nav>
 
             <div className="p-4 border-t border-neutral-200 dark:border-neutral-800">
@@ -63,27 +68,30 @@ interface SidebarLink {
     label: string;
     href: string;
     icon: string;
-    active?: boolean;
 }
 
 function SidebarSection({
     title,
     links,
+    pathname,
 }: {
     title: string;
     links: SidebarLink[];
+    pathname: string;
 }) {
     return (
         <div className="pt-6 first:pt-0">
             <p className="px-4 text-xs font-semibold text-neutral-600 uppercase tracking-wider mb-2">
                 {title}
             </p>
-            {links.map((link) => (
+            {links.map((link) => {
+                const active = pathname === link.href;
+                return (
                 <Link
                     key={link.href}
                     href={link.href}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors group font-medium ${
-                        link.active
+                        active
                             ? "bg-primary/10 text-primary"
                             : "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800/50 hover:text-neutral-800 dark:hover:text-white"
                     }`}
@@ -93,7 +101,8 @@ function SidebarSection({
                     </span>
                     {link.label}
                 </Link>
-            ))}
+                );
+            })}
         </div>
     );
 }
