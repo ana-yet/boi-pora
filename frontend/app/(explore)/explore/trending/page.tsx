@@ -33,7 +33,7 @@ export default function TrendingPage() {
 
             <div className="flex-1 overflow-y-auto px-8 pb-12">
                 <div className="max-w-7xl mx-auto">
-                    <BookGrid />
+                    <BookGrid sort="rating" title="Trending books" />
                 </div>
             </div>
         </>

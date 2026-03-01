@@ -1,18 +1,26 @@
+import Link from "next/link";
+
 export interface SavedBook {
     title: string;
     author: string;
     image: string;
+    slug?: string;
+    bookId?: string;
 }
 
+const PLACEHOLDER =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='300'%3E%3Crect fill='%23e5e7eb' width='200' height='300'/%3E%3C/svg%3E";
+
 export function SavedBookCard({ book }: { book: SavedBook }) {
+    const href = book.slug ? `/fiction/${book.slug}` : book.bookId ? `/read/${book.bookId}/chapter-1` : "#";
     return (
-        <div className="group cursor-pointer">
+        <Link href={href} className="group cursor-pointer block">
             <div className="relative aspect-[2/3] mb-3 rounded-lg shadow-md group-hover:shadow-xl transition-all duration-300 group-hover:-translate-y-1 overflow-hidden bg-neutral-200">
                 <img
                     alt={`${book.title} cover`}
                     className="w-full h-full object-cover"
                     loading="lazy"
-                    src={book.image}
+                    src={book.image || PLACEHOLDER}
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
                 <button className="absolute bottom-3 right-3 w-8 h-8 bg-white dark:bg-neutral-800 rounded-full shadow-lg flex items-center justify-center opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300 text-primary">
@@ -25,6 +33,6 @@ export function SavedBookCard({ book }: { book: SavedBook }) {
             <p className="text-xs text-neutral-600 dark:text-neutral-400">
                 {book.author}
             </p>
-        </div>
+        </Link>
     );
 }

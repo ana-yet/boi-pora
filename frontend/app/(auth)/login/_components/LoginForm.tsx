@@ -2,18 +2,34 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PasswordInput } from "../../_components/PasswordInput";
+import { useAuth, ApiError } from "@/app/providers/AuthProvider";
 
 export function LoginForm() {
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [remember, setRemember] = useState(false);
+    const { login } = useAuth();
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const redirect = searchParams.get("redirect") || "/";
 
-    function handleSubmit(e: FormEvent) {
+    async function handleSubmit(e: FormEvent) {
         e.preventDefault();
+        setError(null);
         setIsLoading(true);
-        setTimeout(() => setIsLoading(false), 2000);
+        try {
+            await login(email, password);
+            router.push(redirect);
+            router.refresh();
+        } catch (err) {
+            setError(err instanceof ApiError ? err.message : "Something went wrong");
+        } finally {
+            setIsLoading(false);
+        }
     }
 
     return (
@@ -68,6 +84,12 @@ export function LoginForm() {
                     Forgot password?
                 </Link>
             </div>
+
+            {error && (
+                <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm">
+                    {error}
+                </div>
+            )}
 
             {/* Submit */}
             <button

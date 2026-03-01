@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export interface Book {
     title: string;
     author: string;
@@ -5,9 +7,16 @@ export interface Book {
     rating: string;
     duration: string;
     tags: { label: string; variant?: "default" | "accent" }[];
+    slug?: string;
+    category?: string;
 }
 
 export function BookCard({ book }: { book: Book }) {
+    const href = book.slug && book.category
+        ? `/${book.category}/${book.slug}`
+        : book.slug
+            ? `/fiction/${book.slug}`
+            : "#";
     return (
         <div className="group relative flex flex-col bg-white dark:bg-surface-dark rounded-2xl border border-neutral-200 dark:border-neutral-800 hover:shadow-xl hover:shadow-neutral-200/50 dark:hover:shadow-black/30 transition-all duration-300 hover:-translate-y-1">
             <div className="relative aspect-[3/4] overflow-hidden rounded-t-2xl bg-neutral-100 dark:bg-neutral-800">
@@ -52,9 +61,12 @@ export function BookCard({ book }: { book: Book }) {
                         ))}
                     </div>
                 </div>
-                <button className="w-full py-2.5 rounded-xl border border-primary text-primary hover:bg-primary hover:text-white font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2">
+                <Link
+                    href={href}
+                    className="w-full py-2.5 rounded-xl border border-primary text-primary hover:bg-primary hover:text-white font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2"
+                >
                     Read Sample
-                </button>
+                </Link>
             </div>
         </div>
     );

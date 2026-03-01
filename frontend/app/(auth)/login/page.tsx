@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import { SocialButtons } from "../_components";
 import { LoginForm } from "./_components";
 
@@ -44,7 +45,9 @@ export default function LoginPage() {
             </div>
 
             {/* Login Form */}
-            <LoginForm />
+            <Suspense fallback={<div className="h-40 animate-pulse rounded-xl bg-neutral-100 dark:bg-neutral-800" />}>
+                <LoginForm />
+            </Suspense>
 
             {/* Register link */}
             <p className="text-center text-sm text-neutral-600 dark:text-neutral-400">
