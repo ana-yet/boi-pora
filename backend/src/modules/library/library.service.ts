@@ -39,6 +39,14 @@ export class LibraryService {
     });
   }
 
+  async checkStatus(userId: string, bookId: string) {
+    const item = await this.libraryItemModel.findOne({
+      userId: new Types.ObjectId(userId),
+      bookId: new Types.ObjectId(bookId),
+    }).lean().exec();
+    return { inLibrary: !!item, status: item?.status ?? null };
+  }
+
   async remove(userId: string, bookId: string) {
     const result = await this.libraryItemModel
       .findOneAndDelete({ userId: new Types.ObjectId(userId), bookId: new Types.ObjectId(bookId) })

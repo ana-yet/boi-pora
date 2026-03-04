@@ -2,7 +2,10 @@
 
 import { useState, type ReactNode, type CSSProperties } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { SettingsPanel } from "./SettingsPanel";
+import { TOCSidebar } from "./TOCSidebar";
+import { useKeyboardShortcuts } from "@/lib/hooks/useKeyboardShortcuts";
 
 export type ReaderTheme = "light" | "dark" | "sepia";
 export type ReaderFont = "serif" | "sans" | "mono";
@@ -58,6 +61,9 @@ interface ReaderShellProps {
     progress: { currentPage: number; totalPages: number; percentage: number };
     prevHref?: string;
     nextHref?: string;
+    bookId: string;
+    currentChapterId: string;
+    chapters: { chapterId: string; chapterNumber: number; title: string; wordCount?: number }[];
     children: ReactNode;
 }
 
@@ -67,10 +73,22 @@ export function ReaderShell({
     progress,
     prevHref,
     nextHref,
+    bookId,
+    currentChapterId,
+    chapters,
     children,
 }: ReaderShellProps) {
+    const router = useRouter();
     const [panelOpen, setPanelOpen] = useState(false);
+    const [tocOpen, setTocOpen] = useState(false);
     const [settings, setSettings] = useState<ReaderSettings>(DEFAULTS);
+
+    useKeyboardShortcuts({
+        arrowleft: () => prevHref && router.push(prevHref),
+        arrowright: () => nextHref && router.push(nextHref),
+        t: () => setTocOpen((o) => !o),
+        escape: () => { setTocOpen(false); setPanelOpen(false); },
+    });
 
     const contentStyle: CSSProperties = {
         fontSize: `${settings.fontSize}px`,
@@ -89,15 +107,24 @@ export function ReaderShell({
             <header
                 className={`fixed top-0 left-0 right-0 h-16 backdrop-blur-sm border-b z-40 flex items-center justify-between px-6 transition-all duration-300 ${HEADER_THEME[settings.theme]}`}
             >
-                <Link
-                    href="/library"
-                    className="p-2 rounded-lg hover:bg-primary/10 opacity-60 hover:opacity-100 hover:text-primary transition-all group"
-                    aria-label="Back to Library"
-                >
-                    <span className="material-icons group-hover:-translate-x-1 transition-transform">
-                        arrow_back
-                    </span>
-                </Link>
+                <div className="flex items-center gap-1">
+                    <Link
+                        href="/library"
+                        className="p-2 rounded-lg hover:bg-primary/10 opacity-60 hover:opacity-100 hover:text-primary transition-all group"
+                        aria-label="Back to Library"
+                    >
+                        <span className="material-icons group-hover:-translate-x-1 transition-transform">
+                            arrow_back
+                        </span>
+                    </Link>
+                    <button
+                        onClick={() => setTocOpen(true)}
+                        className="p-2 rounded-lg hover:bg-primary/10 opacity-60 hover:opacity-100 hover:text-primary transition-all"
+                        aria-label="Table of Contents"
+                    >
+                        <span className="material-icons">toc</span>
+                    </button>
+                </div>
 
                 <div className="flex flex-col items-center opacity-80">
                     <h1 className="text-sm font-medium tracking-wide uppercase opacity-60 font-display">
@@ -124,7 +151,7 @@ export function ReaderShell({
             {/* Reading Area */}
             <main className="relative min-h-screen pt-24 pb-32 flex justify-center">
                 <article
-                    className="w-full max-w-[650px] px-6 md:px-0"
+                    className="w-full max-w-[650px] px-6 md:px-0 overflow-hidden break-words"
                     style={contentStyle}
                 >
                     {children}
@@ -218,6 +245,14 @@ export function ReaderShell({
                     )}
                 </div>
             </footer>
+
+            <TOCSidebar
+                bookId={bookId}
+                currentChapterId={currentChapterId}
+                chapters={chapters}
+                open={tocOpen}
+                onClose={() => setTocOpen(false)}
+            />
         </div>
     );
 }

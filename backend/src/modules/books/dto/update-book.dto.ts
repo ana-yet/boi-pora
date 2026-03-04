@@ -47,5 +47,9 @@ export class UpdateBookDto {
 
   @IsOptional()
   @IsString()
+  language?: string;
+
+  @IsOptional()
+  @IsString()
   status?: string;
 }

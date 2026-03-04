@@ -11,6 +11,7 @@ export interface ApiBook {
   description?: string;
   coverImageUrl?: string;
   category?: string;
+  language?: string;
   genres?: string[];
   pageCount?: number;
   estimatedReadTimeMinutes?: number;

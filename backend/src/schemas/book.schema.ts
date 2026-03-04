@@ -41,6 +41,9 @@ export class Book {
   @Prop({ default: 0 })
   ratingCount: number;
 
+  @Prop({ required: true, default: 'en' })
+  language: string;
+
   @Prop({ default: 'published' })
   status: string;
 }
@@ -49,4 +52,7 @@ export const BookSchema = SchemaFactory.createForClass(Book);
 BookSchema.index({ slug: 1 }, { unique: true });
 BookSchema.index({ category: 1 });
 BookSchema.index({ status: 1 });
-BookSchema.index({ title: 'text', author: 'text', description: 'text' });
+BookSchema.index(
+  { title: 'text', author: 'text', description: 'text' },
+  { language_override: 'textSearchLang' },
+);

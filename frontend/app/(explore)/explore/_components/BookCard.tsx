@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getLanguageLabel } from "@/lib/constants";
 
 export interface Book {
     title: string;
@@ -9,6 +10,7 @@ export interface Book {
     tags: { label: string; variant?: "default" | "accent" }[];
     slug?: string;
     category?: string;
+    language?: string;
 }
 
 export function BookCard({ book }: { book: Book }) {
@@ -43,9 +45,14 @@ export function BookCard({ book }: { book: Book }) {
                     <h3 className="text-lg font-bold text-neutral-800 dark:text-white leading-tight mb-1 group-hover:text-primary transition-colors">
                         {book.title}
                     </h3>
-                    <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-3">
+                    <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-2">
                         By {book.author}
                     </p>
+                    {book.language && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium uppercase tracking-wider bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 mb-2">
+                            {getLanguageLabel(book.language)}
+                        </span>
+                    )}
                     <div className="flex gap-2 mb-4">
                         {book.tags.map((tag) => (
                             <span

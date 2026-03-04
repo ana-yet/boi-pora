@@ -1,10 +1,16 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import { api, ApiError, setToken } from "@/lib/api";
+import { useAuth } from "@/app/providers/AuthProvider";
 import { PasswordInput } from "../../_components/PasswordInput";
 
 export function RegisterForm() {
+    const router = useRouter();
+    const { refetchUser } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -16,15 +22,35 @@ export function RegisterForm() {
 
     const strengthLabel = getStrengthLabel(password);
 
-    function handleSubmit(e: FormEvent) {
+    async function handleSubmit(e: FormEvent) {
         e.preventDefault();
         if (passwordMismatch || !agreed) return;
+        setError(null);
         setIsLoading(true);
-        setTimeout(() => setIsLoading(false), 2000);
+        try {
+            const res = await api.post<{ accessToken: string }>("/api/v1/auth/register", {
+                name,
+                email,
+                password,
+            });
+            setToken(res.accessToken);
+            await refetchUser();
+            router.push("/");
+        } catch (err) {
+            setError(err instanceof ApiError ? err.message : "Registration failed. Please try again.");
+        } finally {
+            setIsLoading(false);
+        }
     }
 
     return (
         <form onSubmit={handleSubmit} className="space-y-5">
+            {error && (
+                <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 text-sm flex items-center gap-2">
+                    <span className="material-icons text-lg">error_outline</span>
+                    {error}
+                </div>
+            )}
             {/* Full Name */}
             <div className="space-y-1.5">
                 <label

@@ -10,6 +10,7 @@ export interface Chapter {
   chapterId: string;
   title: string;
   content: string;
+  wordCount?: number;
 }
 
 export function useChapters(bookId: string | null) {

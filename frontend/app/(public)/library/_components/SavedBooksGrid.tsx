@@ -6,7 +6,7 @@ import type { SavedBook } from "./SavedBookCard";
 import { useLibrary } from "@/lib/hooks/useLibrary";
 
 export function SavedBooksGrid() {
-  const { data, error, isLoading } = useLibrary();
+  const { data, error, isLoading, mutate } = useLibrary();
 
   const items = data?.items ?? [];
   const books: SavedBook[] = items.map((item) => ({
@@ -57,7 +57,7 @@ export function SavedBooksGrid() {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-x-6 gap-y-10">
       {books.map((book) => (
-        <SavedBookCard key={book.bookId || book.title} book={book} />
+        <SavedBookCard key={book.bookId || book.title} book={book} onRemove={() => mutate()} />
       ))}
     </div>
   );
