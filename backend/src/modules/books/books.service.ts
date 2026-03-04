@@ -20,16 +20,24 @@ export class BooksService {
     if (category) filter.category = category;
     if (status) filter.status = status;
     const skip = (page - 1) * limit;
-    let query = this.bookModel.find(filter);
+
+    let sortSpec: Record<string, 1 | -1>;
     if (sort === 'rating' || sort === 'ratingCount') {
-      query = query.sort({ [sort]: -1 });
+      sortSpec = { [sort]: -1 };
     } else if (sort === 'createdAt') {
-      query = query.sort({ createdAt: -1 });
+      sortSpec = { createdAt: -1 };
     } else {
-      query = query.sort({ title: 1 });
+      sortSpec = { title: 1 };
     }
+
     const [items, total] = await Promise.all([
-      query.skip(skip).limit(limit).lean().exec(),
+      this.bookModel
+        .find(filter)
+        .sort(sortSpec)
+        .skip(skip)
+        .limit(limit)
+        .lean()
+        .exec(),
       this.bookModel.countDocuments(filter).exec(),
     ]);
     return { items, total, page, limit };
@@ -37,15 +45,32 @@ export class BooksService {
 
   async search(q: string, limit = 20) {
     if (!q || q.trim().length === 0) {
-      return this.bookModel.find().limit(limit).sort({ title: 1 }).lean().exec();
+      return this.bookModel.find().sort({ title: 1 }).limit(limit).lean().exec();
     }
-    const regex = new RegExp(q.trim(), 'i');
+
+    const trimmed = q.trim();
+
+    // Use text index for multi-word queries (faster, scored)
+    if (trimmed.includes(' ') || trimmed.length >= 3) {
+      const textResults = await this.bookModel
+        .find(
+          { $text: { $search: trimmed } },
+          { score: { $meta: 'textScore' } },
+        )
+        .sort({ score: { $meta: 'textScore' } })
+        .limit(limit)
+        .lean()
+        .exec();
+      if (textResults.length > 0) return textResults;
+    }
+
+    // Fallback to regex for short queries or when text search yields nothing
+    const regex = new RegExp(trimmed, 'i');
     return this.bookModel
       .find({
         $or: [
           { title: regex },
           { author: regex },
-          { description: regex },
         ],
       })
       .limit(limit)
@@ -55,49 +80,47 @@ export class BooksService {
 
   async findOne(id: string) {
     const book = await this.bookModel.findById(id).lean().exec();
-    if (!book) {
-      throw new NotFoundException('Book not found');
-    }
+    if (!book) throw new NotFoundException('Book not found');
     return book;
   }
 
   async findBySlug(slug: string) {
     const book = await this.bookModel.findOne({ slug }).lean().exec();
-    if (!book) {
-      throw new NotFoundException('Book not found');
-    }
+    if (!book) throw new NotFoundException('Book not found');
     return book;
   }
 
   async create(dto: CreateBookDto) {
-    const existing = await this.bookModel.findOne({ slug: dto.slug }).exec();
-    if (existing) {
-      throw new ConflictException('Book with this slug already exists');
+    try {
+      return await this.bookModel.create(dto);
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'code' in err && (err as { code: number }).code === 11000) {
+        throw new ConflictException('Book with this slug already exists');
+      }
+      throw err;
     }
-    return this.bookModel.create(dto);
   }
 
   async update(id: string, dto: UpdateBookDto) {
-    const book = await this.bookModel.findById(id).exec();
-    if (!book) {
-      throw new NotFoundException('Book not found');
+    if (dto.slug) {
+      const conflict = await this.bookModel
+        .findOne({ slug: dto.slug, _id: { $ne: id } })
+        .select('_id')
+        .lean()
+        .exec();
+      if (conflict) throw new ConflictException('Book with this slug already exists');
     }
-    if (dto.slug && dto.slug !== book.slug) {
-      const existing = await this.bookModel.findOne({ slug: dto.slug }).exec();
-      if (existing) {
-        throw new ConflictException('Book with this slug already exists');
-      }
-    }
-    Object.assign(book, dto);
-    await book.save();
-    return book.toObject();
+
+    const book = await this.bookModel
+      .findByIdAndUpdate(id, { $set: dto }, { new: true, lean: true })
+      .exec();
+    if (!book) throw new NotFoundException('Book not found');
+    return book;
   }
 
   async remove(id: string) {
     const result = await this.bookModel.findByIdAndDelete(id).exec();
-    if (!result) {
-      throw new NotFoundException('Book not found');
-    }
+    if (!result) throw new NotFoundException('Book not found');
     return { deleted: true };
   }
 }

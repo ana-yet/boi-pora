@@ -27,3 +27,4 @@ export class LibraryItem {
 export const LibraryItemSchema = SchemaFactory.createForClass(LibraryItem);
 LibraryItemSchema.index({ userId: 1, bookId: 1 }, { unique: true });
 LibraryItemSchema.index({ userId: 1, status: 1 });
+LibraryItemSchema.index({ userId: 1, addedAt: -1 });

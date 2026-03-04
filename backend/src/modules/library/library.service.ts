@@ -15,10 +15,10 @@ export class LibraryService {
     const [items, total] = await Promise.all([
       this.libraryItemModel
         .find({ userId: uid })
-        .populate('bookId', 'title slug author coverImageUrl')
+        .populate('bookId', 'title slug author coverImageUrl category')
+        .sort({ addedAt: -1 })
         .skip(skip)
         .limit(limit)
-        .sort({ addedAt: -1 })
         .lean()
         .exec(),
       this.libraryItemModel.countDocuments({ userId: uid }).exec(),
@@ -29,27 +29,39 @@ export class LibraryService {
   async add(userId: string, bookId: string) {
     const uid = new Types.ObjectId(userId);
     const bid = new Types.ObjectId(bookId);
-    const existing = await this.libraryItemModel.findOne({ userId: uid, bookId: bid }).exec();
-    if (existing) throw new ConflictException('Already in library');
-    return this.libraryItemModel.create({
-      userId: uid,
-      bookId: bid,
-      status: 'saved',
-      addedAt: new Date(),
-    });
+    try {
+      return await this.libraryItemModel.create({
+        userId: uid,
+        bookId: bid,
+        status: 'saved',
+        addedAt: new Date(),
+      });
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'code' in err && (err as { code: number }).code === 11000) {
+        throw new ConflictException('Already in library');
+      }
+      throw err;
+    }
   }
 
   async checkStatus(userId: string, bookId: string) {
-    const item = await this.libraryItemModel.findOne({
-      userId: new Types.ObjectId(userId),
-      bookId: new Types.ObjectId(bookId),
-    }).lean().exec();
+    const item = await this.libraryItemModel
+      .findOne({
+        userId: new Types.ObjectId(userId),
+        bookId: new Types.ObjectId(bookId),
+      })
+      .select('status')
+      .lean()
+      .exec();
     return { inLibrary: !!item, status: item?.status ?? null };
   }
 
   async remove(userId: string, bookId: string) {
     const result = await this.libraryItemModel
-      .findOneAndDelete({ userId: new Types.ObjectId(userId), bookId: new Types.ObjectId(bookId) })
+      .findOneAndDelete({
+        userId: new Types.ObjectId(userId),
+        bookId: new Types.ObjectId(bookId),
+      })
       .exec();
     if (!result) throw new NotFoundException('Not in library');
     return { deleted: true };
@@ -62,6 +74,7 @@ export class LibraryService {
         .find()
         .populate('userId', 'email name')
         .populate('bookId', 'title slug author')
+        .sort({ addedAt: -1 })
         .skip(skip)
         .limit(limit)
         .lean()

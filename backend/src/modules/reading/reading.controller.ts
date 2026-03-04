@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Query, UseGuards } from '@nestjs/common';
 import { ReadingService } from './reading.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -9,8 +9,11 @@ export class ReadingController {
   constructor(private readonly readingService: ReadingService) {}
 
   @Get()
-  findByUser(@CurrentUser('sub') userId: string) {
-    return this.readingService.findByUser(userId);
+  findByUser(
+    @CurrentUser('sub') userId: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.readingService.findByUser(userId, limit ? parseInt(limit, 10) : 50);
   }
 
   @Post()

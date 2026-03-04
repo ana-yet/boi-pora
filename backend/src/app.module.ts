@@ -13,6 +13,7 @@ import { AdminModule } from './modules/admin/admin.module';
 import { LibraryModule } from './modules/library/library.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
 import { ReadingModule } from './modules/reading/reading.module';
+import { HealthController } from './health.controller.js';
 
 @Module({
   imports: [
@@ -21,6 +22,9 @@ import { ReadingModule } from './modules/reading/reading.module';
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
         uri: config.get<string>('MONGODB_URI', 'mongodb://localhost:27017/boi-pora'),
+        maxPoolSize: config.get<string>('VERCEL') ? 5 : 10,
+        serverSelectionTimeoutMS: 5000,
+        socketTimeoutMS: 45000,
       }),
       inject: [ConfigService],
     }),
@@ -37,7 +41,7 @@ import { ReadingModule } from './modules/reading/reading.module';
     ReviewsModule,
     ReadingModule,
   ],
-  controllers: [],
+  controllers: [HealthController],
   providers: [
     {
       provide: APP_GUARD,

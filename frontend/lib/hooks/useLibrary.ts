@@ -3,20 +3,23 @@
 import useSWR from "swr";
 import { api } from "../api";
 
-interface LibraryItem {
+export interface LibraryBookRef {
   _id: string;
-  bookId: {
-    _id: string;
-    title: string;
-    slug: string;
-    author: string;
-    coverImageUrl?: string;
-  };
+  title: string;
+  slug: string;
+  author: string;
+  coverImageUrl?: string;
+  category?: string;
+}
+
+export interface LibraryItem {
+  _id: string;
+  bookId: LibraryBookRef;
   status?: string;
   addedAt?: string;
 }
 
-interface LibraryResponse {
+export interface LibraryResponse {
   items: LibraryItem[];
   total: number;
   page: number;

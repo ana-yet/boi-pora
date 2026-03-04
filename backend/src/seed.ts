@@ -3,7 +3,7 @@
  * Run: npx ts-node src/seed.ts
  */
 import mongoose from 'mongoose';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/boi-pora';
 

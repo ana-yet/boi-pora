@@ -26,3 +26,4 @@ export class ReadingProgress {
 
 export const ReadingProgressSchema = SchemaFactory.createForClass(ReadingProgress);
 ReadingProgressSchema.index({ userId: 1, bookId: 1 }, { unique: true });
+ReadingProgressSchema.index({ userId: 1, lastReadAt: -1 });
