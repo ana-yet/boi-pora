@@ -22,7 +22,6 @@ import { HealthController } from './health.controller.js';
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
         uri: config.get<string>('MONGODB_URI', 'mongodb://localhost:27017/boi-pora'),
-        maxPoolSize: config.get<string>('VERCEL') ? 5 : 10,
         serverSelectionTimeoutMS: 5000,
         socketTimeoutMS: 45000,
       }),
