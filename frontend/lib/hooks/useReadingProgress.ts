@@ -3,15 +3,25 @@
 import useSWR from "swr";
 import { api } from "../api";
 
+export interface ProgressBook {
+  _id: string;
+  title: string;
+  slug: string;
+  author: string;
+  coverImageUrl?: string;
+  category?: string;
+}
+
+export interface ProgressChapter {
+  _id: string;
+  title?: string;
+  chapterNumber?: number;
+}
+
 export interface ProgressItem {
   _id: string;
-  bookId: {
-    _id: string;
-    title: string;
-    slug: string;
-    author: string;
-    coverImageUrl?: string;
-  };
+  bookId: ProgressBook;
+  chapterId?: ProgressChapter;
   percentComplete?: number;
   lastReadAt?: string;
 }

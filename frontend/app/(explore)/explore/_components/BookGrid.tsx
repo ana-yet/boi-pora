@@ -22,6 +22,7 @@ function mapApiBookToBook(apiBook: {
     author: string;
     coverImageUrl?: string;
     category?: string;
+    language?: string;
     genres?: string[];
     rating?: number;
     estimatedReadTimeMinutes?: number;
@@ -37,6 +38,7 @@ function mapApiBookToBook(apiBook: {
         ),
         slug: apiBook.slug,
         category: apiBook.category || "fiction",
+        language: apiBook.language,
     };
 }
 

@@ -2,19 +2,26 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
+import { api, ApiError } from "@/lib/api";
 
 export function ForgotPasswordForm() {
     const [email, setEmail] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [sent, setSent] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    function handleSubmit(e: FormEvent) {
+    async function handleSubmit(e: FormEvent) {
         e.preventDefault();
+        setError(null);
         setIsLoading(true);
-        setTimeout(() => {
-            setIsLoading(false);
+        try {
+            await api.post("/api/v1/auth/forgot-password", { email });
             setSent(true);
-        }, 1500);
+        } catch (err) {
+            setError(err instanceof ApiError ? err.message : "Failed to send reset link.");
+        } finally {
+            setIsLoading(false);
+        }
     }
 
     if (sent) {
@@ -47,6 +54,12 @@ export function ForgotPasswordForm() {
 
     return (
         <form onSubmit={handleSubmit} className="space-y-5">
+            {error && (
+                <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 text-sm flex items-center gap-2">
+                    <span className="material-icons text-lg">error_outline</span>
+                    {error}
+                </div>
+            )}
             <p className="text-neutral-600 dark:text-neutral-400 text-sm">
                 Enter your email and we&apos;ll send you a link to reset your
                 password.

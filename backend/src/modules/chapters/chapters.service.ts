@@ -63,7 +63,10 @@ export class ChaptersService {
         throw new ConflictException('Chapter with this ID already exists for this book');
       }
     }
-    Object.assign(chapter, dto);
+    const updates = Object.fromEntries(
+      Object.entries(dto).filter(([, v]) => v !== undefined),
+    );
+    Object.assign(chapter, updates);
     await chapter.save();
     return chapter.toObject();
   }

@@ -23,6 +23,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   refetchUser: () => Promise<void>;
 }
@@ -80,6 +81,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  const register = useCallback(
+    async (name: string, email: string, password: string) => {
+      const res = await api.post<{ accessToken: string; user: User }>("/api/v1/auth/register", {
+        name,
+        email,
+        password,
+      });
+      setToken(res.accessToken);
+      setTokenState(res.accessToken);
+      setUser(res.user);
+    },
+    []
+  );
+
   const logout = useCallback(() => {
     setToken(null);
     setTokenState(null);
@@ -94,6 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         isAuthenticated: !!user,
         login,
+        register,
         logout,
         refetchUser,
       }}

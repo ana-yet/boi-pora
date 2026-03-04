@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useBooks, type ApiBook } from "@/lib/hooks/useBooks";
+import { getLanguageLabel } from "@/lib/constants";
 import { Button } from "@/app/components/ui/Button";
 
 export default function AdminBooksPage() {
@@ -75,6 +76,9 @@ export default function AdminBooksPage() {
                       Category
                     </th>
                     <th className="text-left p-4 font-medium text-neutral-600 dark:text-neutral-400 hidden md:table-cell">
+                      Language
+                    </th>
+                    <th className="text-left p-4 font-medium text-neutral-600 dark:text-neutral-400 hidden md:table-cell">
                       Status
                     </th>
                     <th className="text-right p-4 font-medium text-neutral-600 dark:text-neutral-400">
@@ -96,6 +100,11 @@ export default function AdminBooksPage() {
                       </td>
                       <td className="p-4 text-neutral-600 dark:text-neutral-300 hidden sm:table-cell">
                         {book.category ?? "—"}
+                      </td>
+                      <td className="p-4 text-neutral-600 dark:text-neutral-300 hidden md:table-cell">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400">
+                          {getLanguageLabel(book.language ?? "en")}
+                        </span>
                       </td>
                       <td className="p-4 hidden md:table-cell">
                         <span

@@ -42,6 +42,9 @@ export class CreateBookDto {
   @Min(0)
   estimatedReadTimeMinutes?: number;
 
+  @IsString()
+  language!: string;
+
   @IsOptional()
   @IsString()
   status?: string;

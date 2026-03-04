@@ -28,6 +28,11 @@ export class LibraryController {
     return this.libraryService.add(userId, bookId);
   }
 
+  @Get('status/:bookId')
+  checkStatus(@CurrentUser('sub') userId: string, @Param('bookId') bookId: string) {
+    return this.libraryService.checkStatus(userId, bookId);
+  }
+
   @Delete(':bookId')
   remove(@CurrentUser('sub') userId: string, @Param('bookId') bookId: string) {
     return this.libraryService.remove(userId, bookId);

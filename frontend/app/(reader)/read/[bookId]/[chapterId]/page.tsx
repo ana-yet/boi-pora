@@ -2,11 +2,19 @@
 
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { useEffect } from "react";
 import { useChapter } from "@/lib/hooks/useChapter";
 import { useChapters } from "@/lib/hooks/useChapters";
 import { useBookById } from "@/lib/hooks/useBook";
+import { useAuth } from "@/app/providers/AuthProvider";
+import { api } from "@/lib/api";
 import { ReaderShell } from "./_components/ReaderShell";
 import { ChapterContent } from "./_components/ChapterContent";
+import { MarkdownRenderer } from "@/app/components/ui/MarkdownRenderer";
+
+function isMarkdown(text: string): boolean {
+  return /^#{1,6}\s|^\*\*|^\*[^*]|^-\s|^\d+\.\s|^>\s|```|^\|.*\|/m.test(text);
+}
 
 function splitContent(content: string): string[] {
   return content
@@ -20,6 +28,7 @@ export default function ReaderPage() {
   const bookId = params.bookId as string;
   const chapterId = params.chapterId as string;
 
+  const { isAuthenticated } = useAuth();
   const { data: chapter, error: chapterError, isLoading } = useChapter(bookId, chapterId);
   const { data: chapters } = useChapters(bookId);
   const { data: book } = useBookById(bookId);
@@ -33,6 +42,16 @@ export default function ReaderPage() {
 
   const prevHref = prev ? `/read/${bookId}/${prev.chapterId}` : undefined;
   const nextHref = next ? `/read/${bookId}/${next.chapterId}` : undefined;
+
+  useEffect(() => {
+    if (!isAuthenticated || !chapter || !book) return;
+    const percentage = sortedChapters.length > 0 ? Math.round(((idx + 1) / sortedChapters.length) * 100) : 0;
+    api.post("/api/v1/reading/progress", {
+      bookId,
+      chapterId: chapter._id,
+      percentComplete: percentage,
+    }).catch(() => {});
+  }, [isAuthenticated, chapter, book, bookId, idx, sortedChapters.length]);
 
   if (chapterError || (!isLoading && !chapter)) {
     return (
@@ -53,7 +72,6 @@ export default function ReaderPage() {
     );
   }
 
-  const paragraphs = splitContent(chapter.content);
   const bookTitle = book?.title ?? "Book";
   const chapterLabel = `Chapter ${chapter.chapterNumber}`;
   const progress = {
@@ -62,6 +80,8 @@ export default function ReaderPage() {
     percentage: Math.min(100, ((idx + 1) / sortedChapters.length) * 100) || 0,
   };
 
+  const useMarkdown = isMarkdown(chapter.content);
+
   return (
     <ReaderShell
       bookTitle={bookTitle}
@@ -69,12 +89,29 @@ export default function ReaderPage() {
       progress={progress}
       prevHref={prevHref}
       nextHref={nextHref}
+      bookId={bookId}
+      currentChapterId={chapterId}
+      chapters={sortedChapters}
     >
-      <ChapterContent
-        chapterNumber={`Chapter ${getOrdinal(chapter.chapterNumber)}`}
-        chapterTitle={chapter.title}
-        paragraphs={paragraphs}
-      />
+      <header className="mb-12 text-center">
+        <span className="text-primary/60 font-display text-sm font-bold tracking-widest uppercase mb-4 block">
+          Chapter {getOrdinal(chapter.chapterNumber)}
+        </span>
+        <h2 className="font-serif-reading text-4xl md:text-5xl font-bold leading-tight">
+          {chapter.title}
+        </h2>
+      </header>
+
+      {useMarkdown ? (
+        <MarkdownRenderer content={chapter.content} />
+      ) : (
+        <ChapterContent
+          chapterNumber={`Chapter ${getOrdinal(chapter.chapterNumber)}`}
+          chapterTitle={chapter.title}
+          paragraphs={splitContent(chapter.content)}
+          hideHeader
+        />
+      )}
     </ReaderShell>
   );
 }

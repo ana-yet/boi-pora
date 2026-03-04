@@ -10,6 +10,7 @@ interface ChapterContentProps {
     chapterTitle: string;
     paragraphs: string[];
     illustration?: Illustration;
+    hideHeader?: boolean;
 }
 
 export function ChapterContent({
@@ -17,20 +18,21 @@ export function ChapterContent({
     chapterTitle,
     paragraphs,
     illustration,
+    hideHeader,
 }: ChapterContentProps) {
     return (
         <>
-            {/* Chapter Heading */}
-            <header className="mb-12 text-center">
-                <span className="text-primary/60 font-display text-sm font-bold tracking-widest uppercase mb-4 block">
-                    {chapterNumber}
-                </span>
-                <h2 className="font-serif-reading text-4xl md:text-5xl font-bold leading-tight">
-                    {chapterTitle}
-                </h2>
-            </header>
+            {!hideHeader && (
+                <header className="mb-12 text-center">
+                    <span className="text-primary/60 font-display text-sm font-bold tracking-widest uppercase mb-4 block">
+                        {chapterNumber}
+                    </span>
+                    <h2 className="font-serif-reading text-4xl md:text-5xl font-bold leading-tight">
+                        {chapterTitle}
+                    </h2>
+                </header>
+            )}
 
-            {/* Prose Blocks */}
             {paragraphs.map((text, i) => (
                 <ParagraphBlock
                     key={i}
@@ -59,11 +61,12 @@ function ParagraphBlock({
     return (
         <>
             <p
-                className={`mb-8 ${
+                className={`mb-8 break-words overflow-wrap-anywhere ${
                     isFirst
                         ? "first-letter:text-5xl first-letter:font-bold first-letter:text-primary first-letter:mr-2 first-letter:float-left"
                         : ""
                 }`}
+                style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}
             >
                 {text}
             </p>

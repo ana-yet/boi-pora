@@ -2,12 +2,36 @@
 
 import Link from "next/link";
 import { useAuth } from "@/app/providers/AuthProvider";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
+
+function useTheme() {
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("theme");
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const dark = stored === "dark" || (!stored && prefersDark);
+    setIsDark(dark);
+    document.documentElement.classList.toggle("dark", dark);
+  }, []);
+
+  const toggle = useCallback(() => {
+    setIsDark((prev) => {
+      const next = !prev;
+      document.documentElement.classList.toggle("dark", next);
+      localStorage.setItem("theme", next ? "dark" : "light");
+      return next;
+    });
+  }, []);
+
+  return { isDark, toggle };
+}
 
 export function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { isDark, toggle: toggleTheme } = useTheme();
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -72,6 +96,15 @@ export function Navbar() {
                 type="search"
               />
             </form>
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+              aria-label="Toggle dark mode"
+            >
+              <span className="material-icons text-neutral-600 dark:text-neutral-300">
+                {isDark ? "light_mode" : "dark_mode"}
+              </span>
+            </button>
             {isAuthenticated && user ? (
               <div className="relative" ref={dropdownRef}>
                 <button
@@ -93,6 +126,13 @@ export function Navbar() {
                       </p>
                       <p className="text-xs text-neutral-500 truncate">{user.email}</p>
                     </div>
+                    <Link
+                      href="/profile"
+                      className="block px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700"
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      Profile
+                    </Link>
                     <Link
                       href="/library"
                       className="block px-4 py-2 text-sm text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700"

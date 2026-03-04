@@ -1,0 +1,13 @@
+src/
+test/
+*.spec.ts
+*.md
+.env
+.env.local
+.eslintrc*
+.prettierrc
+jest.config.*
+tsconfig.json
+tsconfig.build.json
+nest-cli.json
+coverage/
