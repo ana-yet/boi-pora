@@ -206,7 +206,7 @@ export function ReaderShell({
 
                 <button
                     onClick={() => setPanelOpen((o) => !o)}
-                    className={`p-2 rounded-lg transition-colors ${panelOpen ? "bg-primary text-white" : "hover:text-primary"}`}
+                    className={`px-2 pt-1 rounded-md transition-colors ${panelOpen ? "bg-primary text-white" : "hover:text-primary"}`}
                     style={panelOpen ? undefined : { color: c.muted }}
                     aria-label="Reader settings"
                 >
