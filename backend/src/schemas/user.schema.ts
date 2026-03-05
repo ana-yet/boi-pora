@@ -1,14 +1,15 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
+import { UserRole } from '../common/enums';
 
 export type UserDocument = User & Document;
 
 @Schema({ timestamps: true })
 export class User {
-  @Prop({ required: true, unique: true })
+  @Prop({ required: true, unique: true, lowercase: true, trim: true })
   email: string;
 
-  @Prop({ required: true })
+  @Prop({ required: true, select: false })
   passwordHash: string;
 
   @Prop()
@@ -17,8 +18,8 @@ export class User {
   @Prop()
   avatarUrl?: string;
 
-  @Prop({ default: 'user' })
-  role: string;
+  @Prop({ type: String, enum: UserRole, default: UserRole.USER })
+  role: UserRole;
 
   @Prop({ default: 'local' })
   authProvider: string;
@@ -29,10 +30,10 @@ export class User {
   @Prop({ default: false })
   isVerified: boolean;
 
-  @Prop()
+  @Prop({ select: false })
   resetPasswordToken?: string;
 
-  @Prop()
+  @Prop({ select: false })
   resetPasswordExpires?: Date;
 }
 

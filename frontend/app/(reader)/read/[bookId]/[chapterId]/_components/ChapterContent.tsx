@@ -24,10 +24,10 @@ export function ChapterContent({
         <>
             {!hideHeader && (
                 <header className="mb-12 text-center">
-                    <span className="text-primary/60 font-display text-sm font-bold tracking-widest uppercase mb-4 block">
+                    <span className="text-primary/70 font-display text-sm font-bold tracking-widest uppercase mb-4 block">
                         {chapterNumber}
                     </span>
-                    <h2 className="font-serif-reading text-4xl md:text-5xl font-bold leading-tight">
+                    <h2 className="font-serif-reading text-3xl md:text-4xl font-bold leading-snug">
                         {chapterTitle}
                     </h2>
                 </header>
@@ -61,9 +61,9 @@ function ParagraphBlock({
     return (
         <>
             <p
-                className={`mb-8 break-words overflow-wrap-anywhere ${
+                className={`mb-6 leading-relaxed ${
                     isFirst
-                        ? "first-letter:text-5xl first-letter:font-bold first-letter:text-primary first-letter:mr-2 first-letter:float-left"
+                        ? "first-letter:text-[2.8em] first-letter:font-bold first-letter:text-primary first-letter:mr-1.5 first-letter:float-left first-letter:leading-[0.85]"
                         : ""
                 }`}
                 style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}
@@ -72,17 +72,16 @@ function ParagraphBlock({
             </p>
 
             {illustration && (
-                <figure className="my-12">
-                    <div className="w-full h-64 bg-gradient-to-br from-primary/5 to-primary/20 rounded-xl overflow-hidden relative flex items-center justify-center">
+                <figure className="my-10">
+                    <div className="w-full h-64 bg-linear-to-br from-primary/5 to-primary/20 rounded-xl overflow-hidden relative flex items-center justify-center">
                         <img
                             alt={illustration.alt}
                             className="w-full h-full object-cover opacity-80 mix-blend-overlay hover:scale-105 transition-transform duration-700"
                             loading="lazy"
                             src={illustration.src}
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-50" />
                     </div>
-                    <figcaption className="text-center text-sm opacity-50 mt-4 italic font-display">
+                    <figcaption className="text-center text-sm opacity-50 mt-3 italic font-display">
                         {illustration.caption}
                     </figcaption>
                 </figure>

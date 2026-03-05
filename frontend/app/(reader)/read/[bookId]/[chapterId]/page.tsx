@@ -23,6 +23,12 @@ function splitContent(content: string): string[] {
     .filter(Boolean);
 }
 
+function getOrdinal(n: number): string {
+  const words = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten",
+    "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen", "Twenty"];
+  return words[n] ?? String(n);
+}
+
 export default function ReaderPage() {
   const params = useParams();
   const bookId = params.bookId as string;
@@ -55,7 +61,7 @@ export default function ReaderPage() {
 
   if (chapterError || (!isLoading && !chapter)) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-8">
+      <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-[#fafafa]">
         <p className="text-red-500 mb-4">Chapter not found.</p>
         <Link href="/explore" className="text-primary hover:underline">
           Browse books
@@ -66,7 +72,7 @@ export default function ReaderPage() {
 
   if (isLoading || !chapter) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-[#fafafa]">
         <span className="inline-block h-8 w-8 border-2 border-primary border-r-transparent rounded-full animate-spin" />
       </div>
     );
@@ -94,12 +100,13 @@ export default function ReaderPage() {
       chapters={sortedChapters}
     >
       <header className="mb-12 text-center">
-        <span className="text-primary/60 font-display text-sm font-bold tracking-widest uppercase mb-4 block">
+        <span className="text-primary/70 font-display text-sm font-bold tracking-widest uppercase mb-4 block">
           Chapter {getOrdinal(chapter.chapterNumber)}
         </span>
-        <h2 className="font-serif-reading text-4xl md:text-5xl font-bold leading-tight">
+        <h2 className="font-serif-reading text-3xl md:text-4xl font-bold leading-snug">
           {chapter.title}
         </h2>
+        <div className="mt-4 w-12 h-0.5 bg-primary/30 mx-auto rounded-full" />
       </header>
 
       {useMarkdown ? (
@@ -114,9 +121,4 @@ export default function ReaderPage() {
       )}
     </ReaderShell>
   );
-}
-
-function getOrdinal(n: number): string {
-  const s = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"];
-  return s[n] ?? String(n);
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode, type CSSProperties } from "react";
+import { useState, useEffect, useCallback, type ReactNode, type CSSProperties } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { SettingsPanel } from "./SettingsPanel";
@@ -22,37 +22,75 @@ const DEFAULTS: ReaderSettings = {
     theme: "light",
     font: "serif",
     fontSize: 20,
-    spacing: "loose",
+    spacing: "normal",
 };
 
+const STORAGE_KEY = "boi_pora_reader_settings";
+
+function loadSettings(): ReaderSettings {
+    if (typeof window === "undefined") return DEFAULTS;
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return DEFAULTS;
+        const parsed = JSON.parse(raw);
+        return {
+            theme: ["light", "dark", "sepia"].includes(parsed.theme) ? parsed.theme : DEFAULTS.theme,
+            font: ["serif", "sans", "mono"].includes(parsed.font) ? parsed.font : DEFAULTS.font,
+            fontSize: typeof parsed.fontSize === "number" && parsed.fontSize >= 14 && parsed.fontSize <= 30 ? parsed.fontSize : DEFAULTS.fontSize,
+            spacing: ["compact", "normal", "loose"].includes(parsed.spacing) ? parsed.spacing : DEFAULTS.spacing,
+        };
+    } catch {
+        return DEFAULTS;
+    }
+}
+
+function saveSettings(s: ReaderSettings) {
+    if (typeof window === "undefined") return;
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch {}
+}
+
 const FONT_MAP: Record<ReaderFont, string> = {
-    serif: "var(--font-serif-reading)",
-    sans: "var(--font-display)",
+    serif: "'Merriweather', serif",
+    sans: "'Work Sans', sans-serif",
     mono: "'Courier New', monospace",
 };
 
 const SPACING_MAP: Record<ReaderSpacing, string> = {
     compact: "1.6",
-    normal: "1.8",
-    loose: "2.0",
+    normal: "1.85",
+    loose: "2.15",
 };
 
-const WRAPPER_THEME: Record<ReaderTheme, string> = {
-    light: "bg-background-light text-neutral-800",
-    dark: "bg-background-dark text-neutral-200",
-    sepia: "bg-sepia-bg text-sepia-text",
-};
+interface ThemeColors {
+    bg: string;
+    text: string;
+    muted: string;
+    headerBg: string;
+    border: string;
+}
 
-const HEADER_THEME: Record<ReaderTheme, string> = {
-    light: "bg-background-light/95 border-primary/10",
-    dark: "bg-background-dark/95 border-white/5",
-    sepia: "bg-sepia-bg/95 border-sepia-text/10",
-};
-
-const FOOTER_THEME: Record<ReaderTheme, string> = {
-    light: "bg-white/90 border-neutral-300",
-    dark: "bg-background-dark/95 border-neutral-800",
-    sepia: "bg-sepia-bg/90 border-sepia-text/10",
+const COLORS: Record<ReaderTheme, ThemeColors> = {
+    light: {
+        bg: "#f8f7f6",
+        text: "#4a4036",
+        muted: "#8c8075",
+        headerBg: "rgba(248,247,246,0.97)",
+        border: "#e5ddd5",
+    },
+    dark: {
+        bg: "#141414",
+        text: "#d4d4d4",
+        muted: "#737373",
+        headerBg: "rgba(20,20,20,0.97)",
+        border: "#333333",
+    },
+    sepia: {
+        bg: "#f5e6c8",
+        text: "#3b2a14",
+        muted: "#8a7560",
+        headerBg: "rgba(245,230,200,0.97)",
+        border: "#d4be94",
+    },
 };
 
 interface ReaderShellProps {
@@ -82,6 +120,17 @@ export function ReaderShell({
     const [panelOpen, setPanelOpen] = useState(false);
     const [tocOpen, setTocOpen] = useState(false);
     const [settings, setSettings] = useState<ReaderSettings>(DEFAULTS);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setSettings(loadSettings());
+        setMounted(true);
+    }, []);
+
+    const handleSettingsChange = useCallback((newSettings: ReaderSettings) => {
+        setSettings(newSettings);
+        saveSettings(newSettings);
+    }, []);
 
     useKeyboardShortcuts({
         arrowleft: () => prevHref && router.push(prevHref),
@@ -90,69 +139,96 @@ export function ReaderShell({
         escape: () => { setTocOpen(false); setPanelOpen(false); },
     });
 
-    const contentStyle: CSSProperties = {
-        fontSize: `${settings.fontSize}px`,
-        lineHeight: SPACING_MAP[settings.spacing],
-        fontFamily: FONT_MAP[settings.font],
+    const c = COLORS[settings.theme];
+
+    const wrapperStyle: CSSProperties = {
+        backgroundColor: c.bg,
+        color: c.text,
+        minHeight: "100vh",
+        transition: "background-color 0.3s, color 0.3s",
     };
 
-    const trackBg =
-        settings.theme === "dark" ? "bg-white/10" : "bg-black/10";
+    const headerStyle: CSSProperties = {
+        backgroundColor: c.headerBg,
+        borderColor: c.border,
+        color: c.text,
+    };
+
+    const settingsCSS = `
+        .boi-reader-article {
+            font-size: ${settings.fontSize}px;
+            font-family: ${FONT_MAP[settings.font]};
+            color: ${c.text};
+        }
+        .boi-reader-article p,
+        .boi-reader-article li,
+        .boi-reader-article td,
+        .boi-reader-article th,
+        .boi-reader-article blockquote,
+        .boi-reader-article figcaption {
+            line-height: ${SPACING_MAP[settings.spacing]} !important;
+        }
+    `;
+
+    if (!mounted) {
+        return (
+            <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "#ffffff" }}>
+                <span className="inline-block h-8 w-8 border-2 border-primary border-r-transparent rounded-full animate-spin" />
+            </div>
+        );
+    }
 
     return (
-        <div
-            className={`min-h-screen transition-colors duration-300 antialiased overflow-x-hidden ${WRAPPER_THEME[settings.theme]}`}
-        >
+        <div style={wrapperStyle} className="antialiased overflow-x-hidden">
+            <style>{settingsCSS}</style>
+
             {/* Top Bar */}
             <header
-                className={`fixed top-0 left-0 right-0 h-16 backdrop-blur-sm border-b z-40 flex items-center justify-between px-6 transition-all duration-300 ${HEADER_THEME[settings.theme]}`}
+                style={headerStyle}
+                className="fixed top-0 left-0 right-0 h-14 backdrop-blur-md border-b z-40 flex items-center justify-between px-4 md:px-6"
             >
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-0.5">
                     <Link
                         href="/library"
-                        className="p-2 rounded-lg hover:bg-primary/10 opacity-60 hover:opacity-100 hover:text-primary transition-all group"
+                        style={{ color: c.muted }}
+                        className="p-2 rounded-lg hover:text-primary transition-colors"
                         aria-label="Back to Library"
                     >
-                        <span className="material-icons group-hover:-translate-x-1 transition-transform">
-                            arrow_back
-                        </span>
+                        <span className="material-icons text-xl" aria-hidden="true">arrow_back</span>
                     </Link>
                     <button
                         onClick={() => setTocOpen(true)}
-                        className="p-2 rounded-lg hover:bg-primary/10 opacity-60 hover:opacity-100 hover:text-primary transition-all"
+                        style={{ color: c.muted }}
+                        className="p-2 rounded-lg hover:text-primary transition-colors"
                         aria-label="Table of Contents"
                     >
-                        <span className="material-icons">toc</span>
+                        <span className="material-icons text-xl" aria-hidden="true">toc</span>
                     </button>
                 </div>
 
-                <div className="flex flex-col items-center opacity-80">
-                    <h1 className="text-sm font-medium tracking-wide uppercase opacity-60 font-display">
+                <div className="flex flex-col items-center select-none">
+                    <span style={{ color: c.muted }} className="text-xs font-medium tracking-wide truncate max-w-[200px]">
                         {bookTitle}
-                    </h1>
-                    <span className="text-xs text-primary font-semibold">
+                    </span>
+                    <span className="text-[11px] text-primary font-semibold">
                         {chapterLabel}
                     </span>
                 </div>
 
                 <button
                     onClick={() => setPanelOpen((o) => !o)}
-                    className={`p-2 rounded-lg transition-colors ${
-                        panelOpen
-                            ? "bg-primary text-white"
-                            : "bg-primary/10 text-primary"
-                    }`}
+                    className={`px-2 pt-1 rounded-md transition-colors ${panelOpen ? "bg-primary text-white" : "hover:text-primary"}`}
+                    style={panelOpen ? undefined : { color: c.muted }}
                     aria-label="Reader settings"
                 >
-                    <span className="material-icons">settings</span>
+                    <span className="material-icons text-xl" aria-hidden="true">tune</span>
                 </button>
             </header>
 
             {/* Reading Area */}
-            <main className="relative min-h-screen pt-24 pb-32 flex justify-center">
+            <main className="relative min-h-screen pt-24 pb-28 flex justify-center">
                 <article
-                    className="w-full max-w-[650px] px-6 md:px-0 overflow-hidden break-words"
-                    style={contentStyle}
+                    className="boi-reader-article w-full max-w-[640px] px-6 md:px-0 overflow-hidden wrap-break-word"
                 >
                     {children}
                 </article>
@@ -160,8 +236,7 @@ export function ReaderShell({
                 {panelOpen && (
                     <SettingsPanel
                         settings={settings}
-                        theme={settings.theme}
-                        onChange={setSettings}
+                        onChange={handleSettingsChange}
                         onClose={() => setPanelOpen(false)}
                     />
                 )}
@@ -169,79 +244,48 @@ export function ReaderShell({
 
             {/* Bottom Navigation */}
             <footer
-                className={`fixed bottom-0 left-0 right-0 h-20 backdrop-blur border-t z-40 ${FOOTER_THEME[settings.theme]}`}
+                style={headerStyle}
+                className="fixed bottom-0 left-0 right-0 h-16 backdrop-blur-md border-t z-40"
             >
-                <div className="max-w-4xl mx-auto h-full flex items-center justify-between px-6">
+                <div className="max-w-3xl mx-auto h-full flex items-center justify-between px-4 md:px-6">
                     {prevHref ? (
-                        <>
-                            <Link
-                                href={prevHref}
-                                className="hidden md:flex items-center gap-2 opacity-60 hover:text-primary transition-colors group"
-                            >
-                                <span className="material-icons text-xl group-hover:-translate-x-1 transition-transform">
-                                    chevron_left
-                                </span>
-                                <span className="font-display font-medium text-sm">
-                                    Prev Chapter
-                                </span>
-                            </Link>
-                            <Link
-                                href={prevHref}
-                                className="md:hidden p-2 rounded-full hover:bg-primary/10 opacity-60"
-                            >
-                                <span className="material-icons">
-                                    chevron_left
-                                </span>
-                            </Link>
-                        </>
+                        <Link
+                            href={prevHref}
+                            style={{ color: c.muted }}
+                            className="flex items-center gap-1 hover:text-primary transition-colors text-sm"
+                        >
+                            <span className="material-icons text-lg" aria-hidden="true">chevron_left</span>
+                            <span className="hidden sm:inline font-medium">Previous</span>
+                        </Link>
                     ) : (
-                        <div />
+                        <div className="w-20" />
                     )}
 
-                    <div className="flex flex-col items-center flex-1 max-w-xs mx-4">
-                        <div className="w-full flex justify-between text-xs opacity-50 mb-2 font-display">
-                            <span>
-                                Page {progress.currentPage} of{" "}
-                                {progress.totalPages}
-                            </span>
-                            <span>{progress.percentage}%</span>
-                        </div>
+                    <div className="flex flex-col items-center flex-1 max-w-[200px] mx-4">
+                        <span style={{ color: c.muted }} className="text-[10px] mb-1.5 tabular-nums">
+                            {Math.round(progress.percentage)}%
+                        </span>
                         <div
-                            className={`w-full h-1.5 ${trackBg} rounded-full overflow-hidden`}
+                            className="w-full h-1 rounded-full overflow-hidden"
+                            style={{ backgroundColor: settings.theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)" }}
                         >
                             <div
-                                className="h-full bg-primary rounded-full relative overflow-hidden"
-                                style={{
-                                    width: `${progress.percentage}%`,
-                                }}
-                            >
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
-                            </div>
+                                className="h-full bg-primary rounded-full transition-all duration-500"
+                                style={{ width: `${progress.percentage}%` }}
+                            />
                         </div>
                     </div>
 
                     {nextHref ? (
-                        <>
-                            <Link
-                                href={nextHref}
-                                className="hidden md:flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-lg shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all active:translate-y-0 font-display font-medium text-sm"
-                            >
-                                Next Chapter
-                                <span className="material-icons text-xl">
-                                    chevron_right
-                                </span>
-                            </Link>
-                            <Link
-                                href={nextHref}
-                                className="md:hidden p-2 rounded-full bg-primary text-white shadow-lg shadow-primary/20"
-                            >
-                                <span className="material-icons">
-                                    chevron_right
-                                </span>
-                            </Link>
-                        </>
+                        <Link
+                            href={nextHref}
+                            className="flex items-center gap-1 bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors"
+                        >
+                            <span className="hidden sm:inline">Next</span>
+                            <span className="material-icons text-lg" aria-hidden="true">chevron_right</span>
+                        </Link>
                     ) : (
-                        <div />
+                        <div className="w-20" />
                     )}
                 </div>
             </footer>
@@ -252,6 +296,7 @@ export function ReaderShell({
                 chapters={chapters}
                 open={tocOpen}
                 onClose={() => setTocOpen(false)}
+                readerTheme={settings.theme}
             />
         </div>
     );

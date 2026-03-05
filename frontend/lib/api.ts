@@ -25,8 +25,24 @@ function getToken(): string | null {
 
 export function setToken(token: string | null): void {
   if (typeof window === "undefined") return;
-  if (token) localStorage.setItem("boi_pora_token", token);
-  else localStorage.removeItem("boi_pora_token");
+  if (token) {
+    localStorage.setItem("boi_pora_token", token);
+    document.cookie = `boi_pora_token=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+  } else {
+    localStorage.removeItem("boi_pora_token");
+    document.cookie = "boi_pora_token=; path=/; max-age=0";
+  }
+}
+
+export function setRefreshToken(token: string | null): void {
+  if (typeof window === "undefined") return;
+  if (token) localStorage.setItem("boi_pora_refresh_token", token);
+  else localStorage.removeItem("boi_pora_refresh_token");
+}
+
+export function getRefreshToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("boi_pora_refresh_token");
 }
 
 type ApiRequestInit = Omit<RequestInit, "body"> & {
@@ -79,6 +95,12 @@ async function request<T>(
   }
 
   if (!res.ok) {
+    if (res.status === 401 && !path.includes("/auth/refresh") && !path.includes("/auth/login")) {
+      const refreshed = await tryRefreshToken();
+      if (refreshed) {
+        return request<T>(path, options);
+      }
+    }
     const msg =
       typeof parsed === "object" && parsed !== null && "message" in parsed
         ? String((parsed as { message: unknown }).message)
@@ -91,6 +113,40 @@ async function request<T>(
   return parsed as T;
 }
 
+let refreshPromise: Promise<boolean> | null = null;
+
+async function tryRefreshToken(): Promise<boolean> {
+  if (refreshPromise) return refreshPromise;
+  refreshPromise = (async () => {
+    const rToken = getRefreshToken();
+    if (!rToken) return false;
+    try {
+      const base = getApiUrl();
+      const res = await fetch(`${base}/api/v1/auth/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refreshToken: rToken }),
+      });
+      if (!res.ok) {
+        setToken(null);
+        setRefreshToken(null);
+        return false;
+      }
+      const data = await res.json();
+      setToken(data.accessToken);
+      if (data.refreshToken) setRefreshToken(data.refreshToken);
+      return true;
+    } catch {
+      setToken(null);
+      setRefreshToken(null);
+      return false;
+    }
+  })();
+  const result = await refreshPromise;
+  refreshPromise = null;
+  return result;
+}
+
 export const api = {
   get: <T>(path: string, init?: Omit<RequestInit, "method" | "body">) =>
     request<T>(path, { ...init, method: "GET" }),
@@ -100,6 +156,9 @@ export const api = {
 
   put: <T>(path: string, body?: Record<string, unknown>, init?: RequestInit) =>
     request<T>(path, { ...init, method: "PUT", body }),
+
+  patch: <T>(path: string, body?: Record<string, unknown>, init?: RequestInit) =>
+    request<T>(path, { ...init, method: "PATCH", body }),
 
   delete: <T>(path: string, init?: Omit<RequestInit, "method" | "body">) =>
     request<T>(path, { ...init, method: "DELETE" }),

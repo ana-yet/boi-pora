@@ -1,13 +1,20 @@
-import { IsOptional, IsString, IsNumber, IsArray, Min } from 'class-validator';
+import { IsOptional, IsString, IsNumber, IsArray, Min, MaxLength, IsNotEmpty, IsIn } from 'class-validator';
+import { BookStatus } from '../../../common/enums';
 
 export class CreateBookDto {
   @IsString()
+  @IsNotEmpty()
+  @MaxLength(500)
   title!: string;
 
   @IsString()
+  @IsNotEmpty()
+  @MaxLength(500)
   slug!: string;
 
   @IsString()
+  @IsNotEmpty()
+  @MaxLength(200)
   author!: string;
 
   @IsOptional()
@@ -17,14 +24,17 @@ export class CreateBookDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(5000)
   description?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(2000)
   coverImageUrl?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(100)
   category?: string;
 
   @IsOptional()
@@ -43,9 +53,10 @@ export class CreateBookDto {
   estimatedReadTimeMinutes?: number;
 
   @IsString()
+  @MaxLength(10)
   language!: string;
 
   @IsOptional()
-  @IsString()
-  status?: string;
+  @IsIn(Object.values(BookStatus))
+  status?: BookStatus;
 }

@@ -2,29 +2,8 @@
 
 import useSWR from "swr";
 import { api } from "../api";
-
-export interface ProgressBook {
-  _id: string;
-  title: string;
-  slug: string;
-  author: string;
-  coverImageUrl?: string;
-  category?: string;
-}
-
-export interface ProgressChapter {
-  _id: string;
-  title?: string;
-  chapterNumber?: number;
-}
-
-export interface ProgressItem {
-  _id: string;
-  bookId: ProgressBook;
-  chapterId?: ProgressChapter;
-  percentComplete?: number;
-  lastReadAt?: string;
-}
+import type { ProgressItem } from "../types";
+export type { ProgressBook, ProgressChapter, ProgressItem } from "../types";
 
 const fetcher = (url: string) => api.get<ProgressItem[]>(url);
 

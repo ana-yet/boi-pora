@@ -8,14 +8,10 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
-import { api, setToken, ApiError } from "@/lib/api";
+import { api, setToken, setRefreshToken, ApiError } from "@/lib/api";
+import type { User } from "@/lib/types";
 
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-}
+export type { User };
 
 interface AuthContextType {
   user: User | null;
@@ -43,11 +39,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
     try {
-      const me = await api.get<{ _id: string; email: string; name: string; role: string }>("/api/v1/auth/me");
+      const me = await api.get<{ _id: string; email: string; name?: string; role: string }>("/api/v1/auth/me");
       setUser({
         id: me._id,
         email: me.email,
-        name: me.name,
+        name: me.name ?? "",
         role: me.role,
       });
       setTokenState(t);
@@ -70,11 +66,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(
     async (email: string, password: string) => {
-      const res = await api.post<{ accessToken: string; user: User }>("/api/v1/auth/login", {
+      const res = await api.post<{ accessToken: string; refreshToken: string; user: User }>("/api/v1/auth/login", {
         email,
         password,
       });
       setToken(res.accessToken);
+      setRefreshToken(res.refreshToken);
       setTokenState(res.accessToken);
       setUser(res.user);
     },
@@ -83,12 +80,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = useCallback(
     async (name: string, email: string, password: string) => {
-      const res = await api.post<{ accessToken: string; user: User }>("/api/v1/auth/register", {
+      const res = await api.post<{ accessToken: string; refreshToken: string; user: User }>("/api/v1/auth/register", {
         name,
         email,
         password,
       });
       setToken(res.accessToken);
+      setRefreshToken(res.refreshToken);
       setTokenState(res.accessToken);
       setUser(res.user);
     },
@@ -97,6 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(() => {
     setToken(null);
+    setRefreshToken(null);
     setTokenState(null);
     setUser(null);
   }, []);

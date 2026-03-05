@@ -1,5 +1,6 @@
 import { Controller, Get, Post, Put, Body, Query, UseGuards } from '@nestjs/common';
 import { ReadingService } from './reading.service';
+import { UpsertProgressDto } from './dto/upsert-progress.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 
@@ -13,28 +14,29 @@ export class ReadingController {
     @CurrentUser('sub') userId: string,
     @Query('limit') limit?: string,
   ) {
-    return this.readingService.findByUser(userId, limit ? parseInt(limit, 10) : 50);
+    const parsedLimit = Math.min(parseInt(limit ?? '50', 10) || 50, 100);
+    return this.readingService.findByUser(userId, parsedLimit);
   }
 
   @Post()
   upsert(
     @CurrentUser('sub') userId: string,
-    @Body() body: { bookId: string; chapterId?: string; percentComplete?: number },
+    @Body() dto: UpsertProgressDto,
   ) {
-    return this.readingService.upsert(userId, body.bookId, {
-      chapterId: body.chapterId,
-      percentComplete: body.percentComplete,
+    return this.readingService.upsert(userId, dto.bookId, {
+      chapterId: dto.chapterId,
+      percentComplete: dto.percentComplete,
     });
   }
 
   @Put()
   update(
     @CurrentUser('sub') userId: string,
-    @Body() body: { bookId: string; chapterId?: string; percentComplete?: number },
+    @Body() dto: UpsertProgressDto,
   ) {
-    return this.readingService.upsert(userId, body.bookId, {
-      chapterId: body.chapterId,
-      percentComplete: body.percentComplete,
+    return this.readingService.upsert(userId, dto.bookId, {
+      chapterId: dto.chapterId,
+      percentComplete: dto.percentComplete,
     });
   }
 }

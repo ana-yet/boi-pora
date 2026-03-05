@@ -2,21 +2,8 @@
 
 import useSWR from "swr";
 import { api } from "../api";
-
-export interface ReviewItem {
-  _id: string;
-  userId: { _id: string; name?: string };
-  rating: number;
-  content?: string;
-  createdAt: string;
-}
-
-interface ReviewsResponse {
-  items: ReviewItem[];
-  total: number;
-  page: number;
-  limit: number;
-}
+import type { ReviewsResponse } from "../types";
+export type { ReviewItem, ReviewsResponse } from "../types";
 
 const fetcher = (url: string) => api.get<ReviewsResponse>(url);
 
