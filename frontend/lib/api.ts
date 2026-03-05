@@ -157,6 +157,9 @@ export const api = {
   put: <T>(path: string, body?: Record<string, unknown>, init?: RequestInit) =>
     request<T>(path, { ...init, method: "PUT", body }),
 
+  patch: <T>(path: string, body?: Record<string, unknown>, init?: RequestInit) =>
+    request<T>(path, { ...init, method: "PATCH", body }),
+
   delete: <T>(path: string, init?: Omit<RequestInit, "method" | "body">) =>
     request<T>(path, { ...init, method: "DELETE" }),
 };

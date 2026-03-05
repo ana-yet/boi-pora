@@ -12,7 +12,8 @@ export function useBooks(
   limit = 20,
   category?: string,
   status?: string,
-  sort?: string
+  sort?: string,
+  search?: string,
 ) {
   const params = new URLSearchParams();
   params.set("page", String(page));
@@ -20,6 +21,7 @@ export function useBooks(
   if (category) params.set("category", category);
   if (status) params.set("status", status);
   if (sort) params.set("sort", sort);
+  if (search) params.set("search", search);
   const query = params.toString();
   const url = `/api/v1/books${query ? `?${query}` : ""}`;
 

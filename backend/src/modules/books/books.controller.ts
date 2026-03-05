@@ -1,13 +1,5 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Body,
-  Param,
-  Query,
-  UseGuards,
+  Controller, Get, Post, Put, Patch, Delete, Body, Param, Query, UseGuards,
 } from '@nestjs/common';
 import { BooksService } from './books.service';
 import { CreateBookDto } from './dto/create-book.dto';
@@ -30,6 +22,7 @@ export class BooksController {
     @Query('category') category?: string,
     @Query('status') status?: string,
     @Query('sort') sort?: string,
+    @Query('search') search?: string,
   ) {
     const parsedLimit = Math.min(parseInt(limit ?? '20', 10) || 20, 100);
     return this.booksService.findAll(
@@ -38,6 +31,7 @@ export class BooksController {
       category,
       status,
       sort,
+      search,
     );
   }
 
@@ -65,6 +59,20 @@ export class BooksController {
   @Post()
   create(@Body() dto: CreateBookDto) {
     return this.booksService.create(dto);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @Post('bulk')
+  bulk(@Body() body: { action: string; ids: string[] }) {
+    return this.booksService.bulkAction(body.action, body.ids ?? []);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @Patch(':id/status')
+  updateStatus(@Param('id') id: string, @Body() body: { status: string }) {
+    return this.booksService.updateStatus(id, body.status);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

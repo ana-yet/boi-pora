@@ -1,13 +1,5 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Body,
-  Param,
-  Query,
-  UseGuards,
+  Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -24,11 +16,18 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
-  findAll(@Query('page') page?: string, @Query('limit') limit?: string) {
+  findAll(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+    @Query('role') role?: string,
+  ) {
     const parsedLimit = Math.min(parseInt(limit ?? '20', 10) || 20, 100);
     return this.usersService.findAll(
       parseInt(page ?? '1', 10) || 1,
       parsedLimit,
+      search,
+      role,
     );
   }
 
@@ -40,6 +39,11 @@ export class UsersController {
   @Post()
   create(@Body() dto: CreateUserDto) {
     return this.usersService.create(dto);
+  }
+
+  @Post('bulk')
+  bulk(@Body() body: { action: string; ids: string[] }) {
+    return this.usersService.bulkAction(body.action, body.ids ?? []);
   }
 
   @Put(':id')

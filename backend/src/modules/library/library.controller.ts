@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Delete, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Query, UseGuards } from '@nestjs/common';
 import { LibraryService } from './library.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -48,11 +48,28 @@ export class AdminLibraryController {
   constructor(private readonly libraryService: LibraryService) {}
 
   @Get()
-  findAll(@Query('page') page?: string, @Query('limit') limit?: string) {
+  findAll(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+    @Query('status') status?: string,
+  ) {
     const parsedLimit = Math.min(parseInt(limit ?? '20', 10) || 20, 100);
     return this.libraryService.findAll(
       parseInt(page ?? '1', 10) || 1,
       parsedLimit,
+      search,
+      status,
     );
+  }
+
+  @Patch(':id/status')
+  updateStatus(@Param('id') id: string, @Query('status') status: string) {
+    return this.libraryService.adminUpdateStatus(id, status);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.libraryService.adminRemove(id);
   }
 }

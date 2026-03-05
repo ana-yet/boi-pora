@@ -19,8 +19,12 @@ export class Review {
 
   @Prop({ default: true })
   isPublic: boolean;
+
+  @Prop({ default: false })
+  flagged: boolean;
 }
 
 export const ReviewSchema = SchemaFactory.createForClass(Review);
 ReviewSchema.index({ userId: 1, bookId: 1 }, { unique: true });
 ReviewSchema.index({ bookId: 1 });
+ReviewSchema.index({ flagged: 1 });
