@@ -10,6 +10,7 @@ import { useChapters } from "@/lib/hooks/useChapters";
 import { api } from "@/lib/api";
 import { getLanguageLabel } from "@/lib/constants";
 import { ReviewsSection } from "./_components/ReviewsSection";
+import { Toast } from "@/app/components/ui/Toast";
 
 const PLACEHOLDER =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='300'%3E%3Crect fill='%23e5e7eb' width='200' height='300'/%3E%3C/svg%3E";
@@ -36,6 +37,7 @@ export default function BookDetailPage() {
 
   const [inLibrary, setInLibrary] = useState(false);
   const [libraryLoading, setLibraryLoading] = useState(false);
+  const [toast, setToast] = useState<{ message: string; variant: "success" | "error" } | null>(null);
 
   useEffect(() => {
     if (!book || !isAuthenticated) return;
@@ -51,11 +53,15 @@ export default function BookDetailPage() {
       if (inLibrary) {
         await api.delete(`/api/v1/library/${book._id}`);
         setInLibrary(false);
+        setToast({ message: "Removed from library", variant: "success" });
       } else {
         await api.post(`/api/v1/library/${book._id}`);
         setInLibrary(true);
+        setToast({ message: "Added to library", variant: "success" });
       }
-    } catch {}
+    } catch {
+      setToast({ message: "Failed to update library", variant: "error" });
+    }
     setLibraryLoading(false);
   }
 
@@ -217,13 +223,13 @@ export default function BookDetailPage() {
                 {libraryLoading ? "Updating..." : inLibrary ? "In Library" : "Add to Library"}
               </button>
             ) : (
-              <a
+              <Link
                 href="/login"
                 className="flex items-center justify-center gap-3 px-8 py-4 border-2 border-neutral-200 dark:border-neutral-700 hover:border-primary/50 hover:bg-primary/5 text-neutral-700 dark:text-neutral-200 hover:text-primary rounded-lg font-semibold transition-all"
               >
                 <span className="material-icons">bookmark_add</span>
                 Add to Library
-              </a>
+              </Link>
             )}
           </div>
         </div>
@@ -255,6 +261,15 @@ export default function BookDetailPage() {
       )}
 
       <ReviewsSection bookId={book._id} />
+
+      {toast && (
+        <Toast
+          message={toast.message}
+          variant={toast.variant}
+          open={!!toast}
+          onClose={() => setToast(null)}
+        />
+      )}
     </main>
   );
 }

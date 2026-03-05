@@ -145,19 +145,13 @@ export function RegisterForm() {
                 />
                 <span className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
                     I agree to the{" "}
-                    <a
-                        href="#"
-                        className="text-primary hover:underline font-medium"
-                    >
+                    <span className="text-primary font-medium">
                         Terms of Service
-                    </a>{" "}
+                    </span>{" "}
                     and{" "}
-                    <a
-                        href="#"
-                        className="text-primary hover:underline font-medium"
-                    >
+                    <span className="text-primary font-medium">
                         Privacy Policy
-                    </a>
+                    </span>
                 </span>
             </label>
 

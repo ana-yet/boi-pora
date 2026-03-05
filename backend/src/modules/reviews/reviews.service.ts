@@ -60,10 +60,6 @@ export class ReviewsService {
     if (flagged === 'true') filter.flagged = true;
     if (rating && rating >= 1 && rating <= 5) filter.rating = rating;
 
-    const query = this.reviewModel.find(filter)
-      .populate('userId', 'email name')
-      .populate('bookId', 'title slug author');
-
     if (search?.trim()) {
       const regex = new RegExp(this.escapeRegex(search.trim()), 'i');
       filter.$or = [{ content: regex }];
