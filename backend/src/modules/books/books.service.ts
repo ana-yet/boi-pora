@@ -9,6 +9,10 @@ import { UpdateBookDto } from './dto/update-book.dto';
 export class BooksService {
   constructor(@InjectModel(Book.name) private bookModel: Model<BookDocument>) {}
 
+  private escapeRegex(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
   async findAll(
     page = 1,
     limit = 20,
@@ -16,6 +20,7 @@ export class BooksService {
     status?: string,
     sort?: string,
   ) {
+    limit = Math.min(limit, 100);
     const filter: Record<string, unknown> = {};
     if (category) filter.category = category;
     if (status) filter.status = status;
@@ -44,13 +49,13 @@ export class BooksService {
   }
 
   async search(q: string, limit = 20) {
+    limit = Math.min(limit, 100);
     if (!q || q.trim().length === 0) {
       return this.bookModel.find().sort({ title: 1 }).limit(limit).lean().exec();
     }
 
     const trimmed = q.trim();
 
-    // Use text index for multi-word queries (faster, scored)
     if (trimmed.includes(' ') || trimmed.length >= 3) {
       const textResults = await this.bookModel
         .find(
@@ -64,8 +69,8 @@ export class BooksService {
       if (textResults.length > 0) return textResults;
     }
 
-    // Fallback to regex for short queries or when text search yields nothing
-    const regex = new RegExp(trimmed, 'i');
+    const escaped = this.escapeRegex(trimmed);
+    const regex = new RegExp(escaped, 'i');
     return this.bookModel
       .find({
         $or: [

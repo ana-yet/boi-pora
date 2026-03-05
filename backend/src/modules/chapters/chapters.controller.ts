@@ -15,6 +15,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Public } from '../../common/decorators/public.decorator';
+import { UserRole } from '../../common/enums';
 
 @Controller('api/v1/chapters')
 export class ChaptersController {
@@ -42,21 +43,21 @@ export class ChaptersController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
+  @Roles(UserRole.ADMIN)
   @Post()
   create(@Body() dto: CreateChapterDto) {
     return this.chaptersService.create(dto);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
+  @Roles(UserRole.ADMIN)
   @Put(':id')
   update(@Param('id') id: string, @Body() dto: UpdateChapterDto) {
     return this.chaptersService.update(id, dto);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
+  @Roles(UserRole.ADMIN)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.chaptersService.remove(id);

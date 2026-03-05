@@ -2,16 +2,8 @@
 
 import useSWR from "swr";
 import { api } from "../api";
-
-export interface Chapter {
-  _id: string;
-  bookId: string;
-  chapterNumber: number;
-  chapterId: string;
-  title: string;
-  content: string;
-  wordCount?: number;
-}
+import type { Chapter } from "../types";
+export type { Chapter } from "../types";
 
 export function useChapters(bookId: string | null) {
   const { data, error, isLoading } = useSWR<Chapter[]>(

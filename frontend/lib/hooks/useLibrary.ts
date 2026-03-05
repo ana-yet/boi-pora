@@ -2,29 +2,8 @@
 
 import useSWR from "swr";
 import { api } from "../api";
-
-export interface LibraryBookRef {
-  _id: string;
-  title: string;
-  slug: string;
-  author: string;
-  coverImageUrl?: string;
-  category?: string;
-}
-
-export interface LibraryItem {
-  _id: string;
-  bookId: LibraryBookRef;
-  status?: string;
-  addedAt?: string;
-}
-
-export interface LibraryResponse {
-  items: LibraryItem[];
-  total: number;
-  page: number;
-  limit: number;
-}
+import type { LibraryResponse } from "../types";
+export type { LibraryBookRef, LibraryItem, LibraryResponse } from "../types";
 
 const fetcher = (url: string) => api.get<LibraryResponse>(url);
 

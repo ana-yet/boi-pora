@@ -2,30 +2,8 @@
 
 import useSWR from "swr";
 import { api } from "../api";
-
-export interface ApiBook {
-  _id: string;
-  title: string;
-  slug: string;
-  author: string;
-  description?: string;
-  coverImageUrl?: string;
-  category?: string;
-  language?: string;
-  genres?: string[];
-  pageCount?: number;
-  estimatedReadTimeMinutes?: number;
-  rating?: number;
-  ratingCount?: number;
-  status?: string;
-}
-
-interface BooksResponse {
-  items: ApiBook[];
-  total: number;
-  page: number;
-  limit: number;
-}
+import type { BooksResponse } from "../types";
+export type { ApiBook, BooksResponse } from "../types";
 
 const fetcher = (url: string) => api.get<BooksResponse>(url);
 

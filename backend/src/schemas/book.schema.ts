@@ -1,29 +1,30 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
+import { BookStatus } from '../common/enums';
 
 export type BookDocument = Book & Document;
 
 @Schema({ timestamps: true })
 export class Book {
-  @Prop({ required: true })
+  @Prop({ required: true, maxlength: 500 })
   title: string;
 
-  @Prop({ required: true, unique: true })
+  @Prop({ required: true, unique: true, maxlength: 500 })
   slug: string;
 
-  @Prop({ required: true })
+  @Prop({ required: true, maxlength: 200 })
   author: string;
 
   @Prop({ type: [String] })
   authors?: string[];
 
-  @Prop()
+  @Prop({ maxlength: 5000 })
   description?: string;
 
-  @Prop()
+  @Prop({ maxlength: 2000 })
   coverImageUrl?: string;
 
-  @Prop()
+  @Prop({ maxlength: 100 })
   category?: string;
 
   @Prop({ type: [String] })
@@ -41,11 +42,11 @@ export class Book {
   @Prop({ default: 0 })
   ratingCount: number;
 
-  @Prop({ required: true, default: 'en' })
+  @Prop({ required: true, default: 'en', maxlength: 10 })
   language: string;
 
-  @Prop({ default: 'published' })
-  status: string;
+  @Prop({ type: String, enum: BookStatus, default: BookStatus.PUBLISHED })
+  status: BookStatus;
 }
 
 export const BookSchema = SchemaFactory.createForClass(Book);

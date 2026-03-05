@@ -4,10 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const sidebarLinks = [
-    { label: "ড্যাশবোর্ড", href: "/dashboard", icon: "🏠" },
-    { label: "আমার বই", href: "/dashboard/my-books", icon: "📚" },
-    { label: "পছন্দ তালিকা", href: "/dashboard/favorites", icon: "❤️" },
-    { label: "সেটিংস", href: "/dashboard/settings", icon: "⚙️" },
+    { label: "এক্সপ্লোর", href: "/explore", icon: "🔍" },
+    { label: "আমার লাইব্রেরি", href: "/library", icon: "📚" },
+    { label: "প্রোফাইল", href: "/profile", icon: "👤" },
 ];
 
 export function Sidebar() {
@@ -15,7 +14,6 @@ export function Sidebar() {
 
     return (
         <aside className="hidden lg:flex flex-col w-64 border-r border-border bg-surface min-h-screen sticky top-0">
-            {/* Logo */}
             <div className="h-16 flex items-center px-6 border-b border-border">
                 <Link href="/" className="flex items-center gap-2">
                     <span className="text-xl">📖</span>
@@ -23,10 +21,9 @@ export function Sidebar() {
                 </Link>
             </div>
 
-            {/* Navigation */}
             <nav className="flex-1 py-6 px-3 space-y-1">
                 {sidebarLinks.map((link) => {
-                    const isActive = pathname === link.href;
+                    const isActive = pathname === link.href || pathname.startsWith(link.href + "/");
                     return (
                         <Link
                             key={link.href}
@@ -42,14 +39,6 @@ export function Sidebar() {
                     );
                 })}
             </nav>
-
-            {/* Bottom */}
-            <div className="p-4 border-t border-border">
-                <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-error hover:bg-error/10 transition-colors">
-                    <span className="text-lg">🚪</span>
-                    <span>লগ আউট</span>
-                </button>
-            </div>
         </aside>
     );
 }

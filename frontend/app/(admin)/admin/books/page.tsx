@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useBooks, type ApiBook } from "@/lib/hooks/useBooks";
+import { useBooks } from "@/lib/hooks/useBooks";
+import type { ApiBook } from "@/lib/types";
 import { getLanguageLabel } from "@/lib/constants";
 import { Button } from "@/app/components/ui/Button";
 

@@ -1,4 +1,4 @@
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsNumber, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class UpdateChapterDto {
   @IsOptional()
@@ -7,14 +7,17 @@ export class UpdateChapterDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(200)
   chapterId?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(500)
   title?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(500000)
   content?: string;
 
   @IsOptional()

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
+import { twMerge } from "tailwind-merge";
 
 interface ModalProps {
     open: boolean;
@@ -17,6 +18,8 @@ export function Modal({
     children,
     className = "",
 }: ModalProps) {
+    const dialogRef = useRef<HTMLDivElement>(null);
+
     useEffect(() => {
         if (!open) return;
         const handleEscape = (e: KeyboardEvent) => {
@@ -24,6 +27,38 @@ export function Modal({
         };
         document.addEventListener("keydown", handleEscape);
         document.body.style.overflow = "hidden";
+
+        const dialog = dialogRef.current;
+        if (dialog) {
+            const focusable = dialog.querySelectorAll<HTMLElement>(
+                'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+            );
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            first?.focus();
+
+            const trapFocus = (e: KeyboardEvent) => {
+                if (e.key !== "Tab") return;
+                if (e.shiftKey) {
+                    if (document.activeElement === first) {
+                        e.preventDefault();
+                        last?.focus();
+                    }
+                } else {
+                    if (document.activeElement === last) {
+                        e.preventDefault();
+                        first?.focus();
+                    }
+                }
+            };
+            dialog.addEventListener("keydown", trapFocus);
+            return () => {
+                document.removeEventListener("keydown", handleEscape);
+                document.body.style.overflow = "";
+                dialog.removeEventListener("keydown", trapFocus);
+            };
+        }
+
         return () => {
             document.removeEventListener("keydown", handleEscape);
             document.body.style.overflow = "";
@@ -44,7 +79,11 @@ export function Modal({
                 onClick={onClose}
             />
             <div
-                className={`relative z-10 w-full max-w-md rounded-2xl bg-white dark:bg-surface-dark shadow-xl border border-neutral-200 dark:border-neutral-800 max-h-[90vh] flex flex-col ${className}`}
+                ref={dialogRef}
+                className={twMerge(
+                    "relative z-10 w-full max-w-md rounded-2xl bg-white dark:bg-surface-dark shadow-xl border border-neutral-200 dark:border-neutral-800 max-h-[90vh] flex flex-col",
+                    className
+                )}
                 onClick={(e) => e.stopPropagation()}
             >
                 {title && (
@@ -61,7 +100,7 @@ export function Modal({
                             className="p-2 rounded-lg text-neutral-500 hover:text-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-800 dark:hover:text-white transition-colors"
                             aria-label="Close"
                         >
-                            <span className="material-icons text-xl">close</span>
+                            <span className="material-icons text-xl" aria-hidden="true">close</span>
                         </button>
                     </div>
                 )}

@@ -1,8 +1,7 @@
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength, IsMongoId } from 'class-validator';
 
 export class CreateChapterDto {
-  @IsString()
-  @IsNotEmpty()
+  @IsMongoId()
   bookId!: string;
 
   @IsNumber()
@@ -10,14 +9,17 @@ export class CreateChapterDto {
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(200)
   chapterId!: string;
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(500)
   title!: string;
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(500000)
   content!: string;
 
   @IsOptional()

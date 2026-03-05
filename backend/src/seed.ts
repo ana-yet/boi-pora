@@ -4,10 +4,13 @@
  */
 import mongoose from 'mongoose';
 import * as bcrypt from 'bcryptjs';
+import { config } from 'dotenv';
+config();
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/boi-pora';
+const MONGODB_URI = process.env.MONGODB_URI;
 
 async function seed() {
+  if (!MONGODB_URI) throw new Error('MONGODB_URI is not set');
   await mongoose.connect(MONGODB_URI);
   const db = mongoose.connection.db;
   if (!db) throw new Error('DB not connected');
@@ -18,7 +21,8 @@ async function seed() {
     process.exit(0);
     return;
   }
-  const hash = await bcrypt.hash('admin123', 12);
+  const adminPassword = process.env.ADMIN_SEED_PASSWORD || 'admin@anayet';
+  const hash = await bcrypt.hash(adminPassword, 12);
   await users.insertOne({
     email: 'admin@boipora.com',
     passwordHash: hash,
@@ -29,7 +33,7 @@ async function seed() {
     createdAt: new Date(),
     updatedAt: new Date(),
   });
-  console.log('Admin user created: admin@boipora.com / admin123');
+  console.log('Admin user created: admin@boipora.com (password from env ADMIN_SEED_PASSWORD or default)');
   process.exit(0);
 }
 

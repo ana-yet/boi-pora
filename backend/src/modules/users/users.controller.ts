@@ -15,18 +15,20 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { UserRole } from '../../common/enums';
 
 @Controller('api/v1/admin/users')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('admin')
+@Roles(UserRole.ADMIN)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
   findAll(@Query('page') page?: string, @Query('limit') limit?: string) {
+    const parsedLimit = Math.min(parseInt(limit ?? '20', 10) || 20, 100);
     return this.usersService.findAll(
-      page ? parseInt(page, 10) : 1,
-      limit ? parseInt(limit, 10) : 20,
+      parseInt(page ?? '1', 10) || 1,
+      parsedLimit,
     );
   }
 

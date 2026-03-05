@@ -1,13 +1,14 @@
-import type { Metadata } from "next";
+"use client";
+
+import { useState } from "react";
 import { SearchBar } from "../_components/SearchBar";
 import { BookGrid } from "../_components/BookGrid";
-
-export const metadata: Metadata = {
-    title: "Trending",
-    description: "Trending books this week. See what others are reading.",
-};
+import type { ViewMode } from "../_components/ViewToggle";
 
 export default function TrendingPage() {
+    const [searchQuery, setSearchQuery] = useState("");
+    const [viewMode, setViewMode] = useState<ViewMode>("grid");
+
     return (
         <>
             <header className="flex-shrink-0 px-8 pt-8 pb-4 bg-background-light dark:bg-background-dark z-10">
@@ -21,19 +22,20 @@ export default function TrendingPage() {
                                 Most popular books this week.
                             </p>
                         </div>
-                        <button className="md:hidden p-2 text-neutral-600 dark:text-neutral-300">
-                            <span className="material-icons text-3xl">
-                                menu
-                            </span>
-                        </button>
                     </div>
-                    <SearchBar />
+                    <SearchBar query={searchQuery} onQueryChange={setSearchQuery} />
                 </div>
             </header>
 
             <div className="flex-1 overflow-y-auto px-8 pb-12">
                 <div className="max-w-7xl mx-auto">
-                    <BookGrid sort="rating" title="Trending books" />
+                    <BookGrid
+                        sort="rating"
+                        title="Trending books"
+                        searchQuery={searchQuery}
+                        viewMode={viewMode}
+                        onViewChange={setViewMode}
+                    />
                 </div>
             </div>
         </>

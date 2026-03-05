@@ -2,22 +2,8 @@
 
 import useSWR from "swr";
 import { api } from "../api";
-
-export interface ApiBook {
-  _id: string;
-  title: string;
-  slug: string;
-  author: string;
-  description?: string;
-  coverImageUrl?: string;
-  category?: string;
-  language?: string;
-  genres?: string[];
-  pageCount?: number;
-  estimatedReadTimeMinutes?: number;
-  rating?: number;
-  ratingCount?: number;
-}
+import type { ApiBook } from "../types";
+export type { ApiBook } from "../types";
 
 export function useBookBySlug(slug: string | null) {
   const { data, error, isLoading, mutate } = useSWR<ApiBook>(

@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import { LibraryItemStatus } from '../common/enums';
 
 export type LibraryItemDocument = LibraryItem & Document;
 
@@ -11,8 +12,8 @@ export class LibraryItem {
   @Prop({ type: Types.ObjectId, ref: 'Book', required: true })
   bookId: Types.ObjectId;
 
-  @Prop({ default: 'saved' })
-  status: string;
+  @Prop({ type: String, enum: LibraryItemStatus, default: LibraryItemStatus.SAVED })
+  status: LibraryItemStatus;
 
   @Prop()
   addedAt?: Date;

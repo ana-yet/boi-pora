@@ -5,15 +5,25 @@ import { Model } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
 import { User, UserDocument } from '../../schemas/user.schema';
+import { UserRole } from '../../common/enums';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 
 @Injectable()
 export class AuthService {
+  private readonly REFRESH_EXPIRES_IN = '30d';
+
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     private jwtService: JwtService,
   ) {}
+
+  private generateTokens(userId: string, email: string, role: UserRole) {
+    const payload = { sub: userId, email, role };
+    const accessToken = this.jwtService.sign(payload);
+    const refreshToken = this.jwtService.sign(payload, { expiresIn: this.REFRESH_EXPIRES_IN });
+    return { accessToken, refreshToken };
+  }
 
   async register(dto: RegisterDto) {
     const existing = await this.userModel.findOne({ email: dto.email }).exec();
@@ -25,14 +35,13 @@ export class AuthService {
       email: dto.email,
       passwordHash: hash,
       name: dto.name,
-      role: 'user',
+      role: UserRole.USER,
       authProvider: 'local',
       isVerified: false,
     });
-    const payload = { sub: user._id.toString(), email: user.email, role: user.role };
-    const accessToken = this.jwtService.sign(payload);
+    const tokens = this.generateTokens(user._id.toString(), user.email, user.role);
     return {
-      accessToken,
+      ...tokens,
       user: {
         id: user._id.toString(),
         email: user.email,
@@ -43,7 +52,7 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    const user = await this.userModel.findOne({ email: dto.email }).exec();
+    const user = await this.userModel.findOne({ email: dto.email }).select('+passwordHash').exec();
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -51,10 +60,9 @@ export class AuthService {
     if (!isMatch) {
       throw new UnauthorizedException('Invalid credentials');
     }
-    const payload = { sub: user._id.toString(), email: user.email, role: user.role };
-    const accessToken = this.jwtService.sign(payload);
+    const tokens = this.generateTokens(user._id.toString(), user.email, user.role);
     return {
-      accessToken,
+      ...tokens,
       user: {
         id: user._id.toString(),
         email: user.email,
@@ -64,11 +72,24 @@ export class AuthService {
     };
   }
 
+  async refreshToken(refreshTokenStr: string) {
+    try {
+      const payload = this.jwtService.verify(refreshTokenStr);
+      const user = await this.userModel.findById(payload.sub).lean().exec();
+      if (!user) throw new UnauthorizedException('User not found');
+      const tokens = this.generateTokens(user._id.toString(), user.email, user.role);
+      return tokens;
+    } catch {
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
+  }
+
   async forgotPassword(email: string) {
-    const user = await this.userModel.findOne({ email }).exec();
+    const user = await this.userModel.findOne({ email }).select('+resetPasswordToken +resetPasswordExpires').exec();
     if (!user) return { message: 'If an account exists, a reset link has been sent.' };
     const token = crypto.randomBytes(32).toString('hex');
-    user.resetPasswordToken = token;
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    user.resetPasswordToken = hashedToken;
     user.resetPasswordExpires = new Date(Date.now() + 3600000);
     await user.save();
     // TODO: Send email with reset link
@@ -77,10 +98,11 @@ export class AuthService {
   }
 
   async resetPassword(token: string, newPassword: string) {
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
     const user = await this.userModel.findOne({
-      resetPasswordToken: token,
+      resetPasswordToken: hashedToken,
       resetPasswordExpires: { $gt: new Date() },
-    }).exec();
+    }).select('+resetPasswordToken +resetPasswordExpires +passwordHash').exec();
     if (!user) throw new UnauthorizedException('Invalid or expired reset token');
     user.passwordHash = await bcrypt.hash(newPassword, 12);
     user.resetPasswordToken = undefined;
@@ -90,7 +112,7 @@ export class AuthService {
   }
 
   async me(userId: string) {
-    const user = await this.userModel.findById(userId).select('-passwordHash').lean().exec();
+    const user = await this.userModel.findById(userId).lean().exec();
     if (!user) {
       throw new UnauthorizedException('User not found');
     }

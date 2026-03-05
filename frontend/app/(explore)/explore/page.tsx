@@ -1,11 +1,12 @@
 "use client";
 
-import { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { SearchBar } from "./_components/SearchBar";
 import { MoodFilter } from "./_components/MoodFilter";
 import { BookGrid } from "./_components/BookGrid";
 import { ComingSoonBanner } from "./_components/ComingSoonBanner";
+import type { ViewMode } from "./_components/ViewToggle";
 
 const CATEGORY_LABELS: Record<string, string> = {
   fiction: "Fiction",
@@ -18,8 +19,19 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 function ExploreContent() {
     const searchParams = useSearchParams();
+    const router = useRouter();
     const category = searchParams.get("category") || undefined;
     const categoryLabel = category ? CATEGORY_LABELS[category] || category : undefined;
+
+    const [searchQuery, setSearchQuery] = useState("");
+    const [viewMode, setViewMode] = useState<ViewMode>("grid");
+
+    const handleMoodChange = (mood: string | undefined) => {
+        const params = new URLSearchParams();
+        if (mood) params.set("category", mood);
+        const qs = params.toString();
+        router.push(qs ? `/explore?${qs}` : "/explore");
+    };
 
     return (
         <>
@@ -36,20 +48,21 @@ function ExploreContent() {
                                     : "Explore over 10,000+ titles curated for focus and flow."}
                             </p>
                         </div>
-                        <button className="md:hidden p-2 text-neutral-600 dark:text-neutral-300">
-                            <span className="material-icons text-3xl">
-                                menu
-                            </span>
-                        </button>
                     </div>
-                    <SearchBar />
+                    <SearchBar query={searchQuery} onQueryChange={setSearchQuery} />
                 </div>
             </header>
 
             <div className="flex-1 overflow-y-auto px-8 pb-12">
                 <div className="max-w-7xl mx-auto space-y-10">
-                    <MoodFilter />
-                    <BookGrid category={category} title={categoryLabel ? `${categoryLabel} Books` : "Recommended for you"} />
+                    <MoodFilter activeMood={category} onMoodChange={handleMoodChange} />
+                    <BookGrid
+                        category={category}
+                        title={categoryLabel ? `${categoryLabel} Books` : "Recommended for you"}
+                        searchQuery={searchQuery}
+                        viewMode={viewMode}
+                        onViewChange={setViewMode}
+                    />
                     <ComingSoonBanner />
                 </div>
             </div>
