@@ -21,14 +21,14 @@ interface PanelColors {
 
 const PANEL_COLORS: Record<ReaderTheme, PanelColors> = {
     light: {
-        bg: "#ffffff",
-        headerBg: "#f5f5f5",
-        border: "#e5e5e5",
-        controlBg: "#f0f0f0",
-        controlActiveBg: "#ffffff",
-        text: "#1a1a1a",
-        muted: "#888888",
-        trackBg: "#ddd",
+        bg: "#fdfbf9",
+        headerBg: "#f3eee9",
+        border: "#e5ddd5",
+        controlBg: "#f3eee9",
+        controlActiveBg: "#fdfbf9",
+        text: "#4a4036",
+        muted: "#8c8075",
+        trackBg: "#e5ddd5",
     },
     dark: {
         bg: "#242424",
@@ -224,7 +224,7 @@ function SectionLabel({ text, muted }: { text: string; muted: string }) {
 }
 
 const THEME_OPTIONS: { id: ReaderTheme; label: string; swatchBg: string; swatchBorder: string }[] = [
-    { id: "light", label: "Light", swatchBg: "#ffffff", swatchBorder: "#ccc" },
+    { id: "light", label: "Light", swatchBg: "#f8f7f6", swatchBorder: "#d5cdc5" },
     { id: "dark", label: "Dark", swatchBg: "#141414", swatchBorder: "#555" },
     { id: "sepia", label: "Sepia", swatchBg: "#f5e6c8", swatchBorder: "#c4a870" },
 ];

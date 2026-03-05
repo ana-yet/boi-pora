@@ -99,14 +99,14 @@ export default function ReaderPage() {
       currentChapterId={chapterId}
       chapters={sortedChapters}
     >
-      <header style={{ marginBottom: "2em", textAlign: "center" }}>
-        <span className="text-primary/70 font-display font-bold tracking-widest uppercase block" style={{ fontSize: "0.65em", marginBottom: "0.8em" }}>
+      <header className="mb-12 text-center">
+        <span className="text-primary/70 font-display text-sm font-bold tracking-widest uppercase mb-4 block">
           Chapter {getOrdinal(chapter.chapterNumber)}
         </span>
-        <h2 style={{ fontSize: "1.8em", fontWeight: 700, lineHeight: 1.25 }}>
+        <h2 className="font-serif-reading text-3xl md:text-4xl font-bold leading-snug">
           {chapter.title}
         </h2>
-        <div className="bg-primary/30 mx-auto rounded-full" style={{ marginTop: "0.8em", width: "3em", height: "2px" }} />
+        <div className="mt-4 w-12 h-0.5 bg-primary/30 mx-auto rounded-full" />
       </header>
 
       {useMarkdown ? (

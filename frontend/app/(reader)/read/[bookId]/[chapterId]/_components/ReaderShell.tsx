@@ -71,11 +71,11 @@ interface ThemeColors {
 
 const COLORS: Record<ReaderTheme, ThemeColors> = {
     light: {
-        bg: "#ffffff",
-        text: "#1a1a1a",
-        muted: "#888888",
-        headerBg: "rgba(255,255,255,0.97)",
-        border: "#e5e5e5",
+        bg: "#f8f7f6",
+        text: "#4a4036",
+        muted: "#8c8075",
+        headerBg: "rgba(248,247,246,0.97)",
+        border: "#e5ddd5",
     },
     dark: {
         bg: "#141414",
@@ -154,12 +154,21 @@ export function ReaderShell({
         color: c.text,
     };
 
-    const contentStyle: CSSProperties = {
-        fontSize: `${settings.fontSize}px`,
-        lineHeight: SPACING_MAP[settings.spacing],
-        fontFamily: FONT_MAP[settings.font],
-        color: c.text,
-    };
+    const settingsCSS = `
+        .boi-reader-article {
+            font-size: ${settings.fontSize}px;
+            font-family: ${FONT_MAP[settings.font]};
+            color: ${c.text};
+        }
+        .boi-reader-article p,
+        .boi-reader-article li,
+        .boi-reader-article td,
+        .boi-reader-article th,
+        .boi-reader-article blockquote,
+        .boi-reader-article figcaption {
+            line-height: ${SPACING_MAP[settings.spacing]} !important;
+        }
+    `;
 
     if (!mounted) {
         return (
@@ -171,6 +180,8 @@ export function ReaderShell({
 
     return (
         <div style={wrapperStyle} className="antialiased overflow-x-hidden">
+            <style>{settingsCSS}</style>
+
             {/* Top Bar */}
             <header
                 style={headerStyle}
@@ -217,8 +228,7 @@ export function ReaderShell({
             {/* Reading Area */}
             <main className="relative min-h-screen pt-24 pb-28 flex justify-center">
                 <article
-                    className="w-full max-w-[640px] px-6 md:px-0"
-                    style={contentStyle}
+                    className="boi-reader-article w-full max-w-[640px] px-6 md:px-0 overflow-hidden wrap-break-word"
                 >
                     {children}
                 </article>

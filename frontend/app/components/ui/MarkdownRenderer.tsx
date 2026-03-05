@@ -40,6 +40,8 @@ export function MarkdownRenderer({ content, className = "" }: MarkdownRendererPr
     <div
       className={`prose max-w-none
         prose-headings:font-bold prose-headings:leading-tight
+        prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl
+        prose-p:mb-6 prose-p:leading-relaxed
         prose-a:no-underline hover:prose-a:underline
         prose-blockquote:border-l-primary prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r-lg
         prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none

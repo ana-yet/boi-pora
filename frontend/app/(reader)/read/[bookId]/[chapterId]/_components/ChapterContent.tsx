@@ -27,7 +27,7 @@ export function ChapterContent({
                     <span className="text-primary/70 font-display text-sm font-bold tracking-widest uppercase mb-4 block">
                         {chapterNumber}
                     </span>
-                    <h2 style={{ fontSize: "2em", fontWeight: 700, lineHeight: 1.25 }}>
+                    <h2 className="font-serif-reading text-3xl md:text-4xl font-bold leading-snug">
                         {chapterTitle}
                     </h2>
                 </header>
@@ -61,23 +61,19 @@ function ParagraphBlock({
     return (
         <>
             <p
-                style={{
-                    marginBottom: "1.2em",
-                    overflowWrap: "anywhere",
-                    wordBreak: "break-word",
-                }}
-                className={
+                className={`mb-6 leading-relaxed ${
                     isFirst
                         ? "first-letter:text-[2.8em] first-letter:font-bold first-letter:text-primary first-letter:mr-1.5 first-letter:float-left first-letter:leading-[0.85]"
                         : ""
-                }
+                }`}
+                style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}
             >
                 {text}
             </p>
 
             {illustration && (
-                <figure style={{ margin: "2.5em 0" }}>
-                    <div className="w-full h-64 rounded-xl overflow-hidden relative flex items-center justify-center" style={{ background: "linear-gradient(135deg, rgba(236,127,19,0.05), rgba(236,127,19,0.15))" }}>
+                <figure className="my-10">
+                    <div className="w-full h-64 bg-linear-to-br from-primary/5 to-primary/20 rounded-xl overflow-hidden relative flex items-center justify-center">
                         <img
                             alt={illustration.alt}
                             className="w-full h-full object-cover opacity-80 mix-blend-overlay hover:scale-105 transition-transform duration-700"
@@ -85,7 +81,7 @@ function ParagraphBlock({
                             src={illustration.src}
                         />
                     </div>
-                    <figcaption className="text-center opacity-50 italic font-display" style={{ fontSize: "0.8em", marginTop: "0.75em" }}>
+                    <figcaption className="text-center text-sm opacity-50 mt-3 italic font-display">
                         {illustration.caption}
                     </figcaption>
                 </figure>

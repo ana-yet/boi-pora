@@ -20,7 +20,7 @@ interface TOCColors {
 }
 
 const TOC_COLORS: Record<ReaderTheme, TOCColors> = {
-  light: { bg: "#ffffff", border: "#e5e5e5", text: "#333333", muted: "#aaaaaa", hoverBg: "#f5f5f5", activeBg: "rgba(236,127,19,0.1)" },
+  light: { bg: "#fdfbf9", border: "#e5ddd5", text: "#4a4036", muted: "#8c8075", hoverBg: "#f3eee9", activeBg: "rgba(236,127,19,0.1)" },
   dark: { bg: "#1c1c1c", border: "#3a3a3a", text: "#cccccc", muted: "#666666", hoverBg: "#262626", activeBg: "rgba(236,127,19,0.15)" },
   sepia: { bg: "#faf0d7", border: "#d4be94", text: "#4a3824", muted: "#8a7560", hoverBg: "#f0e2c4", activeBg: "rgba(236,127,19,0.1)" },
 };
