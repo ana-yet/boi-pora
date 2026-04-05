@@ -61,12 +61,11 @@ function ParagraphBlock({
     return (
         <>
             <p
-                className={`mb-6 leading-relaxed ${
+                className={`mb-0 ${
                     isFirst
-                        ? "first-letter:text-[2.8em] first-letter:font-bold first-letter:text-primary first-letter:mr-1.5 first-letter:float-left first-letter:leading-[0.85]"
+                        ? "first-letter:text-[3.2em] first-letter:font-bold first-letter:text-primary first-letter:mr-3 first-letter:float-left first-letter:leading-[0.9] first-letter:mt-[-0.05em]"
                         : ""
                 }`}
-                style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}
             >
                 {text}
             </p>
