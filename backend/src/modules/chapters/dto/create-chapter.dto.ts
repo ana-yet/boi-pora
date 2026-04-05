@@ -19,7 +19,6 @@ export class CreateChapterDto {
 
   @IsString()
   @IsNotEmpty()
-  @MaxLength(500000)
   content!: string;
 
   @IsOptional()
