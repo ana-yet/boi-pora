@@ -182,6 +182,23 @@ export function SettingsPanel({ settings, onChange, onClose }: SettingsPanelProp
                         </div>
                     </section>
 
+                    <p
+                        style={{ color: pc.muted, borderColor: pc.border, backgroundColor: pc.controlBg }}
+                        className="text-[11px] leading-snug rounded-xl border px-3 py-2.5"
+                    >
+                        In the chapter body, tap a <strong className="font-semibold" style={{ color: pc.text }}>word</strong> (not a link) to translate. Set{" "}
+                        <code className="text-[10px] px-1 rounded bg-black/5 dark:bg-white/10">LANGBLY_API_KEY</code> on the server (
+                        <a
+                            href="https://langbly.com/docs/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="underline underline-offset-2 hover:text-primary"
+                        >
+                            Langbly
+                        </a>
+                        ).
+                    </p>
+
                     {/* Line Spacing */}
                     <section>
                         <SectionLabel text="Line Spacing" muted={pc.muted} />
