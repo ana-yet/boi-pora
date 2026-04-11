@@ -11,7 +11,6 @@ import { extractChapterSectionHeadings, type MarkdownSectionHeading } from "@/li
 import { splitContent } from "@/lib/chapter-read-utils";
 import { ChapterMarkdown } from "./ChapterMarkdown";
 import { ChapterContent } from "./ChapterContent";
-import { ReaderInlineTranslate, type InlineTranslatePalette } from "./ReaderInlineTranslate";
 
 export type ReaderTheme = "light" | "dark" | "sepia";
 export type ReaderFont = "serif" | "sans" | "mono";
@@ -110,30 +109,6 @@ interface ThemeColors {
     headerBg: string;
     border: string;
 }
-
-const INLINE_TRANSLATE_PALETTE: Record<ReaderTheme, InlineTranslatePalette> = {
-    light: {
-        bg: "#fdfbf9",
-        border: "#e5ddd5",
-        text: "#2c2c2c",
-        muted: "#8c8075",
-        cardBg: "#f3eee9",
-    },
-    dark: {
-        bg: "#242424",
-        border: "#3a3a3a",
-        text: "#e0e0e0",
-        muted: "#808080",
-        cardBg: "#1c1c1c",
-    },
-    sepia: {
-        bg: "#faf0d7",
-        border: "#d4be94",
-        text: "#433422",
-        muted: "#8a7560",
-        cardBg: "#f0e2c4",
-    },
-};
 
 const COLORS: Record<ReaderTheme, ThemeColors> = {
     light: {
@@ -528,20 +503,18 @@ export function ReaderShell({
                                 <div className="h-px w-16 bg-linear-to-r from-transparent via-primary/40 to-transparent rounded-full" />
                             </div>
                         </header>
-                        <ReaderInlineTranslate palette={INLINE_TRANSLATE_PALETTE[settings.theme]}>
-                            {chapterArticle.isMarkdown ? (
-                                <ChapterMarkdown content={chapterArticle.content} />
-                            ) : (
-                                <div className="mx-auto w-full max-w-[min(42rem,100%)]">
-                                    <ChapterContent
-                                        chapterNumber={chapterArticle.plainChapterNumberLabel}
-                                        chapterTitle={chapterArticle.chapterTitle}
-                                        paragraphs={splitContent(chapterArticle.content)}
-                                        hideHeader
-                                    />
-                                </div>
-                            )}
-                        </ReaderInlineTranslate>
+                        {chapterArticle.isMarkdown ? (
+                            <ChapterMarkdown content={chapterArticle.content} />
+                        ) : (
+                            <div className="mx-auto w-full max-w-[min(42rem,100%)]">
+                                <ChapterContent
+                                    chapterNumber={chapterArticle.plainChapterNumberLabel}
+                                    chapterTitle={chapterArticle.chapterTitle}
+                                    paragraphs={splitContent(chapterArticle.content)}
+                                    hideHeader
+                                />
+                            </div>
+                        )}
                     </>
                 </article>
 

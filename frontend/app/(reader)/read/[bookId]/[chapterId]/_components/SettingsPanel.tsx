@@ -182,19 +182,6 @@ export function SettingsPanel({ settings, onChange, onClose }: SettingsPanelProp
                         </div>
                     </section>
 
-                    <p
-                        style={{ color: pc.muted, borderColor: pc.border, backgroundColor: pc.controlBg }}
-                        className="text-[11px] leading-snug rounded-xl border px-3 py-2.5"
-                    >
-                        In the chapter body, tap a <strong className="font-semibold" style={{ color: pc.text }}>word</strong> (not a link) to open translation — then choose{" "}
-                        <strong className="font-semibold" style={{ color: pc.text }}>Translate word</strong> or{" "}
-                        <strong className="font-semibold" style={{ color: pc.text }}>Translate sentence</strong>. Translations go through your server (default:{" "}
-                        <a href="https://github.com/thedaviddelta/lingva-translate" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-primary">
-                            Lingva
-                        </a>
-                        ).
-                    </p>
-
                     {/* Line Spacing */}
                     <section>
                         <SectionLabel text="Line Spacing" muted={pc.muted} />
