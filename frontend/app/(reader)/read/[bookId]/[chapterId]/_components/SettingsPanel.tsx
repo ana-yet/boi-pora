@@ -1,11 +1,12 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import type {
-    ReaderSettings,
-    ReaderTheme,
-    ReaderFont,
-    ReaderSpacing,
+import {
+    READER_SETTINGS_DEFAULTS,
+    type ReaderSettings,
+    type ReaderTheme,
+    type ReaderFont,
+    type ReaderSpacing,
 } from "./ReaderShell";
 
 interface PanelColors {
@@ -72,14 +73,18 @@ export function SettingsPanel({ settings, onChange, onClose }: SettingsPanelProp
 
     return (
         <>
-            <div className="fixed inset-0 z-30" onClick={onClose} />
+            <div
+                className="fixed inset-0 z-30 bg-black/25 backdrop-blur-[2px] motion-safe:transition-opacity"
+                onClick={onClose}
+                aria-hidden
+            />
             <aside
                 style={panelStyle}
-                className="fixed right-3 top-16 w-72 rounded-xl shadow-sm border z-40 flex flex-col overflow-hidden"
+                className="fixed right-2 sm:right-4 top-[calc(3.75rem+0.75rem+env(safe-area-inset-top))] w-[min(20rem,calc(100vw-1rem))] max-h-[min(32rem,calc(100vh-6rem))] rounded-2xl shadow-xl border z-40 flex flex-col overflow-hidden ring-1 ring-black/[0.04] dark:ring-white/[0.06]"
             >
-                <div style={{ backgroundColor: pc.headerBg, borderColor: pc.border }} className="px-4 py-3 border-b">
-                    <div className="flex items-center justify-between">
-                        <h3 className="font-semibold text-sm">Reading Settings</h3>
+                <div style={{ backgroundColor: pc.headerBg, borderColor: pc.border }} className="px-4 py-3.5 border-b shrink-0">
+                    <div className="flex items-center justify-between gap-2">
+                        <h3 className="font-semibold text-sm tracking-tight">Reading settings</h3>
                         <button
                             onClick={onClose}
                             style={{ color: pc.muted }}
@@ -91,7 +96,7 @@ export function SettingsPanel({ settings, onChange, onClose }: SettingsPanelProp
                     </div>
                 </div>
 
-                <div className="p-4 space-y-6">
+                <div className="p-4 space-y-6 overflow-y-auto overscroll-contain flex-1 min-h-0">
                     {/* Theme */}
                     <section>
                         <SectionLabel text="Theme" muted={pc.muted} />
@@ -106,7 +111,7 @@ export function SettingsPanel({ settings, onChange, onClose }: SettingsPanelProp
                                             backgroundColor: active ? "transparent" : pc.controlBg,
                                             borderColor: active ? "var(--color-primary)" : "transparent",
                                         }}
-                                        className="flex flex-col items-center gap-1.5 p-2.5 rounded-lg border-2 transition-all text-xs font-medium"
+                                        className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl border-2 transition-all text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                                     >
                                         <div
                                             className="w-5 h-5 rounded-full border"
@@ -128,7 +133,7 @@ export function SettingsPanel({ settings, onChange, onClose }: SettingsPanelProp
                                     key={f.id}
                                     onClick={() => update({ font: f.id })}
                                     style={{ backgroundColor: settings.font === f.id ? pc.controlBg : "transparent" }}
-                                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors text-sm"
+                                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                                 >
                                     <span style={{ fontFamily: f.family }}>{f.label}</span>
                                     {settings.font === f.id && (
@@ -146,7 +151,7 @@ export function SettingsPanel({ settings, onChange, onClose }: SettingsPanelProp
                             <button
                                 onClick={() => update({ fontSize: Math.max(14, settings.fontSize - 2) })}
                                 style={{ backgroundColor: pc.controlBg }}
-                                className="w-8 h-8 flex items-center justify-center rounded-lg text-sm font-serif transition-colors hover:text-primary"
+                                className="w-9 h-9 flex items-center justify-center rounded-xl text-sm font-serif transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                                 aria-label="Decrease font size"
                             >
                                 A
@@ -168,7 +173,7 @@ export function SettingsPanel({ settings, onChange, onClose }: SettingsPanelProp
                             <button
                                 onClick={() => update({ fontSize: Math.min(30, settings.fontSize + 2) })}
                                 style={{ backgroundColor: pc.controlBg }}
-                                className="w-8 h-8 flex items-center justify-center rounded-lg text-lg font-serif transition-colors hover:text-primary"
+                                className="w-9 h-9 flex items-center justify-center rounded-xl text-lg font-serif transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                                 aria-label="Increase font size"
                             >
                                 A
@@ -191,7 +196,7 @@ export function SettingsPanel({ settings, onChange, onClose }: SettingsPanelProp
                                             color: active ? "var(--color-primary)" : pc.muted,
                                             boxShadow: active ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
                                         }}
-                                        className="py-1.5 rounded text-xs font-medium transition-colors"
+                                        className="py-2 rounded-lg text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                                     >
                                         {opt.title}
                                     </button>
@@ -201,11 +206,12 @@ export function SettingsPanel({ settings, onChange, onClose }: SettingsPanelProp
                     </section>
                 </div>
 
-                <div style={{ borderColor: pc.border }} className="px-4 py-3 border-t">
+                <div style={{ borderColor: pc.border }} className="px-4 py-3 border-t shrink-0">
                     <button
-                        onClick={() => onChange({ theme: "light", font: "serif", fontSize: 20, spacing: "normal" })}
+                        type="button"
+                        onClick={() => onChange({ ...READER_SETTINGS_DEFAULTS })}
                         style={{ color: pc.muted }}
-                        className="w-full py-1.5 text-xs font-medium hover:text-primary transition-colors"
+                        className="w-full py-2 text-xs font-medium rounded-lg hover:text-primary hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                     >
                         Reset to defaults
                     </button>
