@@ -40,16 +40,17 @@ export function MarkdownRenderer({ content, className = "" }: MarkdownRendererPr
   return (
     <div
       className={`prose max-w-none
-        prose-headings:font-bold prose-headings:leading-tight
+        prose-headings:font-bold prose-headings:leading-tight prose-headings:tracking-tight
         prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl
         prose-p:mb-6 prose-p:leading-relaxed
-        prose-a:no-underline hover:prose-a:underline
-        prose-blockquote:border-l-primary prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r-lg
-        prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none
-        prose-pre:rounded-xl prose-pre:shadow-lg
+        prose-a:no-underline hover:prose-a:underline prose-a:font-medium
+        prose-blockquote:border-l-primary prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r-lg prose-blockquote:not-italic
+        prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none prose-code:font-medium
+        prose-pre:rounded-xl prose-pre:shadow-md prose-pre:border prose-pre:border-current/10
         prose-img:rounded-xl prose-img:shadow-md prose-img:mx-auto
-        prose-table:border-collapse prose-th:p-3 prose-td:p-3
-        prose-li:marker:text-primary
+        prose-table:border-collapse prose-th:p-3 prose-td:p-3 prose-th:font-semibold
+        prose-li:marker:text-primary prose-ul:my-6 prose-ol:my-6
+        prose-hr:my-10 prose-hr:border-current/15
         ${className}`}
       style={proseOverrides}
     >
