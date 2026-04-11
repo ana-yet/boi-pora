@@ -68,6 +68,11 @@
   to { transform: translateX(0); }
 }
 
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
 @layer base {
   body {
     @apply font-display bg-background-light text-neutral-800 dark:bg-background-dark dark:text-neutral-200 transition-colors duration-200;

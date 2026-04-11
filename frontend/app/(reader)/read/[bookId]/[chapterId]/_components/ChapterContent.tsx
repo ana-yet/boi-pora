@@ -63,7 +63,7 @@ function ParagraphBlock({
             <p
                 className={`mb-0 ${
                     isFirst
-                        ? "first-letter:text-[3.2em] first-letter:font-bold first-letter:text-primary first-letter:mr-3 first-letter:float-left first-letter:leading-[0.9] first-letter:mt-[-0.05em]"
+                        ? "first-letter:text-[3.2em] first-letter:font-bold first-letter:text-primary first-letter:mr-3 first-letter:float-left first-letter:leading-[0.9] first-letter:mt-[-0.05em] first-letter:drop-shadow-[0_1px_0_rgba(236,127,19,0.25)]"
                         : ""
                 }`}
             >
