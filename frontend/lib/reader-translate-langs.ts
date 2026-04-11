@@ -30,3 +30,20 @@ export const READER_TRANSLATE_SOURCE = [
 export const READER_TRANSLATE_TARGET = READER_TRANSLATE_SOURCE.filter(
   (o) => o.code !== "auto",
 );
+
+const API_SOURCE_CODES = new Set(
+  READER_TRANSLATE_SOURCE.filter((o) => o.code !== "auto").map((o) => o.code),
+);
+
+/**
+ * Map the book’s catalog language to a `source` code for `/api/v1/translate`.
+ * Uses the book code when the translator supports it; otherwise `auto`.
+ */
+export function apiSourceFromBookLanguage(bookLanguage: string | undefined): string {
+  const raw = (bookLanguage ?? "en").trim().toLowerCase();
+  if (!raw) return "en";
+  const base = raw.split(/[-_]/)[0] ?? raw;
+  if (API_SOURCE_CODES.has(base)) return base;
+  if (API_SOURCE_CODES.has(raw)) return raw;
+  return "auto";
+}

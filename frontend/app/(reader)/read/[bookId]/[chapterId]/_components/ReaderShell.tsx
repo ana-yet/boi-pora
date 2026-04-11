@@ -171,6 +171,8 @@ export interface ReaderChapterArticle {
 
 interface ReaderShellProps {
     bookTitle: string;
+    /** Catalog language for inline translate (matches admin book “Language”). */
+    bookLanguage?: string;
     chapterLabel: string;
     progress: { currentPage: number; totalPages: number; percentage: number };
     /** When set, shows “Chapter n of m” in the footer for context. */
@@ -180,12 +182,13 @@ interface ReaderShellProps {
     bookId: string;
     currentChapterId: string;
     chapters: { chapterId: string; chapterNumber: number; title: string; wordCount?: number }[];
-    /** Shell renders header + body and enables MyMemory translation. */
+    /** Shell renders header + body and enables inline translation. */
     chapterArticle: ReaderChapterArticle;
 }
 
 export function ReaderShell({
     bookTitle,
+    bookLanguage,
     chapterLabel,
     progress,
     chapterPosition,
@@ -528,7 +531,10 @@ export function ReaderShell({
                                 <div className="h-px w-16 bg-linear-to-r from-transparent via-primary/40 to-transparent rounded-full" />
                             </div>
                         </header>
-                        <ReaderInlineTranslate palette={INLINE_TRANSLATE_PALETTE[settings.theme]}>
+                        <ReaderInlineTranslate
+                            palette={INLINE_TRANSLATE_PALETTE[settings.theme]}
+                            bookLanguage={bookLanguage}
+                        >
                             {chapterArticle.isMarkdown ? (
                                 <ChapterMarkdown content={chapterArticle.content} />
                             ) : (

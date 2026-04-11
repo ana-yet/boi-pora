@@ -1,9 +1,21 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { createPortal } from "react-dom";
 import { api, ApiError } from "@/lib/api";
-import { READER_TRANSLATE_SOURCE, READER_TRANSLATE_TARGET } from "@/lib/reader-translate-langs";
+import { getLanguageLabel } from "@/lib/constants";
+import {
+  apiSourceFromBookLanguage,
+  READER_TRANSLATE_TARGET,
+} from "@/lib/reader-translate-langs";
 import {
   caretRangeFromClientPoint,
   nearestBlockElement,
@@ -29,6 +41,8 @@ type PopoverState = {
 
 type Props = {
   palette: InlineTranslatePalette;
+  /** Book language from metadata (admin “Language”); drives default translation source. */
+  bookLanguage?: string;
   children: ReactNode;
 };
 
@@ -76,7 +90,7 @@ function resolveWordAtPoint(
  * Press and hold on a word in the chapter body to translate via your backend (Langbly).
  * @see https://langbly.com/docs/
  */
-export function ReaderInlineTranslate({ palette, children }: Props) {
+export function ReaderInlineTranslate({ palette, bookLanguage, children }: Props) {
   const rootRef = useRef<HTMLDivElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -85,20 +99,37 @@ export function ReaderInlineTranslate({ palette, children }: Props) {
   const [popover, setPopover] = useState<PopoverState | null>(null);
   const [popoverPos, setPopoverPos] = useState({ left: 12, top: 12 });
   const [holding, setHolding] = useState(false);
-  const [sourceLang, setSourceLang] = useState("auto");
   const [targetLang, setTargetLang] = useState("bn");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<string | null>(null);
 
-  useEffect(() => {
+  const apiSource = useMemo(() => apiSourceFromBookLanguage(bookLanguage), [bookLanguage]);
+  const originalLabel = useMemo(
+    () => getLanguageLabel((bookLanguage ?? "en").trim() || "en"),
+    [bookLanguage],
+  );
+
+  const targetOptions = useMemo(() => {
+    if (apiSource === "auto") return READER_TRANSLATE_TARGET;
+    return READER_TRANSLATE_TARGET.filter((o) => o.code !== apiSource);
+  }, [apiSource]);
+
+  useLayoutEffect(() => {
+    let stored: string | null = null;
     try {
-      setSourceLang(sessionStorage.getItem("boi_pora_reader_translate_src") ?? "auto");
-      setTargetLang(sessionStorage.getItem("boi_pora_reader_translate_tgt") ?? "bn");
+      stored = sessionStorage.getItem("boi_pora_reader_translate_tgt");
     } catch {
       /* ignore */
     }
-  }, []);
+    const opts = targetOptions;
+    const pick =
+      (stored && opts.some((o) => o.code === stored) ? stored : null) ??
+      opts.find((o) => o.code === "bn")?.code ??
+      opts[0]?.code ??
+      "en";
+    setTargetLang((prev) => (prev === pick ? prev : pick));
+  }, [apiSource, targetOptions]);
 
   const clearLongPress = useCallback(() => {
     if (longPressTimerRef.current) {
@@ -138,21 +169,20 @@ export function ReaderInlineTranslate({ palette, children }: Props) {
 
   useEffect(() => () => clearLongPress(), [clearLongPress]);
 
-  const persistLangs = useCallback(() => {
+  const persistTarget = useCallback(() => {
     try {
-      sessionStorage.setItem("boi_pora_reader_translate_src", sourceLang);
       sessionStorage.setItem("boi_pora_reader_translate_tgt", targetLang);
     } catch {
       /* ignore */
     }
-  }, [sourceLang, targetLang]);
+  }, [targetLang]);
 
   const translateText = useCallback(
     async (text: string) => {
       const trimmed = text.trim();
       if (!trimmed) return;
-      if (sourceLang !== "auto" && sourceLang === targetLang) {
-        setError("Pick another target or use “Detect”.");
+      if (apiSource !== "auto" && apiSource === targetLang) {
+        setError("Pick another target language.");
         return;
       }
       setLoading(true);
@@ -161,18 +191,18 @@ export function ReaderInlineTranslate({ palette, children }: Props) {
       try {
         const { translated } = await api.post<{ translated: string }>("/api/v1/translate", {
           text: trimmed,
-          source: sourceLang,
+          source: apiSource,
           target: targetLang,
         });
         setResult(translated.trim());
-        persistLangs();
+        persistTarget();
       } catch (e: unknown) {
         setError(e instanceof ApiError ? e.message : "Failed");
       } finally {
         setLoading(false);
       }
     },
-    [persistLangs, sourceLang, targetLang],
+    [apiSource, persistTarget, targetLang],
   );
 
   const handlePointerDown = useCallback(
@@ -284,36 +314,31 @@ export function ReaderInlineTranslate({ palette, children }: Props) {
             }}
           >
             <div className="flex items-start justify-between gap-1 mb-1.5">
-              <div className="flex min-w-0 flex-1 items-center gap-1 text-[10px] leading-none">
-                <select
-                  value={sourceLang}
-                  onChange={(ev) => setSourceLang(ev.target.value)}
-                  style={selectStyle}
-                  aria-label="From"
-                  className="max-w-[42%] shrink rounded border px-1 py-0.5 text-[10px] outline-none focus-visible:ring-1 focus-visible:ring-primary/40"
-                >
-                  {READER_TRANSLATE_SOURCE.map((o) => (
-                    <option key={o.code} value={o.code}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
-                <span style={{ color: palette.muted }} className="shrink-0 opacity-60">
-                  →
-                </span>
-                <select
-                  value={targetLang}
-                  onChange={(ev) => setTargetLang(ev.target.value)}
-                  style={selectStyle}
-                  aria-label="To"
-                  className="max-w-[42%] shrink rounded border px-1 py-0.5 text-[10px] outline-none focus-visible:ring-1 focus-visible:ring-primary/40"
-                >
-                  {READER_TRANSLATE_TARGET.map((o) => (
-                    <option key={o.code} value={o.code}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
+              <div className="min-w-0 flex-1 space-y-1">
+                <p className="text-[10px] leading-snug" style={{ color: palette.muted }}>
+                  <span className="font-medium" style={{ color: palette.text }}>
+                    Original
+                  </span>
+                  <span className="opacity-80"> · {originalLabel}</span>
+                </p>
+                <label className="flex items-center gap-1.5 text-[10px] leading-none">
+                  <span style={{ color: palette.muted }} className="shrink-0">
+                    To
+                  </span>
+                  <select
+                    value={targetLang}
+                    onChange={(ev) => setTargetLang(ev.target.value)}
+                    style={selectStyle}
+                    aria-label="Translation language"
+                    className="min-w-0 flex-1 rounded border px-1 py-0.5 text-[10px] outline-none focus-visible:ring-1 focus-visible:ring-primary/40"
+                  >
+                    {targetOptions.map((o) => (
+                      <option key={o.code} value={o.code}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
               </div>
               <button
                 type="button"

@@ -186,7 +186,7 @@ export function SettingsPanel({ settings, onChange, onClose }: SettingsPanelProp
                         style={{ color: pc.muted, borderColor: pc.border, backgroundColor: pc.controlBg }}
                         className="text-[11px] leading-snug rounded-xl border px-3 py-2.5"
                     >
-                        Press and hold a <strong className="font-semibold" style={{ color: pc.text }}>word</strong> in the chapter (not a link) to translate. Set{" "}
+                        Press and hold a <strong className="font-semibold" style={{ color: pc.text }}>word</strong> in the chapter (not a link). The original language follows the book’s language; choose the translation language in the popover. Set{" "}
                         <code className="text-[10px] px-1 rounded bg-black/5 dark:bg-white/10">LANGBLY_API_KEY</code> on the server (
                         <a
                             href="https://langbly.com/docs/"
