@@ -80,6 +80,7 @@ export default async function ReaderPage({
       ) : null}
       <ReaderShell
         bookTitle={bookTitle}
+        bookLanguage={book?.language}
         chapterLabel={chapterLabel}
         progress={progress}
         chapterPosition={
