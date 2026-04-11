@@ -118,7 +118,7 @@ export default function ReaderPage() {
       currentChapterId={chapterId}
       chapters={sortedChapters}
     >
-      <header className="mb-14 md:mb-16 text-center">
+      <header className="mb-10 md:mb-12 text-center max-w-[min(42rem,100%)] mx-auto">
         <span className="text-primary/80 font-display text-xs sm:text-sm font-bold tracking-[0.2em] uppercase mb-5 block">
           Chapter {getOrdinal(chapter.chapterNumber)}
         </span>
@@ -133,12 +133,14 @@ export default function ReaderPage() {
       {useMarkdown ? (
         <ChapterMarkdown content={chapter.content} />
       ) : (
-        <ChapterContent
-          chapterNumber={`Chapter ${getOrdinal(chapter.chapterNumber)}`}
-          chapterTitle={chapter.title}
-          paragraphs={splitContent(chapter.content)}
-          hideHeader
-        />
+        <div className="mx-auto w-full max-w-[min(42rem,100%)]">
+          <ChapterContent
+            chapterNumber={`Chapter ${getOrdinal(chapter.chapterNumber)}`}
+            chapterTitle={chapter.title}
+            paragraphs={splitContent(chapter.content)}
+            hideHeader
+          />
+        </div>
       )}
     </ReaderShell>
   );

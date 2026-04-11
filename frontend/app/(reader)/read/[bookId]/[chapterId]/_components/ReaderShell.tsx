@@ -267,7 +267,7 @@ export function ReaderShell({
             {/* Reading Area */}
             <main className="relative min-h-screen pt-[calc(4.5rem+env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))] flex justify-center px-4 sm:px-6">
                 <article
-                    className="boi-reader-article w-full max-w-[min(42rem,100%)] md:max-w-[44rem] pb-8 overflow-hidden wrap-break-word"
+                    className="boi-reader-article w-full max-w-[min(76rem,100%)] pb-8 overflow-x-hidden wrap-break-word"
                 >
                     {children}
                 </article>
