@@ -32,24 +32,59 @@ type Props = {
   children: ReactNode;
 };
 
+/** Hold duration before the translate chip appears (ms). */
+const LONG_PRESS_MS = 480;
+const MOVE_CANCEL_PX = 12;
+
 function clampPopoverPosition(x: number, y: number) {
-  const w = 288;
-  const h = 320;
+  const w = 220;
+  const h = 200;
   const pad = 8;
-  const left = Math.max(pad, Math.min(x + 12, window.innerWidth - w - pad));
-  const top = Math.max(pad, Math.min(y + 12, window.innerHeight - h - pad));
+  const left = Math.max(pad, Math.min(x + 8, window.innerWidth - w - pad));
+  const top = Math.max(pad, Math.min(y + 8, window.innerHeight - h - pad));
   return { left, top };
 }
 
+function resolveWordAtPoint(
+  root: HTMLElement,
+  doc: Document,
+  x: number,
+  y: number,
+): PopoverState | null {
+  const range = caretRangeFromClientPoint(doc, x, y);
+  if (!range || !root.contains(range.startContainer)) return null;
+  if (range.startContainer.nodeType !== Node.TEXT_NODE) return null;
+
+  const textNode = range.startContainer as Text;
+  const offset = range.startOffset;
+  const block = nearestBlockElement(textNode, root);
+  if (!block) return null;
+
+  const blockText = block.textContent ?? "";
+  const rel = textOffsetInBlock(block, textNode, offset);
+  if (rel < 0) return null;
+
+  const wb = wordBoundsAt(blockText, rel);
+  if (!wb) return null;
+  const word = blockText.slice(wb.start, wb.end).trim();
+  if (!word) return null;
+  const sentence = sentenceContaining(blockText, wb.start, wb.end);
+  return { x, y, word, sentence };
+}
+
 /**
- * Tap a word in the chapter body to translate via your backend (Langbly).
+ * Press and hold on a word in the chapter body to translate via your backend (Langbly).
  * @see https://langbly.com/docs/
  */
 export function ReaderInlineTranslate({ palette, children }: Props) {
   const rootRef = useRef<HTMLDivElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressTrackRef = useRef<{ x: number; y: number; pointerId: number } | null>(null);
+
   const [popover, setPopover] = useState<PopoverState | null>(null);
   const [popoverPos, setPopoverPos] = useState({ left: 12, top: 12 });
+  const [holding, setHolding] = useState(false);
   const [sourceLang, setSourceLang] = useState("auto");
   const [targetLang, setTargetLang] = useState("bn");
   const [loading, setLoading] = useState(false);
@@ -65,9 +100,18 @@ export function ReaderInlineTranslate({ palette, children }: Props) {
     }
   }, []);
 
+  const clearLongPress = useCallback(() => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+    longPressTrackRef.current = null;
+    setHolding(false);
+  }, []);
+
   useEffect(() => {
     if (!popover) return;
-    const onDown = (ev: MouseEvent) => {
+    const onDown = (ev: PointerEvent) => {
       const el = ev.target as Node;
       if (popoverRef.current?.contains(el)) return;
       if (rootRef.current?.contains(el)) return;
@@ -76,10 +120,10 @@ export function ReaderInlineTranslate({ palette, children }: Props) {
     const onKey = (ev: KeyboardEvent) => {
       if (ev.key === "Escape") setPopover(null);
     };
-    document.addEventListener("mousedown", onDown);
+    document.addEventListener("pointerdown", onDown);
     document.addEventListener("keydown", onKey);
     return () => {
-      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("pointerdown", onDown);
       document.removeEventListener("keydown", onKey);
     };
   }, [popover]);
@@ -91,6 +135,8 @@ export function ReaderInlineTranslate({ palette, children }: Props) {
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
   }, [popover]);
+
+  useEffect(() => () => clearLongPress(), [clearLongPress]);
 
   const persistLangs = useCallback(() => {
     try {
@@ -106,7 +152,7 @@ export function ReaderInlineTranslate({ palette, children }: Props) {
       const trimmed = text.trim();
       if (!trimmed) return;
       if (sourceLang !== "auto" && sourceLang === targetLang) {
-        setError("Choose a different target language, or use “Detect language”.");
+        setError("Pick another target or use “Detect”.");
         return;
       }
       setLoading(true);
@@ -121,7 +167,7 @@ export function ReaderInlineTranslate({ palette, children }: Props) {
         setResult(translated.trim());
         persistLangs();
       } catch (e: unknown) {
-        setError(e instanceof ApiError ? e.message : "Translation failed");
+        setError(e instanceof ApiError ? e.message : "Failed");
       } finally {
         setLoading(false);
       }
@@ -129,45 +175,96 @@ export function ReaderInlineTranslate({ palette, children }: Props) {
     [persistLangs, sourceLang, targetLang],
   );
 
-  const handlePointerUp = useCallback((e: React.PointerEvent) => {
-    if (e.button !== 0) return;
-    const target = e.target as HTMLElement | null;
-    if (!target || !rootRef.current?.contains(target)) return;
-    if (target.closest("a[href], button, input, select, textarea, [data-translate-popover]")) return;
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      if (e.button !== 0) return;
+      const target = e.target as HTMLElement | null;
+      if (!target || !rootRef.current?.contains(target)) return;
+      if (target.closest("a[href], button, input, select, textarea, [data-translate-popover]")) return;
 
-    const x = e.clientX;
-    const y = e.clientY;
-    const range = caretRangeFromClientPoint(document, x, y);
-    if (!range || !rootRef.current.contains(range.startContainer)) return;
-    if (range.startContainer.nodeType !== Node.TEXT_NODE) return;
+      clearLongPress();
+      const sx = e.clientX;
+      const sy = e.clientY;
+      longPressTrackRef.current = { x: sx, y: sy, pointerId: e.pointerId };
+      setHolding(true);
 
-    const textNode = range.startContainer as Text;
-    const offset = range.startOffset;
-    const block = nearestBlockElement(textNode, rootRef.current);
-    if (!block) return;
+      try {
+        (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+      } catch {
+        /* ignore */
+      }
 
-    const blockText = block.textContent ?? "";
-    const rel = textOffsetInBlock(block, textNode, offset);
-    if (rel < 0) return;
+      longPressTimerRef.current = setTimeout(() => {
+        longPressTimerRef.current = null;
+        const root = rootRef.current;
+        if (!root) {
+          clearLongPress();
+          return;
+        }
+        const data = resolveWordAtPoint(root, document, sx, sy);
+        longPressTrackRef.current = null;
+        setHolding(false);
+        if (!data) return;
+        setError(null);
+        setResult(null);
+        setPopoverPos(clampPopoverPosition(sx, sy));
+        setPopover(data);
+      }, LONG_PRESS_MS);
+    },
+    [clearLongPress],
+  );
 
-    const wb = wordBoundsAt(blockText, rel);
-    if (!wb) return;
-    const word = blockText.slice(wb.start, wb.end).trim();
-    if (!word) return;
-    const sentence = sentenceContaining(blockText, wb.start, wb.end);
+  const handlePointerMove = useCallback(
+    (e: React.PointerEvent) => {
+      const track = longPressTrackRef.current;
+      if (!track || e.pointerId !== track.pointerId) return;
+      const dx = e.clientX - track.x;
+      const dy = e.clientY - track.y;
+      if (dx * dx + dy * dy > MOVE_CANCEL_PX * MOVE_CANCEL_PX) {
+        clearLongPress();
+        try {
+          rootRef.current?.releasePointerCapture(e.pointerId);
+        } catch {
+          /* ignore */
+        }
+      }
+    },
+    [clearLongPress],
+  );
 
-    setError(null);
-    setResult(null);
-    setPopoverPos(clampPopoverPosition(x, y));
-    setPopover({ x, y, word, sentence });
-  }, []);
+  const handlePointerUpOrCancel = useCallback(
+    (e: React.PointerEvent) => {
+      if (longPressTimerRef.current || longPressTrackRef.current) {
+        clearLongPress();
+      }
+      try {
+        rootRef.current?.releasePointerCapture(e.pointerId);
+      } catch {
+        /* ignore */
+      }
+    },
+    [clearLongPress],
+  );
 
   const sentenceSameAsWord = popover
     ? popover.sentence.trim() === popover.word.trim()
     : false;
 
+  const selectStyle = {
+    backgroundColor: palette.cardBg,
+    borderColor: palette.border,
+    color: palette.text,
+  } as const;
+
   return (
-    <div ref={rootRef} className="relative" onPointerUp={handlePointerUp}>
+    <div
+      ref={rootRef}
+      className={`relative touch-manipulation ${holding ? "select-none" : ""}`}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUpOrCancel}
+      onPointerCancel={handlePointerUpOrCancel}
+    >
       {children}
       {popover &&
         typeof document !== "undefined" &&
@@ -176,8 +273,8 @@ export function ReaderInlineTranslate({ palette, children }: Props) {
             ref={popoverRef}
             data-translate-popover
             role="dialog"
-            aria-label="Translate selection"
-            className="fixed z-[60] w-[min(18rem,calc(100vw-1.5rem))] rounded-2xl border shadow-xl p-3 text-left"
+            aria-label="Translate"
+            className="fixed z-60 w-[min(13.5rem,calc(100vw-1rem))] rounded-lg border shadow-lg px-2.5 py-2 text-left"
             style={{
               left: popoverPos.left,
               top: popoverPos.top,
@@ -186,26 +283,14 @@ export function ReaderInlineTranslate({ palette, children }: Props) {
               color: palette.text,
             }}
           >
-            <p
-              style={{ color: palette.muted }}
-              className="text-[10px] font-semibold uppercase tracking-wide mb-2"
-            >
-              Translate
-            </p>
-            <div className="grid grid-cols-2 gap-2 mb-2">
-              <label className="block col-span-1">
-                <span style={{ color: palette.muted }} className="text-[9px] uppercase">
-                  From
-                </span>
+            <div className="flex items-start justify-between gap-1 mb-1.5">
+              <div className="flex min-w-0 flex-1 items-center gap-1 text-[10px] leading-none">
                 <select
                   value={sourceLang}
                   onChange={(ev) => setSourceLang(ev.target.value)}
-                  style={{
-                    backgroundColor: palette.cardBg,
-                    borderColor: palette.border,
-                    color: palette.text,
-                  }}
-                  className="mt-0.5 w-full rounded-lg border px-1.5 py-1 text-xs"
+                  style={selectStyle}
+                  aria-label="From"
+                  className="max-w-[42%] shrink rounded border px-1 py-0.5 text-[10px] outline-none focus-visible:ring-1 focus-visible:ring-primary/40"
                 >
                   {READER_TRANSLATE_SOURCE.map((o) => (
                     <option key={o.code} value={o.code}>
@@ -213,20 +298,15 @@ export function ReaderInlineTranslate({ palette, children }: Props) {
                     </option>
                   ))}
                 </select>
-              </label>
-              <label className="block col-span-1">
-                <span style={{ color: palette.muted }} className="text-[9px] uppercase">
-                  To
+                <span style={{ color: palette.muted }} className="shrink-0 opacity-60">
+                  →
                 </span>
                 <select
                   value={targetLang}
                   onChange={(ev) => setTargetLang(ev.target.value)}
-                  style={{
-                    backgroundColor: palette.cardBg,
-                    borderColor: palette.border,
-                    color: palette.text,
-                  }}
-                  className="mt-0.5 w-full rounded-lg border px-1.5 py-1 text-xs"
+                  style={selectStyle}
+                  aria-label="To"
+                  className="max-w-[42%] shrink rounded border px-1 py-0.5 text-[10px] outline-none focus-visible:ring-1 focus-visible:ring-primary/40"
                 >
                   {READER_TRANSLATE_TARGET.map((o) => (
                     <option key={o.code} value={o.code}>
@@ -234,55 +314,58 @@ export function ReaderInlineTranslate({ palette, children }: Props) {
                     </option>
                   ))}
                 </select>
-              </label>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPopover(null)}
+                aria-label="Close"
+                style={{ color: palette.muted }}
+                className="-mr-0.5 -mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-base leading-none opacity-70 transition-opacity hover:opacity-100"
+              >
+                ×
+              </button>
             </div>
-            <div className="flex flex-col gap-1.5">
+
+            <div className="flex gap-1">
               <button
                 type="button"
                 disabled={loading}
                 onClick={() => void translateText(popover.word)}
                 style={{ backgroundColor: palette.cardBg, borderColor: palette.border }}
-                className="w-full rounded-xl border px-2 py-2 text-xs font-semibold hover:border-primary/50 hover:text-primary transition-colors disabled:opacity-50"
+                className="h-7 flex-1 rounded-md border text-[11px] font-medium transition-colors hover:border-primary/45 hover:text-primary disabled:opacity-50"
               >
-                Translate word
+                Word
               </button>
               <button
                 type="button"
                 disabled={loading || sentenceSameAsWord}
                 onClick={() => void translateText(popover.sentence)}
                 style={{ backgroundColor: palette.cardBg, borderColor: palette.border }}
-                className="w-full rounded-xl border px-2 py-2 text-xs font-semibold hover:border-primary/50 hover:text-primary transition-colors disabled:opacity-40"
-                title={sentenceSameAsWord ? "Sentence is the same as this word" : undefined}
+                className="h-7 flex-1 rounded-md border text-[11px] font-medium transition-colors hover:border-primary/45 hover:text-primary disabled:opacity-35"
+                title={sentenceSameAsWord ? "Same as word" : "Translate sentence"}
               >
-                Translate sentence
+                Sentence
               </button>
             </div>
+
             {loading && (
-              <p className="mt-2 text-xs" style={{ color: palette.muted }}>
-                Translating…
+              <p className="mt-1.5 text-[10px]" style={{ color: palette.muted }}>
+                …
               </p>
             )}
             {error && (
-              <p className="mt-2 text-xs text-red-600 dark:text-red-400" role="alert">
+              <p className="mt-1.5 text-[10px] text-red-600 dark:text-red-400" role="alert">
                 {error}
               </p>
             )}
             {result !== null && (
-              <div
-                className="mt-2 rounded-xl border px-2 py-2 text-sm leading-snug"
-                style={{ backgroundColor: palette.cardBg, borderColor: palette.border }}
+              <p
+                className="mt-1.5 border-t pt-1.5 text-xs leading-snug"
+                style={{ borderColor: palette.border, color: palette.text }}
               >
                 {result}
-              </div>
+              </p>
             )}
-            <button
-              type="button"
-              onClick={() => setPopover(null)}
-              style={{ color: palette.muted }}
-              className="mt-2 w-full py-1.5 text-[11px] font-medium rounded-lg hover:text-primary transition-colors"
-            >
-              Close
-            </button>
           </div>,
           document.body,
         )}

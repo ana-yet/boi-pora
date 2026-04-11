@@ -1,4 +1,4 @@
-/** Characters that belong to a “word” for tap-to-translate (Latin, Bengali, CJK, etc.). */
+/** Characters that belong to a “word” for press-and-hold translate (Latin, Bengali, CJK, etc.). */
 export function isWordChar(ch: string): boolean {
   if (!ch) return false;
   const cp = ch.codePointAt(0)!;
