@@ -45,6 +45,14 @@ function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
 }
 
+/** Optional delay between Langbly calls when text is split into multiple chunks (default 0). */
+function interChunkDelayMs(config: ConfigService): number {
+  const raw = config.get<string>('TRANSLATE_INTER_CHUNK_DELAY_MS');
+  if (raw === undefined || raw === '') return 0;
+  const n = parseInt(raw, 10);
+  return Number.isFinite(n) && n >= 0 ? Math.min(n, 2000) : 0;
+}
+
 @Injectable()
 export class TranslateService {
   constructor(private readonly config: ConfigService) {}
@@ -143,11 +151,12 @@ export class TranslateService {
     if (packs.length === 0) {
       return { translated: '' };
     }
+    const delay = interChunkDelayMs(this.config);
     const parts: string[] = [];
     for (let i = 0; i < packs.length; i++) {
       parts.push(await this.translateChunk(packs[i]!, source, target));
-      if (i < packs.length - 1) {
-        await sleep(120);
+      if (delay > 0 && i < packs.length - 1) {
+        await sleep(delay);
       }
     }
     return { translated: parts.join('\n\n') };
