@@ -1,4 +1,4 @@
-export { ReaderShell } from "./ReaderShell";
+export { ReaderShell, READER_SETTINGS_DEFAULTS } from "./ReaderShell";
 export type {
     ReaderSettings,
     ReaderTheme,

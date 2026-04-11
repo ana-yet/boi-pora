@@ -18,12 +18,14 @@ export interface ReaderSettings {
     spacing: ReaderSpacing;
 }
 
-const DEFAULTS: ReaderSettings = {
+export const READER_SETTINGS_DEFAULTS: ReaderSettings = {
     theme: "light",
     font: "serif",
     fontSize: 18,
     spacing: "normal",
 };
+
+const DEFAULTS = READER_SETTINGS_DEFAULTS;
 
 const STORAGE_KEY = "boi_pora_reader_settings";
 
@@ -97,6 +99,8 @@ interface ReaderShellProps {
     bookTitle: string;
     chapterLabel: string;
     progress: { currentPage: number; totalPages: number; percentage: number };
+    /** When set, shows “Chapter n of m” in the footer for context. */
+    chapterPosition?: { current: number; total: number };
     prevHref?: string;
     nextHref?: string;
     bookId: string;
@@ -109,6 +113,7 @@ export function ReaderShell({
     bookTitle,
     chapterLabel,
     progress,
+    chapterPosition,
     prevHref,
     nextHref,
     bookId,
@@ -184,63 +189,77 @@ export function ReaderShell({
 
     if (!mounted) {
         return (
-            <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "#ffffff" }}>
-                <span className="inline-block h-8 w-8 border-2 border-primary border-r-transparent rounded-full animate-spin" />
+            <div
+                style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: COLORS.light.bg }}
+                className="text-neutral-500"
+            >
+                <span className="inline-block h-9 w-9 border-2 border-primary/40 border-t-primary rounded-full animate-spin" aria-hidden />
+                <span className="sr-only">Loading reader</span>
             </div>
         );
     }
 
     return (
-        <div style={wrapperStyle} className="antialiased overflow-x-hidden">
+        <div style={wrapperStyle} className="antialiased overflow-x-hidden selection:bg-primary/15">
             <style>{settingsCSS}</style>
 
             {/* Top Bar */}
             <header
                 style={headerStyle}
-                className="fixed top-0 left-0 right-0 h-14 backdrop-blur-md border-b z-40 flex items-center justify-between px-4 md:px-6"
+                className="fixed top-0 left-0 right-0 h-[3.75rem] pt-[env(safe-area-inset-top)] backdrop-blur-xl border-b z-40 flex items-center justify-between gap-3 px-3 sm:px-5 md:px-8 shadow-[0_1px_0_rgba(0,0,0,0.04)]"
             >
-                <div className="flex items-center gap-0.5">
+                <div className="flex items-center shrink-0 gap-0.5">
                     <Link
                         href="/library"
                         style={{ color: c.muted }}
-                        className="p-2 rounded-lg hover:text-primary transition-colors"
+                        className="p-2.5 rounded-xl hover:bg-black/[0.04] dark:hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 transition-colors"
                         aria-label="Back to Library"
                     >
-                        <span className="material-icons text-xl" aria-hidden="true">arrow_back</span>
+                        <span className="material-icons text-[22px]" aria-hidden="true">arrow_back</span>
                     </Link>
                     <button
+                        type="button"
                         onClick={() => setTocOpen(true)}
                         style={{ color: c.muted }}
-                        className="p-2 rounded-lg hover:text-primary transition-colors"
-                        aria-label="Table of Contents"
+                        className="p-2.5 rounded-xl hover:bg-black/[0.04] dark:hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 transition-colors"
+                        aria-label="Table of contents (shortcut: T)"
                     >
-                        <span className="material-icons text-xl" aria-hidden="true">toc</span>
+                        <span className="material-icons text-[22px]" aria-hidden="true">menu_book</span>
                     </button>
                 </div>
 
-                <div className="flex flex-col items-center select-none">
-                    <span style={{ color: c.muted }} className="text-xs font-medium tracking-wide truncate max-w-[200px]">
+                <div className="flex flex-col items-center justify-center select-none min-w-0 flex-1 px-2">
+                    <span
+                        style={{ color: c.muted }}
+                        className="text-[11px] sm:text-xs font-medium tracking-wide truncate max-w-[min(100%,18rem)] text-center opacity-90"
+                    >
                         {bookTitle}
                     </span>
-                    <span className="text-[11px] text-primary font-semibold">
+                    <span className="text-[11px] sm:text-xs font-semibold text-primary truncate max-w-[min(100%,16rem)] text-center mt-0.5">
                         {chapterLabel}
                     </span>
                 </div>
 
                 <button
+                    type="button"
                     onClick={() => setPanelOpen((o) => !o)}
-                    className={`px-2 pt-1 rounded-md transition-colors ${panelOpen ? "bg-primary text-white" : "hover:text-primary"}`}
+                    className={`shrink-0 p-2.5 rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
+                        panelOpen
+                            ? "bg-primary text-white shadow-md shadow-primary/25"
+                            : "hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
+                    }`}
                     style={panelOpen ? undefined : { color: c.muted }}
+                    aria-expanded={panelOpen}
                     aria-label="Reader settings"
                 >
-                    <span className="material-icons text-xl" aria-hidden="true">tune</span>
+                    <span className="material-icons text-[22px]" aria-hidden="true">tune</span>
                 </button>
             </header>
 
             {/* Reading Area */}
-            <main className="relative min-h-screen pt-24 pb-28 flex justify-center">
+            <main className="relative min-h-screen pt-[calc(4.5rem+env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))] flex justify-center px-4 sm:px-6">
                 <article
-                    className="boi-reader-article w-full max-w-[720px] px-6 md:px-0 overflow-hidden wrap-break-word"
+                    className="boi-reader-article w-full max-w-[min(42rem,100%)] md:max-w-[44rem] pb-8 overflow-hidden wrap-break-word"
                 >
                     {children}
                 </article>
@@ -257,33 +276,45 @@ export function ReaderShell({
             {/* Bottom Navigation */}
             <footer
                 style={headerStyle}
-                className="fixed bottom-0 left-0 right-0 h-16 backdrop-blur-md border-t z-40"
+                className="fixed bottom-0 left-0 right-0 min-h-[4.25rem] pb-[env(safe-area-inset-bottom)] pt-1 backdrop-blur-xl border-t z-40 shadow-[0_-4px_24px_rgba(0,0,0,0.06)]"
             >
-                <div className="max-w-3xl mx-auto h-full flex items-center justify-between px-4 md:px-6">
+                <div className="max-w-2xl mx-auto min-h-[3.5rem] flex items-center justify-between gap-3 px-3 sm:px-5">
                     {prevHref ? (
                         <Link
                             href={prevHref}
-                            style={{ color: c.muted }}
-                            className="flex items-center gap-1 hover:text-primary transition-colors text-sm"
+                            style={{ borderColor: c.border, color: c.text }}
+                            className="flex items-center gap-1 min-h-[44px] px-3 sm:px-4 rounded-xl border bg-black/[0.02] dark:bg-white/[0.04] hover:border-primary/40 hover:text-primary text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                         >
-                            <span className="material-icons text-lg" aria-hidden="true">chevron_left</span>
-                            <span className="hidden sm:inline font-medium">Previous</span>
+                            <span className="material-icons text-xl shrink-0" aria-hidden="true">chevron_left</span>
+                            <span className="hidden sm:inline max-w-[5.5rem] md:max-w-none truncate">Prev</span>
                         </Link>
                     ) : (
-                        <div className="w-20" />
+                        <div className="w-14 sm:w-24 shrink-0" aria-hidden />
                     )}
 
-                    <div className="flex flex-col items-center flex-1 max-w-[200px] mx-4">
-                        <span style={{ color: c.muted }} className="text-[10px] mb-1.5 tabular-nums">
-                            {Math.round(progress.percentage)}%
-                        </span>
+                    <div className="flex flex-col items-center flex-1 min-w-0 max-w-[12rem] sm:max-w-[14rem] mx-1">
+                        <div className="flex items-center gap-2 mb-1.5 w-full justify-center">
+                            <span style={{ color: c.muted }} className="text-[10px] sm:text-xs font-semibold tabular-nums tracking-tight">
+                                {Math.round(progress.percentage)}%
+                            </span>
+                            {chapterPosition && chapterPosition.total > 0 && (
+                                <span style={{ color: c.muted }} className="text-[10px] sm:text-xs opacity-80 tabular-nums hidden sm:inline">
+                                    · Ch {chapterPosition.current}/{chapterPosition.total}
+                                </span>
+                            )}
+                        </div>
                         <div
-                            className="w-full h-1 rounded-full overflow-hidden"
-                            style={{ backgroundColor: settings.theme === "dark" ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)" }}
+                            className="w-full h-1.5 rounded-full overflow-hidden ring-1 ring-inset ring-black/[0.06] dark:ring-white/[0.08]"
+                            style={{ backgroundColor: settings.theme === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)" }}
+                            role="progressbar"
+                            aria-valuenow={Math.round(progress.percentage)}
+                            aria-valuemin={0}
+                            aria-valuemax={100}
+                            aria-label="Book progress"
                         >
                             <div
-                                className="h-full bg-primary rounded-full transition-all duration-500"
-                                style={{ width: `${progress.percentage}%` }}
+                                className="h-full bg-primary rounded-full transition-[width] duration-500 ease-out"
+                                style={{ width: `${Math.min(100, progress.percentage)}%` }}
                             />
                         </div>
                     </div>
@@ -291,13 +322,13 @@ export function ReaderShell({
                     {nextHref ? (
                         <Link
                             href={nextHref}
-                            className="flex items-center gap-1 bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-dark transition-colors"
+                            className="flex items-center gap-1 min-h-[44px] px-4 sm:px-5 rounded-xl bg-primary text-white text-sm font-semibold shadow-md shadow-primary/20 hover:bg-primary-dark hover:shadow-lg hover:shadow-primary/25 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
                         >
                             <span className="hidden sm:inline">Next</span>
-                            <span className="material-icons text-lg" aria-hidden="true">chevron_right</span>
+                            <span className="material-icons text-xl shrink-0" aria-hidden="true">chevron_right</span>
                         </Link>
                     ) : (
-                        <div className="w-20" />
+                        <div className="w-14 sm:w-24 shrink-0" aria-hidden />
                     )}
                 </div>
             </footer>

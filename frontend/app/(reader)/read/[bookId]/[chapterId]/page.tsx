@@ -61,10 +61,22 @@ export default function ReaderPage() {
 
   if (chapterError || (!isLoading && !chapter)) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-[#fafafa]">
-        <p className="text-red-500 mb-4">Chapter not found.</p>
-        <Link href="/explore" className="text-primary hover:underline">
+      <div className="min-h-screen flex flex-col items-center justify-center p-8 bg-background-light dark:bg-background-dark">
+        <span className="material-icons text-5xl text-neutral-300 dark:text-neutral-600 mb-4" aria-hidden>
+          menu_book
+        </span>
+        <p className="text-neutral-800 dark:text-white font-medium mb-1">Chapter not found</p>
+        <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-6 text-center max-w-sm">
+          This chapter may have been removed or the link is incorrect.
+        </p>
+        <Link
+          href="/explore"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-colors"
+        >
           Browse books
+          <span className="material-icons text-lg" aria-hidden>
+            arrow_forward
+          </span>
         </Link>
       </div>
     );
@@ -72,8 +84,10 @@ export default function ReaderPage() {
 
   if (isLoading || !chapter) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#fafafa]">
-        <span className="inline-block h-8 w-8 border-2 border-primary border-r-transparent rounded-full animate-spin" />
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-background-light dark:bg-background-dark px-6">
+        <span className="inline-block h-10 w-10 border-2 border-primary/30 border-t-primary rounded-full animate-spin" aria-hidden />
+        <p className="text-sm text-neutral-500 dark:text-neutral-400">Opening chapter…</p>
+        <span className="sr-only">Loading chapter</span>
       </div>
     );
   }
@@ -93,20 +107,27 @@ export default function ReaderPage() {
       bookTitle={bookTitle}
       chapterLabel={chapterLabel}
       progress={progress}
+      chapterPosition={
+        sortedChapters.length > 0
+          ? { current: idx + 1, total: sortedChapters.length }
+          : undefined
+      }
       prevHref={prevHref}
       nextHref={nextHref}
       bookId={bookId}
       currentChapterId={chapterId}
       chapters={sortedChapters}
     >
-      <header className="mb-12 text-center">
-        <span className="text-primary/70 font-display text-sm font-bold tracking-widest uppercase mb-4 block">
+      <header className="mb-14 md:mb-16 text-center">
+        <span className="text-primary/80 font-display text-xs sm:text-sm font-bold tracking-[0.2em] uppercase mb-5 block">
           Chapter {getOrdinal(chapter.chapterNumber)}
         </span>
-        <h2 className="font-serif-reading text-3xl md:text-4xl font-bold leading-snug">
+        <h2 className="font-serif-reading text-[1.65rem] sm:text-3xl md:text-4xl font-bold leading-[1.2] text-balance px-1">
           {chapter.title}
         </h2>
-        <div className="mt-4 w-12 h-0.5 bg-primary/30 mx-auto rounded-full" />
+        <div className="mt-6 flex justify-center">
+          <div className="h-px w-16 bg-linear-to-r from-transparent via-primary/40 to-transparent rounded-full" />
+        </div>
       </header>
 
       {useMarkdown ? (
