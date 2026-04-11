@@ -4,18 +4,26 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/app/providers/AuthProvider";
 
-const discoverLinks = [
+interface SidebarLink {
+    label: string;
+    href: string;
+    icon: string;
+    /** When false, do not apply active styles even if pathname matches (e.g. duplicate hrefs). */
+    highlightOnPath?: boolean;
+}
+
+const discoverLinks: SidebarLink[] = [
     { label: "Explore", href: "/explore", icon: "explore" },
     { label: "Trending", href: "/explore/trending", icon: "trending_up" },
     { label: "New Arrivals", href: "/explore/new", icon: "new_releases" },
 ];
 
-const libraryLinks = [
-    { label: "My List", href: "/library", icon: "bookmarks" },
-    { label: "History", href: "/library", icon: "history" },
+const libraryLinks: SidebarLink[] = [
+    { label: "My List", href: "/library", icon: "bookmarks", highlightOnPath: true },
+    { label: "History", href: "/library", icon: "history", highlightOnPath: false },
 ];
 
-const categoryLinks = [
+const categoryLinks: SidebarLink[] = [
     { label: "Philosophy", href: "/explore?category=philosophy", icon: "psychology" },
     { label: "Sci-Fi", href: "/explore?category=sci-fi", icon: "rocket_launch" },
 ];
@@ -74,12 +82,6 @@ export function ExploreSidebar() {
     );
 }
 
-interface SidebarLink {
-    label: string;
-    href: string;
-    icon: string;
-}
-
 function SidebarSection({
     title,
     links,
@@ -95,10 +97,12 @@ function SidebarSection({
                 {title}
             </p>
             {links.map((link) => {
-                const active = pathname === link.href;
+                const basePath = link.href.split("#")[0].split("?")[0];
+                const active =
+                    pathname === basePath && link.highlightOnPath !== false;
                 return (
                 <Link
-                    key={link.href}
+                    key={`${title}-${link.label}`}
                     href={link.href}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors group font-medium ${
                         active
