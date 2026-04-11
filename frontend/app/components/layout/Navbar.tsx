@@ -91,6 +91,7 @@ export function Navbar() {
               </span>
               <input
                 name="q"
+                aria-label="Search books"
                 className="pl-10 pr-4 py-2 rounded-full border border-transparent bg-white dark:bg-surface-dark focus:bg-white focus:ring-2 focus:ring-primary text-sm w-48 transition-all placeholder-neutral-400"
                 placeholder="Search..."
                 type="search"
@@ -110,6 +111,9 @@ export function Navbar() {
                 <button
                   onClick={() => setDropdownOpen(!dropdownOpen)}
                   className="flex items-center gap-2 p-1 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                  aria-expanded={dropdownOpen}
+                  aria-haspopup="true"
+                  aria-label="User menu"
                 >
                   <div className="h-9 w-9 rounded-full bg-primary/20 text-primary flex items-center justify-center font-semibold text-sm">
                     {initials}

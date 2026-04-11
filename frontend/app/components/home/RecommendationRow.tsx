@@ -17,8 +17,22 @@ export function RecommendationRow() {
   const { data, error, isLoading } = useBooks(1, 5, undefined, undefined, "rating");
   const books = data?.items ?? [];
 
-  if (error || (isLoading && books.length === 0)) return null;
-  if (books.length === 0) return null;
+  if (isLoading && books.length === 0) {
+    return (
+      <section className="mb-16">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-neutral-800 dark:text-white">Recommended for you</h2>
+          <p className="text-neutral-500 dark:text-neutral-400 text-sm mt-1">Top rated books</p>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="aspect-[2/3] rounded-lg bg-neutral-200 dark:bg-neutral-700 animate-pulse" />
+          ))}
+        </div>
+      </section>
+    );
+  }
+  if (error || books.length === 0) return null;
 
   return (
     <section className="mb-16">

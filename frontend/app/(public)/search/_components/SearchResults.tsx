@@ -59,7 +59,7 @@ export function SearchResults({ query }: { query: string }) {
               >
                 <div className="w-16 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-neutral-200 dark:bg-neutral-700">
                   <img
-                    alt=""
+                    alt={book.title}
                     className="w-full h-full object-cover"
                     src={book.coverImageUrl || PLACEHOLDER}
                   />

@@ -18,6 +18,7 @@ async function seed() {
   const existing = await users.findOne({ email: 'admin@boipora.com' });
   if (existing) {
     console.log('Admin user already exists');
+    await mongoose.disconnect();
     process.exit(0);
     return;
   }
@@ -34,6 +35,7 @@ async function seed() {
     updatedAt: new Date(),
   });
   console.log('Admin user created: admin@boipora.com (password from env ADMIN_SEED_PASSWORD or default)');
+  await mongoose.disconnect();
   process.exit(0);
 }
 

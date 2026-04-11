@@ -1,4 +1,4 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types, FilterQuery } from 'mongoose';
 import { LibraryItem, LibraryItemDocument } from '../../schemas/library-item.schema';
@@ -96,7 +96,7 @@ export class LibraryService {
 
   async adminUpdateStatus(id: string, status: string) {
     if (!Object.values(LibraryItemStatus).includes(status as LibraryItemStatus)) {
-      throw new NotFoundException('Invalid status');
+      throw new BadRequestException('Invalid status');
     }
     const item = await this.libraryItemModel
       .findByIdAndUpdate(id, { $set: { status } }, { new: true, lean: true })

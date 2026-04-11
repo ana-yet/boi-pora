@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { useReviews, type ReviewItem } from "@/lib/hooks/useReviews";
 import { api, ApiError } from "@/lib/api";
@@ -28,6 +29,8 @@ function StarRating({
           onMouseEnter={() => !readonly && setHover(i)}
           onMouseLeave={() => setHover(0)}
           className={`transition-colors ${readonly ? "cursor-default" : "cursor-pointer hover:scale-110"}`}
+          aria-label={`${i} star${i > 1 ? "s" : ""}`}
+          aria-pressed={i <= value}
         >
           <span
             className={`material-icons text-2xl ${i <= (hover || value) ? "text-yellow-400" : "text-neutral-300 dark:text-neutral-600"}`}
@@ -129,12 +132,12 @@ export function ReviewsSection({ bookId }: { bookId: string }) {
 
       {!isAuthenticated && (
         <p className="mb-8 text-sm text-slate-500 dark:text-slate-400">
-          <a
+          <Link
             href="/login"
             className="text-primary hover:underline font-medium"
           >
             Sign in
-          </a>{" "}
+          </Link>{" "}
           to leave a review.
         </p>
       )}

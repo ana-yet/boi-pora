@@ -42,9 +42,15 @@ export class SanitizePipe implements PipeTransform {
       if (typeof val === 'string') {
         result[key] = sanitizeText(val);
       } else if (Array.isArray(val)) {
-        result[key] = val.map((item) =>
-          typeof item === 'string' ? sanitizeText(item) : item,
-        );
+        result[key] = val.map((item) => {
+          if (typeof item === 'string') return sanitizeText(item);
+          if (typeof item === 'object' && item !== null) {
+            return this.sanitizeObject(item as Record<string, unknown>);
+          }
+          return item;
+        });
+      } else if (typeof val === 'object' && val !== null) {
+        result[key] = this.sanitizeObject(val as Record<string, unknown>);
       } else {
         result[key] = val;
       }
