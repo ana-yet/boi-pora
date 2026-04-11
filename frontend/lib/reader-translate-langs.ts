@@ -31,7 +31,7 @@ export const READER_TRANSLATE_TARGET = READER_TRANSLATE_SOURCE.filter(
   (o) => o.code !== "auto",
 );
 
-const API_SOURCE_CODES = new Set(
+const API_SOURCE_CODES = new Set<string>(
   READER_TRANSLATE_SOURCE.filter((o) => o.code !== "auto").map((o) => o.code),
 );
 
