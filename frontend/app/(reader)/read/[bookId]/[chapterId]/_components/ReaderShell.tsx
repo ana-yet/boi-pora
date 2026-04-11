@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useEffect, useCallback, type ReactNode, type CSSProperties } from "react";
+import { useState, useEffect, useCallback, useMemo, type ReactNode, type CSSProperties } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { SettingsPanel } from "./SettingsPanel";
 import { TOCSidebar } from "./TOCSidebar";
+import { SectionOutlineSidebar } from "./SectionOutlineSidebar";
 import { useKeyboardShortcuts } from "@/lib/hooks/useKeyboardShortcuts";
+import type { MarkdownSectionHeading } from "@/lib/markdown-headings";
 
 export type ReaderTheme = "light" | "dark" | "sepia";
 export type ReaderFont = "serif" | "sans" | "mono";
@@ -106,6 +108,8 @@ interface ReaderShellProps {
     bookId: string;
     currentChapterId: string;
     chapters: { chapterId: string; chapterNumber: number; title: string; wordCount?: number }[];
+    /** Markdown `##`…`######` headings — opens from header like book contents. */
+    sectionHeadings?: MarkdownSectionHeading[];
     children: ReactNode;
 }
 
@@ -119,11 +123,13 @@ export function ReaderShell({
     bookId,
     currentChapterId,
     chapters,
+    sectionHeadings,
     children,
 }: ReaderShellProps) {
     const router = useRouter();
     const [panelOpen, setPanelOpen] = useState(false);
     const [tocOpen, setTocOpen] = useState(false);
+    const [sectionsOpen, setSectionsOpen] = useState(false);
     const [settings, setSettings] = useState<ReaderSettings>(DEFAULTS);
     const [mounted, setMounted] = useState(false);
 
@@ -132,17 +138,54 @@ export function ReaderShell({
         setMounted(true);
     }, []);
 
+    useEffect(() => {
+        setSectionsOpen(false);
+        setTocOpen(false);
+    }, [currentChapterId]);
+
     const handleSettingsChange = useCallback((newSettings: ReaderSettings) => {
         setSettings(newSettings);
         saveSettings(newSettings);
     }, []);
 
-    useKeyboardShortcuts({
-        arrowleft: () => prevHref && router.push(prevHref),
-        arrowright: () => nextHref && router.push(nextHref),
-        t: () => setTocOpen((o) => !o),
-        escape: () => { setTocOpen(false); setPanelOpen(false); },
-    });
+    const hasSectionNav = (sectionHeadings?.length ?? 0) > 0;
+
+    const shortcuts = useMemo(
+        () => ({
+            arrowleft: () => {
+                if (prevHref) router.push(prevHref);
+            },
+            arrowright: () => {
+                if (nextHref) router.push(nextHref);
+            },
+            t: () => {
+                setTocOpen((o) => {
+                    const next = !o;
+                    if (next) setSectionsOpen(false);
+                    return next;
+                });
+            },
+            ...(hasSectionNav
+                ? {
+                      s: () => {
+                          setSectionsOpen((o) => {
+                              const next = !o;
+                              if (next) setTocOpen(false);
+                              return next;
+                          });
+                      },
+                  }
+                : {}),
+            escape: () => {
+                setTocOpen(false);
+                setSectionsOpen(false);
+                setPanelOpen(false);
+            },
+        }),
+        [hasSectionNav, nextHref, prevHref, router],
+    );
+
+    useKeyboardShortcuts(shortcuts);
 
     const c = COLORS[settings.theme];
 
@@ -227,13 +270,30 @@ export function ReaderShell({
                     </Link>
                     <button
                         type="button"
-                        onClick={() => setTocOpen(true)}
+                        onClick={() => {
+                            setSectionsOpen(false);
+                            setTocOpen(true);
+                        }}
                         style={{ color: c.muted }}
                         className="p-2.5 rounded-xl hover:bg-black/[0.04] dark:hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 transition-colors"
-                        aria-label="Table of contents (shortcut: T)"
+                        aria-label="Book chapters (shortcut: T)"
                     >
                         <span className="material-icons text-[22px]" aria-hidden="true">menu_book</span>
                     </button>
+                    {hasSectionNav && (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setTocOpen(false);
+                                setSectionsOpen(true);
+                            }}
+                            style={{ color: c.muted }}
+                            className="p-2.5 rounded-xl hover:bg-black/[0.04] dark:hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 transition-colors"
+                            aria-label="Sections in this chapter (shortcut: S)"
+                        >
+                            <span className="material-icons text-[22px]" aria-hidden="true">subject</span>
+                        </button>
+                    )}
                 </div>
 
                 <div className="flex flex-col items-center justify-center select-none min-w-0 flex-1 px-2">
@@ -267,7 +327,7 @@ export function ReaderShell({
             {/* Reading Area */}
             <main className="relative min-h-screen pt-[calc(4.5rem+env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))] flex justify-center px-4 sm:px-6">
                 <article
-                    className="boi-reader-article w-full max-w-[min(76rem,100%)] pb-8 overflow-x-hidden wrap-break-word"
+                    className="boi-reader-article w-full max-w-[min(42rem,100%)] md:max-w-[44rem] pb-8 overflow-x-hidden wrap-break-word mx-auto"
                 >
                     {children}
                 </article>
@@ -349,6 +409,15 @@ export function ReaderShell({
                 onClose={() => setTocOpen(false)}
                 readerTheme={settings.theme}
             />
+
+            {hasSectionNav && sectionHeadings && (
+                <SectionOutlineSidebar
+                    headings={sectionHeadings}
+                    open={sectionsOpen}
+                    onClose={() => setSectionsOpen(false)}
+                    readerTheme={settings.theme}
+                />
+            )}
         </div>
     );
 }

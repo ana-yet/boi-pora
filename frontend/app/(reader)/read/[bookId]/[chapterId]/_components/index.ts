@@ -8,5 +8,5 @@ export type {
 export { SettingsPanel } from "./SettingsPanel";
 export { ChapterContent } from "./ChapterContent";
 export { ChapterMarkdown } from "./ChapterMarkdown";
-export { ChapterOutline } from "./ChapterOutline";
+export { SectionOutlineSidebar } from "./SectionOutlineSidebar";
 export type { Illustration } from "./ChapterContent";

@@ -11,6 +11,7 @@ import { api } from "@/lib/api";
 import { ReaderShell } from "./_components/ReaderShell";
 import { ChapterContent } from "./_components/ChapterContent";
 import { ChapterMarkdown } from "./_components/ChapterMarkdown";
+import { extractChapterSectionHeadings } from "@/lib/markdown-headings";
 
 function isMarkdown(text: string): boolean {
   return /^#{1,6}\s|^\*\*|^\*[^*]|^-\s|^\d+\.\s|^>\s|```|^\|.*\|/m.test(text);
@@ -101,6 +102,7 @@ export default function ReaderPage() {
   };
 
   const useMarkdown = isMarkdown(chapter.content);
+  const sectionHeadings = useMarkdown ? extractChapterSectionHeadings(chapter.content) : [];
 
   return (
     <ReaderShell
@@ -117,6 +119,7 @@ export default function ReaderPage() {
       bookId={bookId}
       currentChapterId={chapterId}
       chapters={sortedChapters}
+      sectionHeadings={sectionHeadings.length > 0 ? sectionHeadings : undefined}
     >
       <header className="mb-10 md:mb-12 text-center max-w-[min(42rem,100%)] mx-auto">
         <span className="text-primary/80 font-display text-xs sm:text-sm font-bold tracking-[0.2em] uppercase mb-5 block">
