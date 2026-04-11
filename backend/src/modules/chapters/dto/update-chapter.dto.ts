@@ -17,7 +17,6 @@ export class UpdateChapterDto {
 
   @IsOptional()
   @IsString()
-  @MaxLength(500000)
   content?: string;
 
   @IsOptional()

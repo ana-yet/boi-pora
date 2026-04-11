@@ -21,7 +21,7 @@ export interface ReaderSettings {
 const DEFAULTS: ReaderSettings = {
     theme: "light",
     font: "serif",
-    fontSize: 20,
+    fontSize: 18,
     spacing: "normal",
 };
 
@@ -56,9 +56,9 @@ const FONT_MAP: Record<ReaderFont, string> = {
 };
 
 const SPACING_MAP: Record<ReaderSpacing, string> = {
-    compact: "1.6",
-    normal: "1.85",
-    loose: "2.15",
+    compact: "1.4",
+    normal: "1.6",
+    loose: "1.8",
 };
 
 interface ThemeColors {
@@ -71,24 +71,24 @@ interface ThemeColors {
 
 const COLORS: Record<ReaderTheme, ThemeColors> = {
     light: {
-        bg: "#f8f7f6",
-        text: "#4a4036",
+        bg: "#fdfcfb",
+        text: "#2c2c2c",
         muted: "#8c8075",
-        headerBg: "rgba(248,247,246,0.97)",
+        headerBg: "rgba(253,252,251,0.97)",
         border: "#e5ddd5",
     },
     dark: {
-        bg: "#141414",
-        text: "#d4d4d4",
+        bg: "#121212",
+        text: "#e0e0e0",
         muted: "#737373",
-        headerBg: "rgba(20,20,20,0.97)",
-        border: "#333333",
+        headerBg: "rgba(18,18,18,0.97)",
+        border: "#2a2a2a",
     },
     sepia: {
-        bg: "#f5e6c8",
-        text: "#3b2a14",
+        bg: "#f4ecd8",
+        text: "#433422",
         muted: "#8a7560",
-        headerBg: "rgba(245,230,200,0.97)",
+        headerBg: "rgba(244,236,216,0.97)",
         border: "#d4be94",
     },
 };
@@ -159,6 +159,11 @@ export function ReaderShell({
             font-size: ${settings.fontSize}px;
             font-family: ${FONT_MAP[settings.font]};
             color: ${c.text};
+            text-align: justify;
+            hyphens: auto;
+            -webkit-hyphens: auto;
+            -moz-hyphens: auto;
+            -ms-hyphens: auto;
         }
         .boi-reader-article p,
         .boi-reader-article li,
@@ -167,6 +172,13 @@ export function ReaderShell({
         .boi-reader-article blockquote,
         .boi-reader-article figcaption {
             line-height: ${SPACING_MAP[settings.spacing]} !important;
+        }
+        .boi-reader-article p {
+            margin-bottom: 1.5em;
+        }
+        ::selection {
+            background-color: ${settings.theme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'};
+            color: inherit;
         }
     `;
 
@@ -228,7 +240,7 @@ export function ReaderShell({
             {/* Reading Area */}
             <main className="relative min-h-screen pt-24 pb-28 flex justify-center">
                 <article
-                    className="boi-reader-article w-full max-w-[640px] px-6 md:px-0 overflow-hidden wrap-break-word"
+                    className="boi-reader-article w-full max-w-[720px] px-6 md:px-0 overflow-hidden wrap-break-word"
                 >
                     {children}
                 </article>
