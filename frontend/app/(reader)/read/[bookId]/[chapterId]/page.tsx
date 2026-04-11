@@ -10,7 +10,7 @@ import { useAuth } from "@/app/providers/AuthProvider";
 import { api } from "@/lib/api";
 import { ReaderShell } from "./_components/ReaderShell";
 import { ChapterContent } from "./_components/ChapterContent";
-import { MarkdownRenderer } from "@/app/components/ui/MarkdownRenderer";
+import { ChapterMarkdown } from "./_components/ChapterMarkdown";
 
 function isMarkdown(text: string): boolean {
   return /^#{1,6}\s|^\*\*|^\*[^*]|^-\s|^\d+\.\s|^>\s|```|^\|.*\|/m.test(text);
@@ -131,7 +131,7 @@ export default function ReaderPage() {
       </header>
 
       {useMarkdown ? (
-        <MarkdownRenderer content={chapter.content} />
+        <ChapterMarkdown content={chapter.content} />
       ) : (
         <ChapterContent
           chapterNumber={`Chapter ${getOrdinal(chapter.chapterNumber)}`}

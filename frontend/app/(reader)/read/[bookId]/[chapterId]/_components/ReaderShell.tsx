@@ -181,6 +181,14 @@ export function ReaderShell({
         .boi-reader-article p {
             margin-bottom: 1.5em;
         }
+        .boi-reader-article :is(h1, h2, h3, h4, h5, h6) {
+            scroll-margin-top: 5.5rem;
+        }
+        @media (prefers-reduced-motion: no-preference) {
+            .boi-reader-article {
+                scroll-behavior: smooth;
+            }
+        }
         ::selection {
             background-color: ${settings.theme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'};
             color: inherit;

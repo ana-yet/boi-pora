@@ -7,4 +7,6 @@ export type {
 } from "./ReaderShell";
 export { SettingsPanel } from "./SettingsPanel";
 export { ChapterContent } from "./ChapterContent";
+export { ChapterMarkdown } from "./ChapterMarkdown";
+export { ChapterOutline } from "./ChapterOutline";
 export type { Illustration } from "./ChapterContent";
