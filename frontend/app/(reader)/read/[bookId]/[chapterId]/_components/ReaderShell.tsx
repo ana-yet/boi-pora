@@ -9,9 +9,9 @@ import { SectionOutlineSidebar } from "./SectionOutlineSidebar";
 import { useKeyboardShortcuts } from "@/lib/hooks/useKeyboardShortcuts";
 import { extractChapterSectionHeadings, type MarkdownSectionHeading } from "@/lib/markdown-headings";
 import { splitContent } from "@/lib/chapter-read-utils";
-import { api, ApiError } from "@/lib/api";
 import { ChapterMarkdown } from "./ChapterMarkdown";
 import { ChapterContent } from "./ChapterContent";
+import { ReaderInlineTranslate, type InlineTranslatePalette } from "./ReaderInlineTranslate";
 
 export type ReaderTheme = "light" | "dark" | "sepia";
 export type ReaderFont = "serif" | "sans" | "mono";
@@ -111,6 +111,30 @@ interface ThemeColors {
     border: string;
 }
 
+const INLINE_TRANSLATE_PALETTE: Record<ReaderTheme, InlineTranslatePalette> = {
+    light: {
+        bg: "#fdfbf9",
+        border: "#e5ddd5",
+        text: "#2c2c2c",
+        muted: "#8c8075",
+        cardBg: "#f3eee9",
+    },
+    dark: {
+        bg: "#242424",
+        border: "#3a3a3a",
+        text: "#e0e0e0",
+        muted: "#808080",
+        cardBg: "#1c1c1c",
+    },
+    sepia: {
+        bg: "#faf0d7",
+        border: "#d4be94",
+        text: "#433422",
+        muted: "#8a7560",
+        cardBg: "#f0e2c4",
+    },
+};
+
 const COLORS: Record<ReaderTheme, ThemeColors> = {
     light: {
         bg: "#fdfcfb",
@@ -180,30 +204,15 @@ export function ReaderShell({
     const [settings, setSettings] = useState<ReaderSettings>(DEFAULTS);
     const [mounted, setMounted] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
-    const [translatedText, setTranslatedText] = useState<string | null>(null);
-    const [showTranslated, setShowTranslated] = useState(false);
-    const [translateLoading, setTranslateLoading] = useState(false);
-    const [translateError, setTranslateError] = useState<string | null>(null);
-    const [sourceLang, setSourceLang] = useState("auto");
-    const [targetLang, setTargetLang] = useState("bn");
 
     useEffect(() => {
         setSettings(loadSettings());
-        try {
-            setSourceLang(sessionStorage.getItem("boi_pora_reader_translate_src") ?? "auto");
-            setTargetLang(sessionStorage.getItem("boi_pora_reader_translate_tgt") ?? "bn");
-        } catch {
-            /* ignore */
-        }
         setMounted(true);
     }, []);
 
     useEffect(() => {
         setSectionsOpen(false);
         setTocOpen(false);
-        setTranslatedText(null);
-        setShowTranslated(false);
-        setTranslateError(null);
     }, [currentChapterId]);
 
     useEffect(() => {
@@ -239,41 +248,13 @@ export function ReaderShell({
         saveSettings(newSettings);
     }, []);
 
-    const displayBody =
-        showTranslated && translatedText !== null ? translatedText : chapterArticle.content;
-
     const resolvedSectionHeadings = useMemo((): MarkdownSectionHeading[] | undefined => {
         if (!chapterArticle.isMarkdown) return undefined;
-        const h = extractChapterSectionHeadings(displayBody);
+        const h = extractChapterSectionHeadings(chapterArticle.content);
         return h.length ? h : undefined;
-    }, [chapterArticle.isMarkdown, displayBody]);
+    }, [chapterArticle.isMarkdown, chapterArticle.content]);
 
     const hasSectionNav = (resolvedSectionHeadings?.length ?? 0) > 0;
-
-    const runTranslate = useCallback(async () => {
-        setTranslateLoading(true);
-        setTranslateError(null);
-        try {
-            const { translated } = await api.post<{ translated: string }>("/api/v1/translate", {
-                text: chapterArticle.content,
-                source: sourceLang,
-                target: targetLang,
-            });
-            setTranslatedText(translated);
-            setShowTranslated(true);
-            try {
-                sessionStorage.setItem("boi_pora_reader_translate_src", sourceLang);
-                sessionStorage.setItem("boi_pora_reader_translate_tgt", targetLang);
-            } catch {
-                /* ignore */
-            }
-        } catch (e: unknown) {
-            const msg = e instanceof ApiError ? e.message : "Translation failed";
-            setTranslateError(msg);
-        } finally {
-            setTranslateLoading(false);
-        }
-    }, [chapterArticle.content, sourceLang, targetLang]);
 
     const shortcuts = useMemo(
         () => ({
@@ -547,18 +528,20 @@ export function ReaderShell({
                                 <div className="h-px w-16 bg-linear-to-r from-transparent via-primary/40 to-transparent rounded-full" />
                             </div>
                         </header>
-                        {chapterArticle.isMarkdown ? (
-                            <ChapterMarkdown content={displayBody} />
-                        ) : (
-                            <div className="mx-auto w-full max-w-[min(42rem,100%)]">
-                                <ChapterContent
-                                    chapterNumber={chapterArticle.plainChapterNumberLabel}
-                                    chapterTitle={chapterArticle.chapterTitle}
-                                    paragraphs={splitContent(displayBody)}
-                                    hideHeader
-                                />
-                            </div>
-                        )}
+                        <ReaderInlineTranslate palette={INLINE_TRANSLATE_PALETTE[settings.theme]}>
+                            {chapterArticle.isMarkdown ? (
+                                <ChapterMarkdown content={chapterArticle.content} />
+                            ) : (
+                                <div className="mx-auto w-full max-w-[min(42rem,100%)]">
+                                    <ChapterContent
+                                        chapterNumber={chapterArticle.plainChapterNumberLabel}
+                                        chapterTitle={chapterArticle.chapterTitle}
+                                        paragraphs={splitContent(chapterArticle.content)}
+                                        hideHeader
+                                    />
+                                </div>
+                            )}
+                        </ReaderInlineTranslate>
                     </>
                 </article>
 
@@ -567,18 +550,6 @@ export function ReaderShell({
                         settings={settings}
                         onChange={handleSettingsChange}
                         onClose={() => setPanelOpen(false)}
-                        translation={{
-                            sourceLang,
-                            setSourceLang,
-                            targetLang,
-                            setTargetLang,
-                            onTranslate: () => void runTranslate(),
-                            loading: translateLoading,
-                            error: translateError,
-                            showTranslated,
-                            setShowTranslated,
-                            hasTranslation: translatedText !== null,
-                        }}
                     />
                 )}
             </main>

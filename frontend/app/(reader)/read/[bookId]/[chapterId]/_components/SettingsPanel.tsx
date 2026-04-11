@@ -8,7 +8,6 @@ import {
     type ReaderFont,
     type ReaderSpacing,
 } from "./ReaderShell";
-import { READER_TRANSLATE_SOURCE, READER_TRANSLATE_TARGET } from "@/lib/reader-translate-langs";
 
 interface PanelColors {
     bg: string;
@@ -54,32 +53,15 @@ const PANEL_COLORS: Record<ReaderTheme, PanelColors> = {
     },
 };
 
-export interface ReaderTranslationPanelProps {
-    sourceLang: string;
-    setSourceLang: (v: string) => void;
-    targetLang: string;
-    setTargetLang: (v: string) => void;
-    onTranslate: () => void;
-    loading: boolean;
-    error: string | null;
-    showTranslated: boolean;
-    setShowTranslated: (v: boolean) => void;
-    hasTranslation: boolean;
-}
-
 interface SettingsPanelProps {
     settings: ReaderSettings;
     onChange: (s: ReaderSettings) => void;
     onClose: () => void;
-    translation: ReaderTranslationPanelProps;
 }
 
-export function SettingsPanel({ settings, onChange, onClose, translation }: SettingsPanelProps) {
+export function SettingsPanel({ settings, onChange, onClose }: SettingsPanelProps) {
     const update = (partial: Partial<ReaderSettings>) =>
         onChange({ ...settings, ...partial });
-
-    const sameLang =
-        translation.sourceLang !== "auto" && translation.sourceLang === translation.targetLang;
 
     const pc = PANEL_COLORS[settings.theme];
 
@@ -200,90 +182,18 @@ export function SettingsPanel({ settings, onChange, onClose, translation }: Sett
                         </div>
                     </section>
 
-                    {/* Translation (MyMemory API — same service as mymemory_translate on pub.dev) */}
-                    <section>
-                        <SectionLabel text="Translate chapter" muted={pc.muted} />
-                        <p style={{ color: pc.muted }} className="text-[11px] leading-snug mb-3">
-                            Uses the public{" "}
-                            <a
-                                href="https://mymemory.translated.net/doc/us.php"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="underline underline-offset-2 hover:text-primary"
-                            >
-                                MyMemory
-                            </a>{" "}
-                            API. Daily limits apply; markdown may need a second pass after translating.
-                        </p>
-                        <div className="space-y-2 mb-3">
-                            <label className="block">
-                                <span style={{ color: pc.muted }} className="text-[10px] font-semibold uppercase tracking-wide">
-                                    From
-                                </span>
-                                <select
-                                    value={translation.sourceLang}
-                                    onChange={(e) => translation.setSourceLang(e.target.value)}
-                                    style={{ backgroundColor: pc.controlBg, borderColor: pc.border, color: pc.text }}
-                                    className="mt-1 w-full rounded-xl border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-                                >
-                                    {READER_TRANSLATE_SOURCE.map((o) => (
-                                        <option key={o.code} value={o.code}>
-                                            {o.label}
-                                        </option>
-                                    ))}
-                                </select>
-                            </label>
-                            <label className="block">
-                                <span style={{ color: pc.muted }} className="text-[10px] font-semibold uppercase tracking-wide">
-                                    To
-                                </span>
-                                <select
-                                    value={translation.targetLang}
-                                    onChange={(e) => translation.setTargetLang(e.target.value)}
-                                    style={{ backgroundColor: pc.controlBg, borderColor: pc.border, color: pc.text }}
-                                    className="mt-1 w-full rounded-xl border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-                                >
-                                    {READER_TRANSLATE_TARGET.map((o) => (
-                                        <option key={o.code} value={o.code}>
-                                            {o.label}
-                                        </option>
-                                    ))}
-                                </select>
-                            </label>
-                        </div>
-                        <button
-                            type="button"
-                            onClick={translation.onTranslate}
-                            disabled={translation.loading || sameLang}
-                            style={{ backgroundColor: pc.controlBg, borderColor: pc.border, color: pc.text }}
-                            className="w-full py-2.5 rounded-xl border text-sm font-semibold hover:border-primary/50 hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-50 disabled:pointer-events-none"
-                        >
-                            {translation.loading ? "Translating…" : "Translate this chapter"}
-                        </button>
-                        {sameLang && (
-                            <p style={{ color: pc.muted }} className="mt-1.5 text-[11px]">
-                                Pick a different target language than the source, or use “Detect language”.
-                            </p>
-                        )}
-                        {translation.hasTranslation && (
-                            <label className="mt-3 flex items-center gap-2 cursor-pointer select-none">
-                                <input
-                                    type="checkbox"
-                                    checked={translation.showTranslated}
-                                    onChange={(e) => translation.setShowTranslated(e.target.checked)}
-                                    className="rounded border-neutral-400 text-primary focus:ring-primary/40"
-                                />
-                                <span className="text-sm" style={{ color: pc.text }}>
-                                    Show translated text
-                                </span>
-                            </label>
-                        )}
-                        {translation.error && (
-                            <p className="mt-2 text-xs text-red-600 dark:text-red-400" role="alert">
-                                {translation.error}
-                            </p>
-                        )}
-                    </section>
+                    <p
+                        style={{ color: pc.muted, borderColor: pc.border, backgroundColor: pc.controlBg }}
+                        className="text-[11px] leading-snug rounded-xl border px-3 py-2.5"
+                    >
+                        In the chapter body, tap a <strong className="font-semibold" style={{ color: pc.text }}>word</strong> (not a link) to open translation — then choose{" "}
+                        <strong className="font-semibold" style={{ color: pc.text }}>Translate word</strong> or{" "}
+                        <strong className="font-semibold" style={{ color: pc.text }}>Translate sentence</strong>. Translations go through your server (default:{" "}
+                        <a href="https://github.com/thedaviddelta/lingva-translate" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-primary">
+                            Lingva
+                        </a>
+                        ).
+                    </p>
 
                     {/* Line Spacing */}
                     <section>

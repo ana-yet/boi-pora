@@ -1,16 +1,24 @@
 import { Injectable, BadRequestException, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-const MYMEMORY_GET = 'https://api.mymemory.translated.net/get';
+/**
+ * Default: Lingva (open proxy around Google Translate) — no API key on public instances.
+ * Optional: set TRANSLATE_PROVIDER=libretranslate + LIBRETRANSLATE_API_URL + LIBRETRANSLATE_API_KEY
+ * (see https://portal.libretranslate.com — the public libretranslate.com host now requires a key).
+ */
+const DEFAULT_LINGVA_BASE = 'https://lingva.ml';
+const DEFAULT_LIBRETRANSLATE_URL = 'https://libretranslate.com';
 
-interface MyMemoryResponse {
-  responseStatus?: number;
-  responseData?: { translatedText?: string; match?: number };
-  quotaFinished?: boolean;
+interface LingvaResponse {
+  translation?: string;
+}
+
+interface LibreTranslateResponse {
+  translatedText?: string;
   error?: string;
 }
 
-function packParagraphs(text: string, max = 420): string[] {
+function packParagraphs(text: string, max = 900): string[] {
   const paras = text.split(/\n\n+/);
   const packs: string[] = [];
   let cur = '';
@@ -42,40 +50,102 @@ function sleep(ms: number): Promise<void> {
 export class TranslateService {
   constructor(private readonly config: ConfigService) {}
 
-  private langPair(source: string, target: string): string {
-    const s = source === 'auto' ? 'auto' : source.toLowerCase();
-    const t = target.toLowerCase();
-    return `${s}|${t}`;
+  private provider(): 'lingva' | 'libretranslate' {
+    const p = this.config.get<string>('TRANSLATE_PROVIDER')?.trim().toLowerCase();
+    return p === 'libretranslate' ? 'libretranslate' : 'lingva';
   }
 
-  private async translateOne(
-    q: string,
-    langpair: string,
-    contactEmail?: string,
-  ): Promise<string> {
-    const url = new URL(MYMEMORY_GET);
-    url.searchParams.set('q', q);
-    url.searchParams.set('langpair', langpair);
-    if (contactEmail) {
-      url.searchParams.set('de', contactEmail);
-    }
+  private lingvaBase(): string {
+    const raw =
+      this.config.get<string>('LINGVA_TRANSLATE_BASE_URL')?.trim() ||
+      DEFAULT_LINGVA_BASE;
+    return raw.replace(/\/$/, '');
+  }
 
-    const res = await fetch(url.toString(), {
+  private libreBase(): string {
+    const raw =
+      this.config.get<string>('LIBRETRANSLATE_API_URL')?.trim() ||
+      DEFAULT_LIBRETRANSLATE_URL;
+    return raw.replace(/\/$/, '');
+  }
+
+  private async translateChunkLingva(
+    q: string,
+    source: string,
+    target: string,
+  ): Promise<string> {
+    const src = source === 'auto' ? 'auto' : source.toLowerCase();
+    const tgt = target.toLowerCase();
+    const encoded = encodeURIComponent(q);
+    const url = `${this.lingvaBase()}/api/v1/${src}/${tgt}/${encoded}`;
+    const res = await fetch(url, {
       method: 'GET',
       headers: { Accept: 'application/json' },
     });
+    const text = await res.text();
+    let data: LingvaResponse;
+    try {
+      data = JSON.parse(text) as LingvaResponse;
+    } catch {
+      throw new ServiceUnavailableException(
+        'Translation service returned an unexpected response. Try another LINGVA_TRANSLATE_BASE_URL instance.',
+      );
+    }
     if (!res.ok) {
-      throw new ServiceUnavailableException('Translation service returned an error');
+      const msg =
+        (data as unknown as { error?: string }).error ??
+        `Translation failed (${res.status})`;
+      if (res.status === 400 || res.status === 404) {
+        throw new BadRequestException(msg);
+      }
+      throw new ServiceUnavailableException(msg);
     }
-    const data = (await res.json()) as MyMemoryResponse;
-    if (data.quotaFinished) {
-      throw new ServiceUnavailableException('Translation quota exceeded; try again later');
+    const out = data.translation?.trim() ?? '';
+    if (!out && q.trim().length > 0) {
+      throw new ServiceUnavailableException('Empty translation response');
     }
-    if (data.responseStatus && data.responseStatus !== 200) {
-      throw new BadRequestException(data.error ?? 'Translation rejected');
+    return out;
+  }
+
+  private async translateChunkLibre(
+    q: string,
+    source: string,
+    target: string,
+  ): Promise<string> {
+    const apiKey = this.config.get<string>('LIBRETRANSLATE_API_KEY')?.trim() ?? '';
+    const url = `${this.libreBase()}/translate`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        q,
+        source: source === 'auto' ? 'auto' : source.toLowerCase(),
+        target: target.toLowerCase(),
+        format: 'text',
+        api_key: apiKey,
+      }),
+    });
+
+    let data: LibreTranslateResponse & { error?: string };
+    try {
+      data = (await res.json()) as LibreTranslateResponse & { error?: string };
+    } catch {
+      throw new ServiceUnavailableException('Invalid response from LibreTranslate');
     }
-    const out = data.responseData?.translatedText?.trim();
-    if (!out) {
+
+    if (!res.ok) {
+      const errMsg = data.error ?? `Translation service error (${res.status})`;
+      if (res.status === 400 || res.status === 422) {
+        throw new BadRequestException(errMsg);
+      }
+      throw new ServiceUnavailableException(errMsg);
+    }
+
+    const out = data.translatedText?.trim() ?? '';
+    if (!out && q.trim().length > 0) {
       throw new ServiceUnavailableException('Empty translation response');
     }
     return out;
@@ -85,19 +155,35 @@ export class TranslateService {
     if (source !== 'auto' && source === target) {
       return { translated: text };
     }
-    const langpair = this.langPair(source, target);
-    const contactEmail = this.config.get<string>('MYMEMORY_CONTACT_EMAIL')?.trim() || undefined;
-    const packs = packParagraphs(text, 420);
+
+    if (this.provider() === 'libretranslate') {
+      const key = this.config.get<string>('LIBRETRANSLATE_API_KEY')?.trim();
+      if (!key) {
+        throw new BadRequestException(
+          'LibreTranslate is selected but LIBRETRANSLATE_API_KEY is not set. Get a key at https://portal.libretranslate.com or use the default Lingva provider (unset TRANSLATE_PROVIDER).',
+        );
+      }
+    }
+
+    const packs = packParagraphs(text, this.provider() === 'lingva' ? 900 : 2000);
     if (packs.length === 0) {
       return { translated: '' };
     }
+
+    const translateOne =
+      this.provider() === 'libretranslate'
+        ? (chunk: string, src: string, tgt: string) =>
+            this.translateChunkLibre(chunk, src, tgt)
+        : (chunk: string, src: string, tgt: string) =>
+            this.translateChunkLingva(chunk, src, tgt);
+
     const parts: string[] = [];
+    const delayMs = this.provider() === 'lingva' ? 280 : 200;
     for (let i = 0; i < packs.length; i++) {
       const chunk = packs[i]!;
-      const translated = await this.translateOne(chunk, langpair, contactEmail);
-      parts.push(translated);
+      parts.push(await translateOne(chunk, source, target));
       if (i < packs.length - 1) {
-        await sleep(130);
+        await sleep(delayMs);
       }
     }
     return { translated: parts.join('\n\n') };
