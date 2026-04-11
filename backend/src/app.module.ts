@@ -13,7 +13,6 @@ import { AdminModule } from './modules/admin/admin.module';
 import { LibraryModule } from './modules/library/library.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
 import { ReadingModule } from './modules/reading/reading.module';
-import { TranslateModule } from './modules/translate/translate.module';
 import { HealthController } from './health.controller.js';
 
 @Module({
@@ -40,7 +39,6 @@ import { HealthController } from './health.controller.js';
     LibraryModule,
     ReviewsModule,
     ReadingModule,
-    TranslateModule,
   ],
   controllers: [HealthController],
   providers: [
