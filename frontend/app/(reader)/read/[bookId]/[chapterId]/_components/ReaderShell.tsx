@@ -12,6 +12,7 @@ import { splitContent } from "@/lib/chapter-read-utils";
 import { ChapterMarkdown } from "./ChapterMarkdown";
 import { ChapterContent } from "./ChapterContent";
 import { ReaderInlineTranslate, type InlineTranslatePalette } from "./ReaderInlineTranslate";
+import { ReaderChapterSummary } from "./ReaderChapterSummary";
 
 export type ReaderTheme = "light" | "dark" | "sepia";
 export type ReaderFont = "serif" | "sans" | "mono";
@@ -481,6 +482,12 @@ export function ReaderShell({
                 </div>
 
                 <div className="flex items-center shrink-0 gap-0.5">
+                    <ReaderChapterSummary
+                        bookId={bookId}
+                        chapterId={currentChapterId}
+                        chapterTitle={chapterArticle.chapterTitle}
+                        colors={{ text: c.text, muted: c.muted, border: c.border, bg: c.bg }}
+                    />
                     <button
                         type="button"
                         onClick={() => void toggleFullscreen()}

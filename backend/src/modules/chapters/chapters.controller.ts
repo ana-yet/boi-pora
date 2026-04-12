@@ -8,7 +8,9 @@ import {
   Param,
   UseGuards,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { ChaptersService } from './chapters.service';
+import { ChapterSummaryService } from './chapter-summary.service';
 import { CreateChapterDto } from './dto/create-chapter.dto';
 import { UpdateChapterDto } from './dto/update-chapter.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -19,12 +21,26 @@ import { UserRole } from '../../common/enums';
 
 @Controller('api/v1/chapters')
 export class ChaptersController {
-  constructor(private readonly chaptersService: ChaptersService) {}
+  constructor(
+    private readonly chaptersService: ChaptersService,
+    private readonly chapterSummaryService: ChapterSummaryService,
+  ) {}
 
   @Public()
   @Get('book/:bookId')
   findByBook(@Param('bookId') bookId: string) {
     return this.chaptersService.findByBook(bookId);
+  }
+
+  /** Must be registered before `book/:bookId/:chapterId` so `chapterId` is not captured as `summary`. */
+  @Public()
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
+  @Post('book/:bookId/:chapterId/summary')
+  getOrCreateChapterSummary(
+    @Param('bookId') bookId: string,
+    @Param('chapterId') chapterId: string,
+  ) {
+    return this.chapterSummaryService.getOrCreateSummary(bookId, chapterId);
   }
 
   @Public()
