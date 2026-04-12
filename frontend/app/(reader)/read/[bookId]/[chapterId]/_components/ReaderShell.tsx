@@ -240,6 +240,9 @@ export function ReaderShell({
             if (getFullscreenElement() === el) {
                 await exitFullscreenDoc();
             } else {
+                if (typeof window !== "undefined" && !window.matchMedia("(min-width: 768px)").matches) {
+                    return;
+                }
                 await enterFullscreenEl(el);
             }
         } catch {
@@ -292,6 +295,8 @@ export function ReaderShell({
                 setPanelOpen(false);
             },
             f: () => {
+                if (typeof window === "undefined") return;
+                if (!window.matchMedia("(min-width: 768px)").matches) return;
                 void toggleFullscreen();
             },
         }),
@@ -493,10 +498,10 @@ export function ReaderShell({
                         type="button"
                         onClick={() => void toggleFullscreen()}
                         style={{ color: c.muted }}
-                        className={`p-2.5 rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
+                        className={`hidden md:flex items-center justify-center p-2.5 rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
                             isFullscreen
                                 ? "bg-primary/15 text-primary ring-1 ring-primary/25"
-                                : "hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
+                                : "hover:bg-black/4 dark:hover:bg-white/6"
                         }`}
                         aria-pressed={isFullscreen}
                         aria-label={isFullscreen ? "Exit fullscreen (shortcut: F)" : "Fullscreen (shortcut: F)"}
