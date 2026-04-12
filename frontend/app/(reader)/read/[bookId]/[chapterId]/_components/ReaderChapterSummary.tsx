@@ -5,10 +5,13 @@ import { createPortal } from "react-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeSanitize from "rehype-sanitize";
+import { defaultSchema } from "hast-util-sanitize";
 import { api, ApiError } from "@/lib/api";
 import type { ReaderTheme } from "./ReaderShell";
 
 type ChapterSummaryResponse = { summary: string; cached: boolean };
+
+type SummaryViewMode = "preview" | "markdown";
 
 type ReaderChapterSummaryColors = {
   text: string;
@@ -37,6 +40,7 @@ export function ReaderChapterSummary({
   const [summary, setSummary] = useState<string | null>(null);
   const [fromCache, setFromCache] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<SummaryViewMode>("preview");
 
   const close = useCallback(() => {
     setOpen(false);
@@ -47,6 +51,7 @@ export function ReaderChapterSummary({
     setError(null);
     setFromCache(false);
     setOpen(false);
+    setViewMode("preview");
   }, [bookId, chapterId]);
 
   const loadSummary = useCallback(async () => {
@@ -59,6 +64,7 @@ export function ReaderChapterSummary({
       );
       setSummary(res.summary);
       setFromCache(res.cached);
+      setViewMode("preview");
     } catch (e: unknown) {
       setSummary(null);
       setError(e instanceof ApiError ? e.message : "Could not load summary");
@@ -189,24 +195,75 @@ export function ReaderChapterSummary({
                   </div>
                 )}
                 {!loading && !error && summary !== null && (
-                  <article
-                    className={`prose prose-sm max-w-none font-serif-reading ${proseInvert}
+                  <div className="space-y-3">
+                    <div
+                      className="flex rounded-xl border bg-black/4 p-0.5 dark:bg-white/6"
+                      style={{ borderColor: colors.border }}
+                      role="tablist"
+                      aria-label="Summary display format"
+                    >
+                      <button
+                        type="button"
+                        role="tab"
+                        aria-selected={viewMode === "preview"}
+                        onClick={() => setViewMode("preview")}
+                        className={`flex-1 rounded-lg px-2 py-1.5 text-center text-xs font-semibold transition-colors ${
+                          viewMode === "preview" ? "bg-primary text-white shadow-sm" : ""
+                        }`}
+                        style={viewMode === "preview" ? undefined : { color: colors.muted }}
+                      >
+                        Preview
+                      </button>
+                      <button
+                        type="button"
+                        role="tab"
+                        aria-selected={viewMode === "markdown"}
+                        onClick={() => setViewMode("markdown")}
+                        className={`flex-1 rounded-lg px-2 py-1.5 text-center text-xs font-semibold transition-colors ${
+                          viewMode === "markdown" ? "bg-primary text-white shadow-sm" : ""
+                        }`}
+                        style={viewMode === "markdown" ? undefined : { color: colors.muted }}
+                      >
+                        Markdown
+                      </button>
+                    </div>
+
+                    {viewMode === "preview" ? (
+                      <article
+                        className={`prose prose-base max-w-none font-serif-reading ${proseInvert}
                       prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-balance
-                      prose-h2:mt-6 prose-h2:mb-2 prose-h2:border-b prose-h2:pb-1.5 prose-h2:text-[0.95rem]
+                      prose-h2:mt-6 prose-h2:mb-2 prose-h2:border-b prose-h2:pb-1.5 prose-h2:text-[1rem]
                       prose-h2:border-black/10 dark:prose-h2:border-white/15
-                      prose-h3:mt-4 prose-h3:mb-1.5 prose-h3:text-sm
-                      prose-p:my-2.5 prose-p:text-[0.9375rem] prose-p:leading-relaxed
+                      prose-h3:mt-4 prose-h3:mb-1.5 prose-h3:text-[0.95rem]
+                      prose-p:my-2.5 prose-p:leading-relaxed
                       prose-ul:my-2.5 prose-ol:my-2.5 prose-li:my-1
                       prose-li:marker:text-primary
                       prose-strong:font-semibold prose-strong:text-inherit
                       prose-a:text-primary prose-a:no-underline hover:prose-a:underline
-                      prose-hr:border-current/20`}
-                    style={{ color: colors.text }}
-                  >
-                    <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]}>
-                      {summary}
-                    </ReactMarkdown>
-                  </article>
+                      prose-hr:border-current/20
+                      prose-table:text-sm prose-th:px-2 prose-td:px-2`}
+                        style={{ color: colors.text }}
+                      >
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          rehypePlugins={[[rehypeSanitize, defaultSchema]]}
+                        >
+                          {summary}
+                        </ReactMarkdown>
+                      </article>
+                    ) : (
+                      <pre
+                        className="max-h-[min(24rem,55vh)] overflow-auto rounded-xl border p-3 text-left text-[13px] leading-relaxed font-mono whitespace-pre-wrap shadow-inner"
+                        style={{
+                          borderColor: colors.border,
+                          backgroundColor: colors.muted + "14",
+                          color: colors.text,
+                        }}
+                      >
+                        {summary}
+                      </pre>
+                    )}
+                  </div>
                 )}
               </div>
             </div>

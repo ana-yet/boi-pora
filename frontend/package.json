@@ -12,6 +12,7 @@
     "@tailwindcss/typography": "^0.5.19",
     "@uiw/react-md-editor": "^4.0.11",
     "github-slugger": "^2.0.0",
+    "hast-util-sanitize": "^5.0.2",
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
