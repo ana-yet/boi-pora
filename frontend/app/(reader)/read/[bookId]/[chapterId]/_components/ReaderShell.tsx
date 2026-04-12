@@ -487,6 +487,7 @@ export function ReaderShell({
                         chapterId={currentChapterId}
                         chapterTitle={chapterArticle.chapterTitle}
                         colors={{ text: c.text, muted: c.muted, border: c.border, bg: c.bg }}
+                        theme={settings.theme}
                     />
                     <button
                         type="button"

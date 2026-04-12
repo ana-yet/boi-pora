@@ -90,13 +90,13 @@ export class ChapterSummaryService {
         '\n\n[Text truncated for summarization.]';
     }
     return (
-      'Summarize the following book chapter for a reader who wants a quick overview.\n\n' +
+      'Summarize the following book chapter for a reader who wants a structured overview.\n\n' +
       'Requirements:\n' +
-      '- Clear prose; short paragraphs or light bullet structure if it helps.\n' +
+      '- Use Markdown as instructed in the system message (## sections, bullets where useful).\n' +
       '- Do not invent plot beyond the excerpt.\n' +
       '- Prefer the same language as the chapter when obvious; otherwise English.\n' +
-      '- About 150–400 words unless the chapter is very short.\n' +
-      '- Output only the summary text (no title line like "Summary:").\n\n' +
+      '- About 180–450 words unless the chapter is very short.\n' +
+      '- Do not wrap the whole response in a code fence.\n\n' +
       `Chapter title: ${title}\n\nChapter body:\n${body}`
     );
   }
@@ -114,12 +114,12 @@ export class ChapterSummaryService {
           {
             role: 'system',
             content:
-              'You are a careful reading assistant. Reply with only the chapter summary body.',
+              'You are a careful reading assistant. Reply with only the chapter summary as GitHub-flavored Markdown: use ## for 2–4 section headings (e.g. Overview, Key events, Characters or ideas, Takeaways), normal paragraphs, and bullet lists (- item) where they improve clarity. No outer title repeating the chapter name as a single # heading. No HTML. No preamble.',
           },
           { role: 'user', content: userPrompt },
         ],
         temperature: 0.35,
-        max_tokens: 2048,
+        max_tokens: 3072,
       }),
     });
 
