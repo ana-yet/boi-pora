@@ -11,6 +11,7 @@ import {
   fetchReaderChapter,
   loadReaderPageData,
 } from "@/lib/reader-page-fetch";
+import { absoluteUrl } from "@/lib/site";
 import { ReaderShell } from "./_components/ReaderShell";
 import { ReaderProgressSync } from "./_components/ReaderProgressSync";
 
@@ -32,7 +33,29 @@ export async function generateMetadata({
     return { title: "Chapter not found" };
   }
   const bookName = book?.title ?? "Book";
-  return { title: `${chapter.title} · ${bookName}` };
+  const title = `${chapter.title} · ${bookName}`;
+  const description = `Read “${chapter.title}” from ${bookName} on Boi Pora — digital reading companion.`;
+  const cover = book?.coverImageUrl?.trim();
+  const ogImages = cover
+    ? [{ url: cover, alt: `${bookName} cover` }]
+    : [{ url: absoluteUrl("/favicon.png"), alt: "Boi Pora" }];
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "article",
+      images: ogImages,
+    },
+    twitter: {
+      card: cover ? "summary_large_image" : "summary",
+      title,
+      description,
+      images: ogImages.map((i) => i.url),
+    },
+  };
 }
 
 export default async function ReaderPage({

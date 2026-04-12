@@ -57,11 +57,14 @@ In a second terminal:
 
 ```bash
 cd frontend
-# Optional: create .env.local if the API is not on localhost:4000
+# Optional: copy .env.local.example → .env.local and set API URL, site URL for OG tags
 # NEXT_PUBLIC_API_URL=http://localhost:4000
+# NEXT_PUBLIC_SITE_URL=http://localhost:3000
 npm install
 npm run dev
 ```
+
+Add your branding asset **`public/favicon.png`** (used as the favicon, PWA manifest icon, and default Open Graph / Twitter image until a page supplies its own image).
 
 Open **http://localhost:3000**. The browser calls the API using `NEXT_PUBLIC_API_URL` (defaults to `http://localhost:4000`).
 
@@ -96,6 +99,7 @@ See `backend/.env.example` for comments and deployment notes.
 | Variable | Purpose |
 |----------|---------|
 | `NEXT_PUBLIC_API_URL` | Public API base URL (no trailing slash). Defaults to `http://localhost:4000` if unset. |
+| `NEXT_PUBLIC_SITE_URL` | Public **site** URL (no trailing slash) for Open Graph, Twitter cards, and JSON-LD. Defaults to `http://localhost:3000`. Set to your production domain at build time. |
 
 ## Root npm scripts
 
