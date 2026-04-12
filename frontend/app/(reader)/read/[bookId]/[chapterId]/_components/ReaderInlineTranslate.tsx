@@ -51,11 +51,11 @@ const LONG_PRESS_MS = 480;
 const MOVE_CANCEL_PX = 12;
 
 function clampPopoverPosition(x: number, y: number) {
-  const w = 220;
-  const h = 200;
-  const pad = 8;
-  const left = Math.max(pad, Math.min(x + 8, window.innerWidth - w - pad));
-  const top = Math.max(pad, Math.min(y + 8, window.innerHeight - h - pad));
+  const w = 248;
+  const h = 220;
+  const pad = 10;
+  const left = Math.max(pad, Math.min(x + 6, window.innerWidth - w - pad));
+  const top = Math.max(pad, Math.min(y + 4, window.innerHeight - h - pad));
   return { left, top };
 }
 
@@ -142,21 +142,11 @@ export function ReaderInlineTranslate({ palette, bookLanguage, children }: Props
 
   useEffect(() => {
     if (!popover) return;
-    const onDown = (ev: PointerEvent) => {
-      const el = ev.target as Node;
-      if (popoverRef.current?.contains(el)) return;
-      if (rootRef.current?.contains(el)) return;
-      setPopover(null);
-    };
     const onKey = (ev: KeyboardEvent) => {
       if (ev.key === "Escape") setPopover(null);
     };
-    document.addEventListener("pointerdown", onDown);
     document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("pointerdown", onDown);
-      document.removeEventListener("keydown", onKey);
-    };
+    return () => document.removeEventListener("keydown", onKey);
   }, [popover]);
 
   useEffect(() => {
@@ -286,6 +276,10 @@ export function ReaderInlineTranslate({ palette, bookLanguage, children }: Props
     color: palette.text,
   } as const;
 
+  const closePopover = useCallback(() => {
+    setPopover(null);
+  }, []);
+
   return (
     <div
       ref={rootRef}
@@ -299,38 +293,62 @@ export function ReaderInlineTranslate({ palette, bookLanguage, children }: Props
       {popover &&
         typeof document !== "undefined" &&
         createPortal(
-          <div
-            ref={popoverRef}
-            data-translate-popover
-            role="dialog"
-            aria-label="Translate"
-            className="fixed z-60 w-[min(13.5rem,calc(100vw-1rem))] rounded-lg border shadow-lg px-2.5 py-2 text-left"
-            style={{
-              left: popoverPos.left,
-              top: popoverPos.top,
-              backgroundColor: palette.bg,
-              borderColor: palette.border,
-              color: palette.text,
-            }}
-          >
-            <div className="flex items-start justify-between gap-1 mb-1.5">
-              <div className="min-w-0 flex-1 space-y-1">
-                <p className="text-[10px] leading-snug" style={{ color: palette.muted }}>
-                  <span className="font-medium" style={{ color: palette.text }}>
-                    Original
-                  </span>
-                  <span className="opacity-80"> · {originalLabel}</span>
+          <>
+            {/* Full-screen layer: any press outside the card closes immediately (above reader). */}
+            <div
+              aria-hidden
+              className="fixed inset-0 z-70 touch-none bg-transparent"
+              onPointerDown={(e) => {
+                if (e.button !== 0) return;
+                e.preventDefault();
+                closePopover();
+              }}
+            />
+            <div
+              ref={popoverRef}
+              data-translate-popover
+              role="dialog"
+              aria-label="Translate"
+              className="fixed z-71 w-[min(15.5rem,calc(100vw-1.25rem))] overflow-hidden rounded-2xl border text-left shadow-2xl ring-1 ring-black/4 dark:ring-white/6"
+              style={{
+                left: popoverPos.left,
+                top: popoverPos.top,
+                backgroundColor: palette.bg,
+                borderColor: palette.border,
+                color: palette.text,
+              }}
+            >
+              <div className="flex items-center justify-between gap-2 border-b px-3 py-2" style={{ borderColor: palette.border }}>
+                <span className="text-[10px] font-semibold uppercase tracking-[0.14em]" style={{ color: palette.muted }}>
+                  Translate
+                </span>
+                <button
+                  type="button"
+                  onClick={closePopover}
+                  aria-label="Close"
+                  style={{ color: palette.muted }}
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-lg leading-none transition-colors hover:bg-black/5 dark:hover:bg-white/8"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="space-y-2.5 px-3 py-2.5">
+                <p className="truncate text-[11px] leading-tight" style={{ color: palette.muted }} title={originalLabel}>
+                  <span style={{ color: palette.text }}>{originalLabel}</span>
+                  <span className="opacity-75"> · source</span>
                 </p>
-                <label className="flex items-center gap-1.5 text-[10px] leading-none">
-                  <span style={{ color: palette.muted }} className="shrink-0">
-                    To
+
+                <label className="flex items-center gap-2">
+                  <span className="shrink-0 text-[11px] font-medium" style={{ color: palette.muted }}>
+                    Into
                   </span>
                   <select
                     value={targetLang}
                     onChange={(ev) => setTargetLang(ev.target.value)}
                     style={selectStyle}
                     aria-label="Translation language"
-                    className="min-w-0 flex-1 rounded border px-1 py-0.5 text-[10px] outline-none focus-visible:ring-1 focus-visible:ring-primary/40"
+                    className="min-w-0 flex-1 cursor-pointer rounded-lg border py-1.5 pr-2 pl-2 text-xs outline-none transition-shadow focus-visible:ring-2 focus-visible:ring-primary/30"
                   >
                     {targetOptions.map((o) => (
                       <option key={o.code} value={o.code}>
@@ -339,59 +357,51 @@ export function ReaderInlineTranslate({ palette, bookLanguage, children }: Props
                     ))}
                   </select>
                 </label>
+
+                <div className="flex gap-1.5">
+                  <button
+                    type="button"
+                    disabled={loading}
+                    onClick={() => void translateText(popover.word)}
+                    style={{ backgroundColor: palette.cardBg, borderColor: palette.border }}
+                    className="h-8 min-h-8 flex-1 rounded-lg border text-xs font-semibold transition-opacity hover:opacity-90 disabled:opacity-45"
+                  >
+                    Word
+                  </button>
+                  <button
+                    type="button"
+                    disabled={loading || sentenceSameAsWord}
+                    onClick={() => void translateText(popover.sentence)}
+                    style={{ backgroundColor: palette.cardBg, borderColor: palette.border }}
+                    className="h-8 min-h-8 flex-1 rounded-lg border text-xs font-semibold transition-opacity hover:opacity-90 disabled:opacity-35"
+                    title={sentenceSameAsWord ? "Same as word" : "Translate sentence"}
+                  >
+                    Sentence
+                  </button>
+                </div>
+
+                {loading && (
+                  <div className="flex items-center gap-2 py-0.5" style={{ color: palette.muted }} aria-live="polite">
+                    <span
+                      className="inline-block size-3.5 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent opacity-70"
+                      aria-hidden
+                    />
+                    <span className="text-[11px]">Translating…</span>
+                  </div>
+                )}
+                {error && (
+                  <p className="text-[11px] leading-snug text-red-600 dark:text-red-400" role="alert">
+                    {error}
+                  </p>
+                )}
+                {result !== null && (
+                  <p className="border-t pt-2 text-sm leading-relaxed font-medium" style={{ borderColor: palette.border, color: palette.text }}>
+                    {result}
+                  </p>
+                )}
               </div>
-              <button
-                type="button"
-                onClick={() => setPopover(null)}
-                aria-label="Close"
-                style={{ color: palette.muted }}
-                className="-mr-0.5 -mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-base leading-none opacity-70 transition-opacity hover:opacity-100"
-              >
-                ×
-              </button>
             </div>
-
-            <div className="flex gap-1">
-              <button
-                type="button"
-                disabled={loading}
-                onClick={() => void translateText(popover.word)}
-                style={{ backgroundColor: palette.cardBg, borderColor: palette.border }}
-                className="h-7 flex-1 rounded-md border text-[11px] font-medium transition-colors hover:border-primary/45 hover:text-primary disabled:opacity-50"
-              >
-                Word
-              </button>
-              <button
-                type="button"
-                disabled={loading || sentenceSameAsWord}
-                onClick={() => void translateText(popover.sentence)}
-                style={{ backgroundColor: palette.cardBg, borderColor: palette.border }}
-                className="h-7 flex-1 rounded-md border text-[11px] font-medium transition-colors hover:border-primary/45 hover:text-primary disabled:opacity-35"
-                title={sentenceSameAsWord ? "Same as word" : "Translate sentence"}
-              >
-                Sentence
-              </button>
-            </div>
-
-            {loading && (
-              <p className="mt-1.5 text-[10px]" style={{ color: palette.muted }}>
-                …
-              </p>
-            )}
-            {error && (
-              <p className="mt-1.5 text-[10px] text-red-600 dark:text-red-400" role="alert">
-                {error}
-              </p>
-            )}
-            {result !== null && (
-              <p
-                className="mt-1.5 border-t pt-1.5 text-xs leading-snug"
-                style={{ borderColor: palette.border, color: palette.text }}
-              >
-                {result}
-              </p>
-            )}
-          </div>,
+          </>,
           document.body,
         )}
     </div>
