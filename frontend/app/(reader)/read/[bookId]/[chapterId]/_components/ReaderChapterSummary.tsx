@@ -11,8 +11,6 @@ import type { ReaderTheme } from "./ReaderShell";
 
 type ChapterSummaryResponse = { summary: string; cached: boolean };
 
-type SummaryViewMode = "preview" | "markdown";
-
 type ReaderChapterSummaryColors = {
   text: string;
   muted: string;
@@ -28,6 +26,8 @@ type Props = {
   theme: ReaderTheme;
 };
 
+type CopyFeedback = "idle" | "copied" | "failed";
+
 export function ReaderChapterSummary({
   bookId,
   chapterId,
@@ -40,7 +40,7 @@ export function ReaderChapterSummary({
   const [summary, setSummary] = useState<string | null>(null);
   const [fromCache, setFromCache] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<SummaryViewMode>("preview");
+  const [copyFeedback, setCopyFeedback] = useState<CopyFeedback>("idle");
 
   const close = useCallback(() => {
     setOpen(false);
@@ -51,7 +51,7 @@ export function ReaderChapterSummary({
     setError(null);
     setFromCache(false);
     setOpen(false);
-    setViewMode("preview");
+    setCopyFeedback("idle");
   }, [bookId, chapterId]);
 
   const loadSummary = useCallback(async () => {
@@ -64,7 +64,7 @@ export function ReaderChapterSummary({
       );
       setSummary(res.summary);
       setFromCache(res.cached);
-      setViewMode("preview");
+      setCopyFeedback("idle");
     } catch (e: unknown) {
       setSummary(null);
       setError(e instanceof ApiError ? e.message : "Could not load summary");
@@ -78,6 +78,18 @@ export function ReaderChapterSummary({
     if (summary !== null && !error) return;
     void loadSummary();
   }, [loadSummary, summary, error]);
+
+  const copyMarkdown = useCallback(async () => {
+    if (!summary?.trim()) return;
+    try {
+      await navigator.clipboard.writeText(summary);
+      setCopyFeedback("copied");
+      window.setTimeout(() => setCopyFeedback("idle"), 2000);
+    } catch {
+      setCopyFeedback("failed");
+      window.setTimeout(() => setCopyFeedback("idle"), 2800);
+    }
+  }, [summary]);
 
   const proseInvert = theme === "dark" ? "prose-invert" : "";
 
@@ -196,41 +208,32 @@ export function ReaderChapterSummary({
                 )}
                 {!loading && !error && summary !== null && (
                   <div className="space-y-3">
-                    <div
-                      className="flex rounded-xl border bg-black/4 p-0.5 dark:bg-white/6"
-                      style={{ borderColor: colors.border }}
-                      role="tablist"
-                      aria-label="Summary display format"
-                    >
+                    <div className="flex flex-wrap items-center justify-end gap-2">
                       <button
                         type="button"
-                        role="tab"
-                        aria-selected={viewMode === "preview"}
-                        onClick={() => setViewMode("preview")}
-                        className={`flex-1 rounded-lg px-2 py-1.5 text-center text-xs font-semibold transition-colors ${
-                          viewMode === "preview" ? "bg-primary text-white shadow-sm" : ""
-                        }`}
-                        style={viewMode === "preview" ? undefined : { color: colors.muted }}
+                        onClick={() => void copyMarkdown()}
+                        className="inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors hover:bg-black/5 dark:hover:bg-white/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                        style={{ borderColor: colors.border, color: colors.text }}
+                        aria-label="Copy summary as Markdown"
                       >
-                        Preview
+                        <span className="material-icons text-[18px]" aria-hidden="true">
+                          {copyFeedback === "copied" ? "check" : "content_copy"}
+                        </span>
+                        {copyFeedback === "copied"
+                          ? "Copied"
+                          : copyFeedback === "failed"
+                            ? "Copy blocked"
+                            : "Copy markdown"}
                       </button>
-                      <button
-                        type="button"
-                        role="tab"
-                        aria-selected={viewMode === "markdown"}
-                        onClick={() => setViewMode("markdown")}
-                        className={`flex-1 rounded-lg px-2 py-1.5 text-center text-xs font-semibold transition-colors ${
-                          viewMode === "markdown" ? "bg-primary text-white shadow-sm" : ""
-                        }`}
-                        style={viewMode === "markdown" ? undefined : { color: colors.muted }}
-                      >
-                        Markdown
-                      </button>
+                      {copyFeedback === "failed" && (
+                        <span className="text-[11px]" style={{ color: colors.muted }}>
+                          Allow clipboard access or copy manually.
+                        </span>
+                      )}
                     </div>
 
-                    {viewMode === "preview" ? (
-                      <article
-                        className={`prose prose-base max-w-none font-serif-reading ${proseInvert}
+                    <article
+                      className={`prose prose-base max-w-none font-serif-reading ${proseInvert}
                       prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-balance
                       prose-h2:mt-6 prose-h2:mb-2 prose-h2:border-b prose-h2:pb-1.5 prose-h2:text-[1rem]
                       prose-h2:border-black/10 dark:prose-h2:border-white/15
@@ -242,27 +245,12 @@ export function ReaderChapterSummary({
                       prose-a:text-primary prose-a:no-underline hover:prose-a:underline
                       prose-hr:border-current/20
                       prose-table:text-sm prose-th:px-2 prose-td:px-2`}
-                        style={{ color: colors.text }}
-                      >
-                        <ReactMarkdown
-                          remarkPlugins={[remarkGfm]}
-                          rehypePlugins={[[rehypeSanitize, defaultSchema]]}
-                        >
-                          {summary}
-                        </ReactMarkdown>
-                      </article>
-                    ) : (
-                      <pre
-                        className="max-h-[min(24rem,55vh)] overflow-auto rounded-xl border p-3 text-left text-[13px] leading-relaxed font-mono whitespace-pre-wrap shadow-inner"
-                        style={{
-                          borderColor: colors.border,
-                          backgroundColor: colors.muted + "14",
-                          color: colors.text,
-                        }}
-                      >
+                      style={{ color: colors.text }}
+                    >
+                      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[[rehypeSanitize, defaultSchema]]}>
                         {summary}
-                      </pre>
-                    )}
+                      </ReactMarkdown>
+                    </article>
                   </div>
                 )}
               </div>
