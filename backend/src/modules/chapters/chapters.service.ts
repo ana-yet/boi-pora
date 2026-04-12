@@ -4,10 +4,14 @@ import { Model, Types } from 'mongoose';
 import { Chapter, ChapterDocument } from '../../schemas/chapter.schema';
 import { CreateChapterDto } from './dto/create-chapter.dto';
 import { UpdateChapterDto } from './dto/update-chapter.dto';
+import { ChapterSummaryService } from './chapter-summary.service';
 
 @Injectable()
 export class ChaptersService {
-  constructor(@InjectModel(Chapter.name) private chapterModel: Model<ChapterDocument>) {}
+  constructor(
+    @InjectModel(Chapter.name) private chapterModel: Model<ChapterDocument>,
+    private readonly chapterSummaryService: ChapterSummaryService,
+  ) {}
 
   async findByBook(bookId: string) {
     return this.chapterModel
@@ -68,14 +72,25 @@ export class ChaptersService {
     );
     Object.assign(chapter, updates);
     await chapter.save();
+    if (dto.content !== undefined) {
+      await this.chapterSummaryService.deleteByBookAndChapterId(
+        chapter.bookId,
+        chapter.chapterId,
+      );
+    }
     return chapter.toObject();
   }
 
   async remove(id: string) {
-    const result = await this.chapterModel.findByIdAndDelete(id).exec();
-    if (!result) {
+    const chapter = await this.chapterModel.findById(id).exec();
+    if (!chapter) {
       throw new NotFoundException('Chapter not found');
     }
+    await this.chapterSummaryService.deleteByBookAndChapterId(
+      chapter.bookId,
+      chapter.chapterId,
+    );
+    await chapter.deleteOne();
     return { deleted: true };
   }
 }

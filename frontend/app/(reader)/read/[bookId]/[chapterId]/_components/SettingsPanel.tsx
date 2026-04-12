@@ -196,7 +196,10 @@ export function SettingsPanel({ settings, onChange, onClose }: SettingsPanelProp
                         >
                             Langbly
                         </a>
-                        ).
+                        ).{" "}
+                        <strong className="font-semibold" style={{ color: pc.text }}>Chapter summary</strong> uses Groq on the server (
+                        <code className="text-[10px] px-1 rounded bg-black/5 dark:bg-white/10">GROQ_API_KEY</code>
+                        ); each chapter’s summary is stored so everyone gets the same cached text until the chapter is edited.
                     </p>
 
                     {/* Line Spacing */}
