@@ -297,7 +297,7 @@ export function ReaderInlineTranslate({ palette, bookLanguage, children }: Props
             {/* Full-screen layer: any press outside the card closes immediately (above reader). */}
             <div
               aria-hidden
-              className="fixed inset-0 z-70 touch-none bg-black/6 dark:bg-black/50"
+              className="fixed inset-0 z-70 touch-none bg-transparent"
               onPointerDown={(e) => {
                 if (e.button !== 0) return;
                 e.preventDefault();
