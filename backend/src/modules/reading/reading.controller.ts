@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Put, Body, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Body,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ReadingService } from './reading.service';
 import { UpsertProgressDto } from './dto/upsert-progress.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -19,10 +27,7 @@ export class ReadingController {
   }
 
   @Post()
-  upsert(
-    @CurrentUser('sub') userId: string,
-    @Body() dto: UpsertProgressDto,
-  ) {
+  upsert(@CurrentUser('sub') userId: string, @Body() dto: UpsertProgressDto) {
     return this.readingService.upsert(userId, dto.bookId, {
       chapterId: dto.chapterId,
       percentComplete: dto.percentComplete,
@@ -30,10 +35,7 @@ export class ReadingController {
   }
 
   @Put()
-  update(
-    @CurrentUser('sub') userId: string,
-    @Body() dto: UpsertProgressDto,
-  ) {
+  update(@CurrentUser('sub') userId: string, @Body() dto: UpsertProgressDto) {
     return this.readingService.upsert(userId, dto.bookId, {
       chapterId: dto.chapterId,
       percentComplete: dto.percentComplete,

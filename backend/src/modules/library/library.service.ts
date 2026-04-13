@@ -1,13 +1,22 @@
-import { Injectable, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types, FilterQuery } from 'mongoose';
-import { LibraryItem, LibraryItemDocument } from '../../schemas/library-item.schema';
+import {
+  LibraryItem,
+  LibraryItemDocument,
+} from '../../schemas/library-item.schema';
 import { LibraryItemStatus } from '../../common/enums';
 
 @Injectable()
 export class LibraryService {
   constructor(
-    @InjectModel(LibraryItem.name) private libraryItemModel: Model<LibraryItemDocument>,
+    @InjectModel(LibraryItem.name)
+    private libraryItemModel: Model<LibraryItemDocument>,
   ) {}
 
   async findByUser(userId: string, page = 1, limit = 20) {
@@ -32,10 +41,18 @@ export class LibraryService {
     const bid = new Types.ObjectId(bookId);
     try {
       return await this.libraryItemModel.create({
-        userId: uid, bookId: bid, status: 'saved', addedAt: new Date(),
+        userId: uid,
+        bookId: bid,
+        status: 'saved',
+        addedAt: new Date(),
       });
     } catch (err: unknown) {
-      if (err && typeof err === 'object' && 'code' in err && (err as { code: number }).code === 11000) {
+      if (
+        err &&
+        typeof err === 'object' &&
+        'code' in err &&
+        (err as { code: number }).code === 11000
+      ) {
         throw new ConflictException('Already in library');
       }
       throw err;
@@ -44,7 +61,10 @@ export class LibraryService {
 
   async checkStatus(userId: string, bookId: string) {
     const item = await this.libraryItemModel
-      .findOne({ userId: new Types.ObjectId(userId), bookId: new Types.ObjectId(bookId) })
+      .findOne({
+        userId: new Types.ObjectId(userId),
+        bookId: new Types.ObjectId(bookId),
+      })
       .select('status')
       .lean()
       .exec();
@@ -53,7 +73,10 @@ export class LibraryService {
 
   async remove(userId: string, bookId: string) {
     const result = await this.libraryItemModel
-      .findOneAndDelete({ userId: new Types.ObjectId(userId), bookId: new Types.ObjectId(bookId) })
+      .findOneAndDelete({
+        userId: new Types.ObjectId(userId),
+        bookId: new Types.ObjectId(bookId),
+      })
       .exec();
     if (!result) throw new NotFoundException('Not in library');
     return { deleted: true };
@@ -62,7 +85,10 @@ export class LibraryService {
   async findAll(page = 1, limit = 20, search?: string, status?: string) {
     const skip = (page - 1) * limit;
     const filter: FilterQuery<LibraryItem> = {};
-    if (status && Object.values(LibraryItemStatus).includes(status as LibraryItemStatus)) {
+    if (
+      status &&
+      Object.values(LibraryItemStatus).includes(status as LibraryItemStatus)
+    ) {
       filter.status = status;
     }
 
@@ -80,7 +106,9 @@ export class LibraryService {
       const lc = search.trim().toLowerCase();
       items = items.filter((item: Record<string, unknown>) => {
         const u = item.userId as { email?: string; name?: string } | undefined;
-        const b = item.bookId as { title?: string; author?: string } | undefined;
+        const b = item.bookId as
+          | { title?: string; author?: string }
+          | undefined;
         return (
           u?.email?.toLowerCase().includes(lc) ||
           u?.name?.toLowerCase().includes(lc) ||
@@ -95,7 +123,9 @@ export class LibraryService {
   }
 
   async adminUpdateStatus(id: string, status: string) {
-    if (!Object.values(LibraryItemStatus).includes(status as LibraryItemStatus)) {
+    if (
+      !Object.values(LibraryItemStatus).includes(status as LibraryItemStatus)
+    ) {
       throw new BadRequestException('Invalid status');
     }
     const item = await this.libraryItemModel

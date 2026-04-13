@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 import { ContinueReading } from "@/app/components/home/ContinueReading";
+import { Hero } from "../components/home/Hero";
+import { RecommendationRow } from "../components/home/RecommendationRow";
+import { CategoryGrid } from "../components/home/CategoryGrid";
+import { ShortReads } from "../components/home/ShortReads";
 
 export const metadata: Metadata = {
   title: "Discover books",
@@ -9,19 +13,15 @@ export const metadata: Metadata = {
     url: "/",
   },
 };
-import { Hero } from "../components/home/Hero";
-import { RecommendationRow } from "../components/home/RecommendationRow";
-import { CategoryGrid } from "../components/home/CategoryGrid";
-import { ShortReads } from "../components/home/ShortReads";
 
 export default function HomePage() {
-    return (
-        <div className="animate-fade-in">
-            <Hero />
-            <ContinueReading />
-            <RecommendationRow />
-            <CategoryGrid />
-            <ShortReads />
-        </div>
-    );
+  return (
+    <div className="animate-fade-in flex flex-1 flex-col w-full">
+      <Hero />
+      <ContinueReading />
+      <RecommendationRow />
+      <CategoryGrid />
+      <ShortReads />
+    </div>
+  );
 }

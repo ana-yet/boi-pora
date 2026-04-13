@@ -16,12 +16,18 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('JWT_SECRET') || 'fallback-dev-secret-do-not-use-in-prod',
+      secretOrKey:
+        configService.get<string>('JWT_SECRET') ||
+        'fallback-dev-secret-do-not-use-in-prod',
     });
   }
 
   async validate(payload: JwtPayload) {
-    const user = await this.userModel.findById(payload.sub).select('_id email role').lean().exec();
+    const user = await this.userModel
+      .findById(payload.sub)
+      .select('_id email role')
+      .lean()
+      .exec();
     if (!user) {
       throw new UnauthorizedException('User no longer exists');
     }

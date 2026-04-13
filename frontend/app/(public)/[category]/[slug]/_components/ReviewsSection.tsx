@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/app/providers/AuthProvider";
-import { useReviews, type ReviewItem } from "@/lib/hooks/useReviews";
+import { useReviews } from "@/lib/hooks/useReviews";
 import { api, ApiError } from "@/lib/api";
 import { Button } from "@/app/components/ui/Button";
 import { Toast } from "@/app/components/ui/Toast";

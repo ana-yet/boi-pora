@@ -1,4 +1,12 @@
-import { IsOptional, IsString, IsNumber, IsArray, Min, MaxLength, IsIn } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsNumber,
+  IsArray,
+  Min,
+  MaxLength,
+  IsIn,
+} from 'class-validator';
 import { BookStatus } from '../../../common/enums';
 
 export class UpdateBookDto {

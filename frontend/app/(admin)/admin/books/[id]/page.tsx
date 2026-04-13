@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { api, ApiError } from "@/lib/api";
-import { LANGUAGES, getLanguageLabel } from "@/lib/constants";
+import { LANGUAGES } from "@/lib/constants";
 import { Button } from "@/app/components/ui/Button";
 import { Input } from "@/app/components/ui/Input";
 import { MarkdownEditor } from "@/app/components/ui/MarkdownEditor";

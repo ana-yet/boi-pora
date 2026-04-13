@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Patch, Delete, Param, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { LibraryService } from './library.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -31,7 +40,10 @@ export class LibraryController {
   }
 
   @Get('status/:bookId')
-  checkStatus(@CurrentUser('sub') userId: string, @Param('bookId') bookId: string) {
+  checkStatus(
+    @CurrentUser('sub') userId: string,
+    @Param('bookId') bookId: string,
+  ) {
     return this.libraryService.checkStatus(userId, bookId);
   }
 

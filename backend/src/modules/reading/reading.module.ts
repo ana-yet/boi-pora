@@ -2,7 +2,10 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ReadingController } from './reading.controller';
 import { ReadingService } from './reading.service';
-import { ReadingProgress, ReadingProgressSchema } from '../../schemas/reading-progress.schema';
+import {
+  ReadingProgress,
+  ReadingProgressSchema,
+} from '../../schemas/reading-progress.schema';
 
 @Module({
   imports: [

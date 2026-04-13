@@ -13,7 +13,6 @@ export default function AdminNewChapterPage() {
   const bookId = params.id as string;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [nextNumber, setNextNumber] = useState(1);
   const [form, setForm] = useState({
     chapterNumber: "1",
     chapterId: "",
@@ -27,7 +26,6 @@ export default function AdminNewChapterPage() {
       .then((chapters) => {
         const arr = Array.isArray(chapters) ? chapters : [];
         const max = arr.reduce((m, c) => Math.max(m, c.chapterNumber ?? 0), 0);
-        setNextNumber(max + 1);
         setForm((f) => ({ ...f, chapterNumber: String(max + 1), chapterId: `chapter-${max + 1}` }));
       })
       .catch(() => {});

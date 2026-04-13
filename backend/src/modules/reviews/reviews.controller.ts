@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Patch, Delete, Param, Query, Body, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Query,
+  Body,
+  UseGuards,
+} from '@nestjs/common';
 import { ReviewsService } from './reviews.service';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -21,13 +31,22 @@ export class ReviewsController {
   ) {
     if (!bookId) return { items: [], total: 0, page: 1, limit: 20 };
     const parsedLimit = Math.min(parseInt(limit ?? '20', 10) || 20, 100);
-    return this.reviewsService.findByBook(bookId, parseInt(page ?? '1', 10) || 1, parsedLimit);
+    return this.reviewsService.findByBook(
+      bookId,
+      parseInt(page ?? '1', 10) || 1,
+      parsedLimit,
+    );
   }
 
   @UseGuards(JwtAuthGuard)
   @Post()
   create(@CurrentUser('sub') userId: string, @Body() dto: CreateReviewDto) {
-    return this.reviewsService.create(userId, dto.bookId, dto.rating, dto.content);
+    return this.reviewsService.create(
+      userId,
+      dto.bookId,
+      dto.rating,
+      dto.content,
+    );
   }
 
   @UseGuards(JwtAuthGuard)
@@ -37,7 +56,11 @@ export class ReviewsController {
     @CurrentUser('sub') userId: string,
     @CurrentUser('role') role: string,
   ) {
-    return this.reviewsService.remove(id, userId, role === UserRole.ADMIN);
+    return this.reviewsService.remove(
+      id,
+      userId,
+      (role as UserRole) === UserRole.ADMIN,
+    );
   }
 }
 

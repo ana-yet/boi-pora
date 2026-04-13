@@ -9,7 +9,7 @@ import { getLanguageLabel } from "@/lib/constants";
 import { Button } from "@/app/components/ui/Button";
 import { Toast } from "@/app/components/ui/Toast";
 import {
-  AdminSearch, StatusBadge, BulkActionBar, Pagination,
+  AdminSearch, BulkActionBar, Pagination,
   ConfirmModal, useUrlParams, useToast,
 } from "../_components";
 
@@ -33,7 +33,8 @@ function BooksPageInner() {
   const toggleSelect = (id: string) => {
     setSelected((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   };

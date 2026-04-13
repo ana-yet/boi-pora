@@ -55,13 +55,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const t = typeof window !== "undefined" ? localStorage.getItem("boi_pora_token") : null;
-    if (!t) {
-      setIsLoading(false);
-      return;
-    }
-    setTokenState(t);
-    refetchUser().finally(() => setIsLoading(false));
+    queueMicrotask(() => {
+      const t = typeof window !== "undefined" ? localStorage.getItem("boi_pora_token") : null;
+      if (!t) {
+        setIsLoading(false);
+        return;
+      }
+      setTokenState(t);
+      void refetchUser().finally(() => setIsLoading(false));
+    });
   }, [refetchUser]);
 
   const login = useCallback(

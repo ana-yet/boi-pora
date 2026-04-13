@@ -41,7 +41,7 @@ export default function ContactPage() {
             Message Sent!
           </h1>
           <p className="text-slate-600 dark:text-slate-300 mb-8">
-            Thank you for reaching out. We'll get back to you as soon as
+            Thank you for reaching out. We&apos;ll get back to you as soon as
             possible.
           </p>
           <button
@@ -66,7 +66,7 @@ export default function ContactPage() {
         </h1>
         <p className="text-slate-600 dark:text-slate-400 mb-10">
           Have a question, suggestion, or need help? Fill out the form below and
-          we'll get back to you.
+          we&apos;ll get back to you.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-6">

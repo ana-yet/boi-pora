@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Chapter, ChapterDocument } from '../../schemas/chapter.schema';
@@ -46,7 +50,9 @@ export class ChaptersService {
       .findOne({ bookId, chapterId: dto.chapterId })
       .exec();
     if (existing) {
-      throw new ConflictException('Chapter with this ID already exists for this book');
+      throw new ConflictException(
+        'Chapter with this ID already exists for this book',
+      );
     }
     return this.chapterModel.create({
       ...dto,
@@ -64,7 +70,9 @@ export class ChaptersService {
         .findOne({ bookId: chapter.bookId, chapterId: dto.chapterId })
         .exec();
       if (existing) {
-        throw new ConflictException('Chapter with this ID already exists for this book');
+        throw new ConflictException(
+          'Chapter with this ID already exists for this book',
+        );
       }
     }
     const updates = Object.fromEntries(

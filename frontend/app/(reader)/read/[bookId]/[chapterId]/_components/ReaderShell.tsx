@@ -93,8 +93,8 @@ function saveSettings(s: ReaderSettings) {
 }
 
 const FONT_MAP: Record<ReaderFont, string> = {
-    serif: "'Merriweather', serif",
-    sans: "'Work Sans', sans-serif",
+    serif: "var(--font-merriweather), ui-serif, Georgia, serif",
+    sans: "var(--font-work-sans), ui-sans-serif, system-ui, sans-serif",
     mono: "'Courier New', monospace",
 };
 
@@ -210,13 +210,17 @@ export function ReaderShell({
     const [isFullscreen, setIsFullscreen] = useState(false);
 
     useEffect(() => {
-        setSettings(loadSettings());
-        setMounted(true);
+        queueMicrotask(() => {
+            setSettings(loadSettings());
+            setMounted(true);
+        });
     }, []);
 
     useEffect(() => {
-        setSectionsOpen(false);
-        setTocOpen(false);
+        queueMicrotask(() => {
+            setSectionsOpen(false);
+            setTocOpen(false);
+        });
     }, [currentChapterId]);
 
     useEffect(() => {

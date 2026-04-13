@@ -257,8 +257,8 @@ const THEME_OPTIONS: { id: ReaderTheme; label: string; swatchBg: string; swatchB
 ];
 
 const FONT_OPTIONS: { id: ReaderFont; label: string; family: string }[] = [
-    { id: "serif", label: "Merriweather", family: "'Merriweather', serif" },
-    { id: "sans", label: "Work Sans", family: "'Work Sans', sans-serif" },
+    { id: "serif", label: "Merriweather", family: "var(--font-merriweather), ui-serif, Georgia, serif" },
+    { id: "sans", label: "Work Sans", family: "var(--font-work-sans), ui-sans-serif, system-ui, sans-serif" },
     { id: "mono", label: "Monospace", family: "'Courier New', monospace" },
 ];
 

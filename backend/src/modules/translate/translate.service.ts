@@ -131,8 +131,7 @@ export class TranslateService {
       throw new ServiceUnavailableException(msg);
     }
 
-    const out =
-      data.data?.translations?.[0]?.translatedText?.trim() ?? '';
+    const out = data.data?.translations?.[0]?.translatedText?.trim() ?? '';
     if (!out && q.trim().length > 0) {
       throw new ServiceUnavailableException('Empty translation response');
     }
@@ -154,7 +153,7 @@ export class TranslateService {
     const delay = interChunkDelayMs(this.config);
     const parts: string[] = [];
     for (let i = 0; i < packs.length; i++) {
-      parts.push(await this.translateChunk(packs[i]!, source, target));
+      parts.push(await this.translateChunk(packs[i], source, target));
       if (delay > 0 && i < packs.length - 1) {
         await sleep(delay);
       }

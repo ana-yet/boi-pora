@@ -20,7 +20,8 @@ const MAX_CONTENT_CHARS = 120_000;
 @Injectable()
 export class ChapterSummaryService {
   constructor(
-    @InjectModel(Chapter.name) private readonly chapterModel: Model<ChapterDocument>,
+    @InjectModel(Chapter.name)
+    private readonly chapterModel: Model<ChapterDocument>,
     @InjectModel(ChapterAiSummary.name)
     private readonly summaryModel: Model<ChapterAiSummaryDocument>,
     private readonly config: ConfigService,
@@ -31,7 +32,9 @@ export class ChapterSummaryService {
   }
 
   private groqModel(): string {
-    return this.config.get<string>('GROQ_MODEL')?.trim() || 'llama-3.3-70b-versatile';
+    return (
+      this.config.get<string>('GROQ_MODEL')?.trim() || 'llama-3.3-70b-versatile'
+    );
   }
 
   async getOrCreateSummary(
@@ -90,30 +93,26 @@ export class ChapterSummaryService {
         '\n\n[Text truncated for summarization.]';
     }
     return (
-     'Summarize the following book chapter into a clear, structured overview.\n\n' +
-
-'GOAL:\n' +
-'- Help a reader quickly understand the most important ideas, events, or lessons.\n\n' +
-
-'REQUIREMENTS:\n' +
-'- Use clear Markdown with "##" section headings (e.g., Overview, Key Ideas, Takeaways).\n' +
-'- Select 2–4 relevant sections only (do not force all sections).\n' +
-'- Prioritize the most impactful ideas over minor details.\n' +
-'- Focus on cause → effect and why things matter.\n' +
-'- Adapt focus based on chapter type (story, informational, reflective).\n' +
-'- Convert dialogue into clear narrative points when needed.\n' +
-'- Avoid repeating the same idea in different words.\n' +
-'- Do NOT invent or assume information beyond the given text.\n' +
-'- Keep language consistent with the chapter; if unclear, use simple English.\n' +
-'- Keep the summary concise (~150–250 words unless necessary).\n' +
-'- If the chapter is short, produce a concise but complete summary.\n' +
-'- Do NOT wrap the response in code blocks.\n\n' +
-
-'CONTEXT:\n' +
-`Chapter title: ${title}\n\n` +
-
-'CHAPTER:\n' +
-`${body}`
+      'Summarize the following book chapter into a clear, structured overview.\n\n' +
+      'GOAL:\n' +
+      '- Help a reader quickly understand the most important ideas, events, or lessons.\n\n' +
+      'REQUIREMENTS:\n' +
+      '- Use clear Markdown with "##" section headings (e.g., Overview, Key Ideas, Takeaways).\n' +
+      '- Select 2–4 relevant sections only (do not force all sections).\n' +
+      '- Prioritize the most impactful ideas over minor details.\n' +
+      '- Focus on cause → effect and why things matter.\n' +
+      '- Adapt focus based on chapter type (story, informational, reflective).\n' +
+      '- Convert dialogue into clear narrative points when needed.\n' +
+      '- Avoid repeating the same idea in different words.\n' +
+      '- Do NOT invent or assume information beyond the given text.\n' +
+      '- Keep language consistent with the chapter; if unclear, use simple English.\n' +
+      '- Keep the summary concise (~150–250 words unless necessary).\n' +
+      '- If the chapter is short, produce a concise but complete summary.\n' +
+      '- Do NOT wrap the response in code blocks.\n\n' +
+      'CONTEXT:\n' +
+      `Chapter title: ${title}\n\n` +
+      'CHAPTER:\n' +
+      `${body}`
     );
   }
 
@@ -185,7 +184,7 @@ export class ChapterSummaryService {
             
             LENGTH:
             - Target ~150–250 words unless the chapter is very long
-            `
+            `,
           },
           { role: 'user', content: userPrompt },
         ],
@@ -196,7 +195,9 @@ export class ChapterSummaryService {
 
     const raw = await res.text();
     if (!res.ok) {
-      throw new BadGatewayException(this.friendlyGroqFailureMessage(res.status, raw));
+      throw new BadGatewayException(
+        this.friendlyGroqFailureMessage(res.status, raw),
+      );
     }
 
     let data: { choices?: Array<{ message?: { content?: string } }> };
@@ -259,7 +260,10 @@ export class ChapterSummaryService {
     return 'We could not generate a summary right now. Please try again later.';
   }
 
-  async deleteByBookAndChapterId(bookId: Types.ObjectId, chapterId: string): Promise<void> {
+  async deleteByBookAndChapterId(
+    bookId: Types.ObjectId,
+    chapterId: string,
+  ): Promise<void> {
     await this.summaryModel.deleteOne({ bookId, chapterId }).exec();
   }
 }

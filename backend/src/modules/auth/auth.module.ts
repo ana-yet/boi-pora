@@ -15,7 +15,10 @@ import { User, UserSchema } from '../../schemas/user.schema';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
-        secret: config.get<string>('JWT_SECRET', 'boi-pora-secret-change-in-prod'),
+        secret: config.get<string>(
+          'JWT_SECRET',
+          'boi-pora-secret-change-in-prod',
+        ),
         signOptions: { expiresIn: '7d' },
       }),
       inject: [ConfigService],
