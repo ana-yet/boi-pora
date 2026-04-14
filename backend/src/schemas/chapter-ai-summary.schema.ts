@@ -22,5 +22,6 @@ export class ChapterAiSummary {
   model?: string;
 }
 
-export const ChapterAiSummarySchema = SchemaFactory.createForClass(ChapterAiSummary);
+export const ChapterAiSummarySchema =
+  SchemaFactory.createForClass(ChapterAiSummary);
 ChapterAiSummarySchema.index({ bookId: 1, chapterId: 1 }, { unique: true });

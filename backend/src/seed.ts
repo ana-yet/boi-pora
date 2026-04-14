@@ -34,7 +34,9 @@ async function seed() {
     createdAt: new Date(),
     updatedAt: new Date(),
   });
-  console.log('Admin user created: admin@boipora.com (password from env ADMIN_SEED_PASSWORD or default)');
+  console.log(
+    'Admin user created: admin@boipora.com (password from env ADMIN_SEED_PASSWORD or default)',
+  );
   await mongoose.disconnect();
   process.exit(0);
 }

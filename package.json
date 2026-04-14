@@ -7,7 +7,7 @@
     "dev": "npm run dev --prefix frontend",
     "build": "npm run build --prefix frontend",
     "start": "npm run start --prefix frontend",
-    "lint": "npm run lint --prefix frontend",
+    "lint": "npm run lint --prefix frontend && npm run lint --prefix backend",
     "dev:api": "npm run start:dev --prefix backend",
     "build:api": "npm run build --prefix backend",
     "start:api": "npm run start:prod --prefix backend",

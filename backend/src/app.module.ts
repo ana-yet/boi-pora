@@ -22,16 +22,21 @@ import { HealthController } from './health.controller.js';
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
-        uri: config.get<string>('MONGODB_URI', 'mongodb://localhost:27017/boi-pora'),
+        uri: config.get<string>(
+          'MONGODB_URI',
+          'mongodb://localhost:27017/boi-pora',
+        ),
         serverSelectionTimeoutMS: 5000,
         socketTimeoutMS: 45000,
       }),
       inject: [ConfigService],
     }),
-    ThrottlerModule.forRoot([{
-      ttl: 60000,
-      limit: 100,
-    }]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 100,
+      },
+    ]),
     AuthModule,
     UsersModule,
     BooksModule,

@@ -1,12 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { ReadingProgress, ReadingProgressDocument } from '../../schemas/reading-progress.schema';
+import {
+  ReadingProgress,
+  ReadingProgressDocument,
+} from '../../schemas/reading-progress.schema';
 
 @Injectable()
 export class ReadingService {
   constructor(
-    @InjectModel(ReadingProgress.name) private progressModel: Model<ReadingProgressDocument>,
+    @InjectModel(ReadingProgress.name)
+    private progressModel: Model<ReadingProgressDocument>,
   ) {}
 
   async findByUser(userId: string, limit = 50) {
@@ -20,7 +24,11 @@ export class ReadingService {
       .exec();
   }
 
-  async upsert(userId: string, bookId: string, data: { chapterId?: string; percentComplete?: number }) {
+  async upsert(
+    userId: string,
+    bookId: string,
+    data: { chapterId?: string; percentComplete?: number },
+  ) {
     const uid = new Types.ObjectId(userId);
     const bid = new Types.ObjectId(bookId);
 
@@ -28,7 +36,8 @@ export class ReadingService {
       lastReadAt: new Date(),
     };
     if (data.chapterId) update.chapterId = new Types.ObjectId(data.chapterId);
-    if (data.percentComplete != null) update.percentComplete = data.percentComplete;
+    if (data.percentComplete != null)
+      update.percentComplete = data.percentComplete;
 
     return this.progressModel
       .findOneAndUpdate(

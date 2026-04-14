@@ -12,7 +12,11 @@ export class LibraryItem {
   @Prop({ type: Types.ObjectId, ref: 'Book', required: true })
   bookId: Types.ObjectId;
 
-  @Prop({ type: String, enum: LibraryItemStatus, default: LibraryItemStatus.SAVED })
+  @Prop({
+    type: String,
+    enum: LibraryItemStatus,
+    default: LibraryItemStatus.SAVED,
+  })
   status: LibraryItemStatus;
 
   @Prop()

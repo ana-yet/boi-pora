@@ -31,8 +31,8 @@
   --color-sepia-bg: #f8f1e3;
   --color-sepia-text: #5b4636;
 
-  --font-display: "Work Sans", "sans-serif";
-  --font-serif-reading: "Merriweather", serif;
+  --font-display: var(--font-work-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-serif-reading: var(--font-merriweather), ui-serif, Georgia, serif;
 
   --shadow-soft: 0 4px 20px -2px rgba(236, 127, 19, 0.05);
   --shadow-card: 0 2px 10px rgba(0, 0, 0, 0.03);

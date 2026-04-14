@@ -6,7 +6,7 @@ import { api } from "@/lib/api";
 import { Button } from "@/app/components/ui/Button";
 import { Toast } from "@/app/components/ui/Toast";
 import {
-  AdminSearch, StatusBadge, Pagination, useUrlParams, useToast,
+  AdminSearch, Pagination, useUrlParams, useToast,
 } from "../_components";
 
 function LibraryPageInner() {

@@ -54,7 +54,7 @@ export function useToast() {
     const ctx = useContext(ToastContext);
     if (!ctx) {
         return {
-            showToast: (_m: ReactNode, _v?: ToastVariant) => {},
+            showToast: () => {},
         };
     }
     return ctx;

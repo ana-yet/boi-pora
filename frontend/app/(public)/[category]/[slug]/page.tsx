@@ -25,7 +25,6 @@ function formatDuration(min?: number) {
 export default function BookDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
-  const category = params.category as string;
   const { isAuthenticated } = useAuth();
   const { data: book, error, isLoading } = useBookBySlug(slug);
   const { data: relatedData } = useBooks(1, 6, book?.category || undefined);
@@ -67,25 +66,25 @@ export default function BookDetailPage() {
 
   if (error) {
     return (
-      <main className="py-12 text-center">
+      <div className="flex flex-1 flex-col py-12 text-center">
         <p className="text-red-500">Book not found.</p>
         <Link href="/explore" className="text-primary hover:underline mt-4 inline-block">
           Browse books
         </Link>
-      </main>
+      </div>
     );
   }
 
   if (isLoading || !book) {
     return (
-      <main className="py-12">
-        <div className="animate-pulse h-96 bg-neutral-200 dark:bg-neutral-700 rounded-xl" />
-      </main>
+      <div className="flex flex-1 flex-col py-12 w-full">
+        <div className="animate-pulse h-96 max-w-4xl mx-auto w-full bg-neutral-200 dark:bg-neutral-700 rounded-xl shrink-0" />
+      </div>
     );
   }
 
   return (
-    <main>
+    <div className="w-full">
       <div className="flex items-center text-sm text-slate-500 dark:text-slate-400 mb-8">
         <Link className="hover:text-primary transition-colors" href="/">
           Home
@@ -100,7 +99,7 @@ export default function BookDetailPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-20">
         <div className="lg:col-span-4 xl:col-span-3 flex flex-col items-center lg:items-start">
-          <div className="relative group w-[280px] sm:w-[320px] lg:w-full aspect-[2/3] rounded-xl shadow-2xl shadow-primary/10 overflow-hidden">
+          <div className="relative group w-[280px] sm:w-[320px] lg:w-full aspect-2/3 rounded-xl shadow-2xl shadow-primary/10 overflow-hidden">
             <img
               alt={`${book.title} cover`}
               className="w-full h-full object-cover"
@@ -245,7 +244,7 @@ export default function BookDetailPage() {
                 key={b._id}
                 className="flex-none w-[180px] group"
               >
-                <div className="aspect-[2/3] rounded-lg overflow-hidden shadow-md mb-3">
+                <div className="aspect-2/3 rounded-lg overflow-hidden shadow-md mb-3">
                   <img
                     alt={b.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform"
@@ -270,6 +269,6 @@ export default function BookDetailPage() {
           onClose={() => setToast(null)}
         />
       )}
-    </main>
+    </div>
   );
 }

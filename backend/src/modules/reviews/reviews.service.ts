@@ -1,4 +1,9 @@
-import { Injectable, ConflictException, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types, FilterQuery } from 'mongoose';
 import { Review, ReviewDocument } from '../../schemas/review.schema';
@@ -32,12 +37,24 @@ export class ReviewsService {
     return { items, total, page, limit };
   }
 
-  async create(userId: string, bookId: string, rating: number, content?: string) {
+  async create(
+    userId: string,
+    bookId: string,
+    rating: number,
+    content?: string,
+  ) {
     const uid = new Types.ObjectId(userId);
     const bid = new Types.ObjectId(bookId);
-    const existing = await this.reviewModel.findOne({ userId: uid, bookId: bid }).exec();
+    const existing = await this.reviewModel
+      .findOne({ userId: uid, bookId: bid })
+      .exec();
     if (existing) throw new ConflictException('Already reviewed');
-    const review = await this.reviewModel.create({ userId: uid, bookId: bid, rating, content });
+    const review = await this.reviewModel.create({
+      userId: uid,
+      bookId: bid,
+      rating,
+      content,
+    });
     await this.recalculateBookRating(bid);
     return review;
   }
@@ -53,7 +70,13 @@ export class ReviewsService {
     return { deleted: true };
   }
 
-  async findAll(page = 1, limit = 20, search?: string, rating?: number, flagged?: string) {
+  async findAll(
+    page = 1,
+    limit = 20,
+    search?: string,
+    rating?: number,
+    flagged?: string,
+  ) {
     const skip = (page - 1) * limit;
     const filter: FilterQuery<Review> = {};
 
@@ -66,7 +89,8 @@ export class ReviewsService {
     }
 
     const [items, total] = await Promise.all([
-      this.reviewModel.find(filter)
+      this.reviewModel
+        .find(filter)
         .populate('userId', 'email name')
         .populate('bookId', 'title slug author')
         .skip(skip)
@@ -98,29 +122,61 @@ export class ReviewsService {
   async bulkAction(action: string, ids: string[]) {
     if (!ids.length) return { affected: 0 };
     if (action === 'delete') {
-      const reviews = await this.reviewModel.find({ _id: { $in: ids } }).lean().exec();
-      const result = await this.reviewModel.deleteMany({ _id: { $in: ids } }).exec();
-      const bookIds = [...new Set(reviews.map(r => r.bookId.toString()))];
-      await Promise.all(bookIds.map(bid => this.recalculateBookRating(new Types.ObjectId(bid))));
+      const reviews = await this.reviewModel
+        .find({ _id: { $in: ids } })
+        .lean()
+        .exec();
+      const result = await this.reviewModel
+        .deleteMany({ _id: { $in: ids } })
+        .exec();
+      const bookIds = [...new Set(reviews.map((r) => r.bookId.toString()))];
+      await Promise.all(
+        bookIds.map((bid) =>
+          this.recalculateBookRating(new Types.ObjectId(bid)),
+        ),
+      );
       return { affected: result.deletedCount };
     }
     if (action === 'flag') {
-      const result = await this.reviewModel.updateMany(
-        { _id: { $in: ids } },
-        { $set: { flagged: true } },
-      ).exec();
+      const result = await this.reviewModel
+        .updateMany({ _id: { $in: ids } }, { $set: { flagged: true } })
+        .exec();
       return { affected: result.modifiedCount };
     }
     return { affected: 0 };
   }
 
   private async recalculateBookRating(bookId: Types.ObjectId) {
-    const result = await this.reviewModel.aggregate([
+    const raw: unknown = await this.reviewModel.aggregate([
       { $match: { bookId } },
-      { $group: { _id: null, avgRating: { $avg: '$rating' }, count: { $sum: 1 } } },
+      {
+        $group: {
+          _id: null,
+          avgRating: { $avg: '$rating' },
+          count: { $sum: 1 },
+        },
+      },
     ]);
-    const rating = result.length > 0 ? Math.round(result[0].avgRating * 10) / 10 : 0;
-    const ratingCount = result.length > 0 ? result[0].count : 0;
-    await this.bookModel.findByIdAndUpdate(bookId, { $set: { rating, ratingCount } }).exec();
+    const first =
+      Array.isArray(raw) && raw.length > 0
+        ? (raw[0] as Record<string, unknown>)
+        : undefined;
+    const avgRaw = first?.['avgRating'];
+    const countRaw = first?.['count'];
+    const rating =
+      typeof avgRaw === 'number'
+        ? Math.round(avgRaw * 10) / 10
+        : typeof avgRaw === 'string'
+          ? Math.round(parseFloat(avgRaw) * 10) / 10
+          : 0;
+    const ratingCount =
+      typeof countRaw === 'number'
+        ? countRaw
+        : typeof countRaw === 'string'
+          ? parseInt(countRaw, 10)
+          : 0;
+    await this.bookModel
+      .findByIdAndUpdate(bookId, { $set: { rating, ratingCount } })
+      .exec();
   }
 }

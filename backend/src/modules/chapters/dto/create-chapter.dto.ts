@@ -1,4 +1,11 @@
-import { IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength, IsMongoId } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  MaxLength,
+  IsMongoId,
+} from 'class-validator';
 
 export class CreateChapterDto {
   @IsMongoId()

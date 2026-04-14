@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, FilterQuery } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
@@ -28,7 +32,13 @@ export class UsersService {
     }
 
     const [items, total] = await Promise.all([
-      this.userModel.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean().exec(),
+      this.userModel
+        .find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean()
+        .exec(),
       this.userModel.countDocuments(filter).exec(),
     ]);
     return { items, total, page, limit };
@@ -54,10 +64,15 @@ export class UsersService {
   }
 
   async update(id: string, dto: UpdateUserDto) {
-    const user = await this.userModel.findById(id).select('+passwordHash').exec();
+    const user = await this.userModel
+      .findById(id)
+      .select('+passwordHash')
+      .exec();
     if (!user) throw new NotFoundException('User not found');
     if (dto.email && dto.email !== user.email) {
-      const existing = await this.userModel.findOne({ email: dto.email }).exec();
+      const existing = await this.userModel
+        .findOne({ email: dto.email })
+        .exec();
       if (existing) throw new ConflictException('Email already exists');
       user.email = dto.email;
     }
@@ -79,7 +94,9 @@ export class UsersService {
   async bulkAction(action: string, ids: string[]) {
     if (!ids.length) return { affected: 0 };
     if (action === 'delete') {
-      const result = await this.userModel.deleteMany({ _id: { $in: ids } }).exec();
+      const result = await this.userModel
+        .deleteMany({ _id: { $in: ids } })
+        .exec();
       return { affected: result.deletedCount };
     }
     return { affected: 0 };

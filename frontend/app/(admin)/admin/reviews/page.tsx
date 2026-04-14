@@ -34,7 +34,12 @@ function ReviewsPageInner() {
   const { toast, show, close } = useToast();
 
   const toggleSelect = (id: string) => {
-    setSelected((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+    setSelected((prev) => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
   };
   const toggleAll = () => {
     setSelected((prev) => prev.size === items.length ? new Set() : new Set(items.map((r) => r._id)));
