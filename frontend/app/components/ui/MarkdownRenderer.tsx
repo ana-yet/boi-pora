@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
@@ -57,9 +57,68 @@ export function MarkdownRenderer({ content, className = "" }: MarkdownRendererPr
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeRaw, rehypeSlug, rehypeSanitize]}
+        components={{
+          pre({ children, ...props }: any) {
+            const codeString = extractCodeFromChildren(children);
+            
+            return (
+              <div className="relative group">
+                <pre {...props}>{children}</pre>
+                <CopyButton code={codeString} />
+              </div>
+            );
+          },
+        }}
       >
         {content}
       </ReactMarkdown>
     </div>
+  );
+}
+
+function extractCodeFromChildren(children: any): string {
+  try {
+    if (typeof children === "string") return children;
+    if (children?.props?.children) {
+      const code = children.props.children;
+      if (Array.isArray(code)) return code.join("");
+      return String(code);
+    }
+    return "";
+  } catch {
+    return "";
+  }
+}
+
+function CopyButton({ code }: { code: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      const textarea = document.createElement("textarea");
+      textarea.value = code;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleCopy}
+      className="absolute top-2 right-2 flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-white rounded-lg opacity-0 group-hover:opacity-100 hover:bg-gray-600 transition-all"
+      aria-label={copied ? "Copied" : "Copy code"}
+    >
+      <span className="material-icons text-sm leading-none" aria-hidden="true">
+        {copied ? "check" : "content_copy"}
+      </span>
+    </button>
   );
 }
