@@ -1,12 +1,12 @@
-export default function ReaderChapterLoading() {
+export default function ReaderLoading() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-background-light dark:bg-background-dark px-6">
-      <span
-        className="inline-block h-10 w-10 border-2 border-primary/30 border-t-primary rounded-full animate-spin"
-        aria-hidden
-      />
-      <p className="text-sm text-neutral-500 dark:text-neutral-400">Opening chapter…</p>
-      <span className="sr-only">Loading chapter</span>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+      <div className="text-center space-y-4">
+        <div className="w-16 h-16 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto" />
+        <p className="text-gray-500 dark:text-gray-400 animate-pulse">
+          Loading chapter...
+        </p>
+      </div>
     </div>
   );
 }
