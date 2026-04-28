@@ -1,11 +1,12 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import {  type CSSProperties } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import rehypeSanitize from "rehype-sanitize";
 import rehypeSlug from "rehype-slug";
+import { CopyButton } from "../shared/CopyButton";
 
 interface MarkdownRendererProps {
   content: string;
@@ -57,9 +58,36 @@ export function MarkdownRenderer({ content, className = "" }: MarkdownRendererPr
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeRaw, rehypeSlug, rehypeSanitize]}
+        components={{
+          pre({ children, ...props }: any) {
+            const codeString = extractCodeFromChildren(children);
+            
+            return (
+              <div className="relative group">
+                <pre {...props}>{children}</pre>
+                <CopyButton code={codeString} />
+              </div>
+            );
+          },
+        }}
       >
         {content}
       </ReactMarkdown>
     </div>
   );
 }
+
+function extractCodeFromChildren(children: any): string {
+  try {
+    if (typeof children === "string") return children;
+    if (children?.props?.children) {
+      const code = children.props.children;
+      if (Array.isArray(code)) return code.join("");
+      return String(code);
+    }
+    return "";
+  } catch {
+    return "";
+  }
+}
+
