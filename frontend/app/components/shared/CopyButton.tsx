@@ -23,7 +23,7 @@ export function CopyButton({ code }: { code: string }) {
   return (
     <button
       onClick={handleCopy}
-      className="absolute top-2 right-2 flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-white rounded-lg opacity-0 group-hover:opacity-100 hover:bg-gray-600 transition-all"
+      className="absolute top-2 right-2 flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-white rounded-lg opacity-100 group-hover:opacity-100 hover:bg-gray-600 transition-all"
       aria-label={copied ? "Copied" : "Copy code"}
     >
       <span className="material-icons text-sm leading-none" aria-hidden="true">

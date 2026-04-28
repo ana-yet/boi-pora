@@ -63,7 +63,7 @@ export function MarkdownRenderer({ content, className = "" }: MarkdownRendererPr
             const codeString = extractCodeFromChildren(children);
             
             return (
-              <div className="relative group">
+              <div className="relative">
                 <pre {...props}>{children}</pre>
                 <CopyButton code={codeString} />
               </div>
