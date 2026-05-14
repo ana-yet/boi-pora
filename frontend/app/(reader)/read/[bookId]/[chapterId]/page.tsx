@@ -16,7 +16,7 @@ import { ReaderProgressSync } from "./_components/ReaderProgressSync";
 
 export const revalidate = 120;
 // Enable PPR (Partial Prerendering) for hybrid static/dynamic
-export const experimental_ppr = true;
+// export const experimental_ppr = true;
 
 type PageParams = { bookId: string; chapterId: string };
 
