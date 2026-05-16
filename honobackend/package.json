@@ -2,12 +2,14 @@
   "name": "honobackend",
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy --minify",
+    "dev": "wrangler dev --env-file .env",
+    "deploy": "wrangler deploy --env production --minify",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings"
   },
   "dependencies": {
-    "hono": "^4.12.19"
+    "hono": "^4.12.19",
+    "mongodb": "^7.2.0",
+    "mongoose": "^9.6.2"
   },
   "devDependencies": {
     "wrangler": "^4.4.0"

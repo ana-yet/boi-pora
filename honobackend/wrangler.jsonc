@@ -2,13 +2,22 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "honobackend",
   "main": "src/index.ts",
-  "compatibility_date": "2026-05-16"
-  // "compatibility_flags": [
-  //   "nodejs_compat"
-  // ],
-  // "vars": {
-  //   "MY_VAR": "my-variable"
-  // },
+  "compatibility_date": "2026-05-16",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  // Non-secret defaults (safe to commit). Do not put MONGODB_URI here.
+  "vars": {
+    "DB_NAME": "boi-pora"
+  },
+  // Production deploy: pnpm deploy  →  wrangler deploy --env production
+  "env": {
+    "production": {
+      "vars": {
+        "CORS_ORIGIN": "https://YOUR_FRONTEND_DOMAIN.com"
+      }
+    }
+  },
   // "kv_namespaces": [
   //   {
   //     "binding": "MY_KV_NAMESPACE",
