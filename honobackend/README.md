@@ -25,27 +25,17 @@ pnpm dev
 
 Server: `http://localhost:8787`
 
-### Local dev: use Nest proxy (recommended)
+### Data source order
 
-The MongoDB Node driver often **hangs** inside `wrangler dev`, which makes the browser show a **CORS** error (the runtime error has no CORS headers).
-
-**Fix:** run Nest on port 4000 and set in `.env`:
+1. **MongoDB** (`MONGODB_URI`) — primary (local Atlas or `mongodb+srv://...`, same DB as Nest).
+2. **`BOOKS_API_PROXY`** — only if MongoDB throws (e.g. optional `http://127.0.0.1:4000` when Nest is running).
 
 ```env
-BOOKS_API_PROXY=http://127.0.0.1:4000
+MONGODB_URI=mongodb+srv://...
+BOOKS_API_PROXY=http://127.0.0.1:4000   # optional fallback
 ```
 
-```bash
-# terminal 1
-npm run dev:api
-
-# terminal 2
-cd honobackend && pnpm dev
-```
-
-Hono on `:8787` adds CORS and forwards `/api/v1/books*` to Nest.
-
-For **Cloudflare production**, use **MongoDB Atlas** (`mongodb+srv://...`) in `wrangler secret put MONGODB_URI` and leave `BOOKS_API_PROXY` unset.
+For **production**, set only `MONGODB_URI` via `wrangler secret put`; leave `BOOKS_API_PROXY` unset.
 
 ## Deploy to Cloudflare
 

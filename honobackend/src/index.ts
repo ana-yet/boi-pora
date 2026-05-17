@@ -1,13 +1,16 @@
 import { Hono } from 'hono'
+import type { Context } from 'hono'
 import { MongoClient, ObjectId } from 'mongodb'
 
 type Bindings = {
   MONGODB_URI?: string
   DB_NAME?: string
   CORS_ORIGIN?: string
-  /** Local dev: proxy books routes to Nest (e.g. http://127.0.0.1:4000) when Mongo hangs in Workers. */
+  /** Fallback when MongoDB fails (e.g. http://127.0.0.1:4000 for local Nest). */
   BOOKS_API_PROXY?: string
 }
+
+type AppContext = Context<{ Bindings: Bindings }>
 
 const DEFAULT_ORIGINS = [
   'http://localhost:3000',
@@ -71,26 +74,70 @@ function withCorsHeaders(
   return new Response(res.body, { status: res.status, headers })
 }
 
-async function proxyToNest(c: {
-  env: Bindings
-  req: { method: string; url: string; header: (name: string) => string | undefined }
-}): Promise<Response | null> {
+async function proxyToNest(c: AppContext): Promise<Response | null> {
   const base = c.env.BOOKS_API_PROXY?.replace(/\/$/, '')
   if (!base) return null
 
   const incoming = new URL(c.req.url)
   const target = `${base}${incoming.pathname}${incoming.search}`
 
-  const headers = new Headers()
-  const accept = c.req.header('Accept')
-  if (accept) headers.set('Accept', accept)
+  try {
+    const res = await fetch(target, {
+      method: c.req.method,
+      headers: { Accept: 'application/json' },
+    })
 
-  const res = await fetch(target, {
-    method: c.req.method,
-    headers,
-  })
+    const contentType = res.headers.get('content-type') ?? ''
 
-  return withCorsHeaders(c, res)
+    if (!res.ok || !contentType.includes('application/json')) {
+      const body = await res.text().catch(() => '')
+      console.error('[books proxy] failed', target, res.status, body.slice(0, 200))
+      return null
+    }
+
+    console.warn('[books proxy] serving via BOOKS_API_PROXY fallback:', target)
+    return withCorsHeaders(c, res)
+  } catch (err) {
+    console.error('[books proxy] unreachable', target, err)
+    return null
+  }
+}
+
+/** Primary: MongoDB. Fallback: BOOKS_API_PROXY only when Mongo throws. */
+async function tryMongoThenProxy(
+  c: AppContext,
+  fromMongo: () => Promise<Response>,
+): Promise<Response> {
+  if (c.env.MONGODB_URI) {
+    try {
+      return await fromMongo()
+    } catch (error) {
+      console.error('[books] MongoDB failed, trying BOOKS_API_PROXY', error)
+    }
+  }
+
+  const proxied = await proxyToNest(c)
+  if (proxied) return proxied
+
+  if (!c.env.MONGODB_URI && !c.env.BOOKS_API_PROXY) {
+    return c.json(
+      {
+        message: 'No data source configured',
+        hint: 'Set MONGODB_URI and/or BOOKS_API_PROXY in honobackend/.env',
+      },
+      500,
+    )
+  }
+
+  return c.json(
+    {
+      message: 'Failed to load books data',
+      hint: c.env.BOOKS_API_PROXY
+        ? 'MongoDB failed and Nest proxy is unavailable. Fix MONGODB_URI or start `npm run dev:api`.'
+        : 'MongoDB failed. Check MONGODB_URI.',
+    },
+    500,
+  )
 }
 
 async function withDb<T>(
@@ -100,9 +147,7 @@ async function withDb<T>(
   const { MONGODB_URI, DB_NAME } = c.env
 
   if (!MONGODB_URI) {
-    throw new Error(
-      'MONGODB_URI is not set. Add it to honobackend/.env, or set BOOKS_API_PROXY=http://127.0.0.1:4000 to use Nest locally.',
-    )
+    throw new Error('MONGODB_URI is not set')
   }
 
   const client = new MongoClient(MONGODB_URI, {
@@ -149,17 +194,15 @@ app.get('/', (c) => {
   return c.json({
     ok: true,
     service: 'honobackend',
-    booksProxy: Boolean(c.env.BOOKS_API_PROXY),
+    primary: 'mongodb',
+    booksProxyFallback: Boolean(c.env.BOOKS_API_PROXY),
     hasMongoUri: Boolean(c.env.MONGODB_URI),
   })
 })
 
-app.get('/api/v1/books', async (c) => {
-  const proxied = await proxyToNest(c)
-  if (proxied) return proxied
-
-  try {
-    return await withDb(c, async (db) => {
+app.get('/api/v1/books', (c) =>
+  tryMongoThenProxy(c, () =>
+    withDb(c, async (db) => {
       const booksCollection = db.collection('books')
 
       const page = parseInt(c.req.query('page') || '1', 10) || 1
@@ -205,30 +248,21 @@ app.get('/api/v1/books', async (c) => {
         page,
         limit,
       })
-    })
-  } catch (error) {
-    console.error(error)
-    const message =
-      error instanceof Error ? error.message : 'Failed to fetch books'
-    return c.json({ message }, 500)
-  }
-})
+    }),
+  ),
+)
 
-app.get('/api/v1/books/search', async (c) => {
-  const proxied = await proxyToNest(c)
-  if (proxied) return proxied
-
-  try {
-    return await withDb(c, async (db) => {
-      const booksCollection = db.collection('books')
-
+app.get('/api/v1/books/search', (c) =>
+  tryMongoThenProxy(c, () =>
+    withDb(c, async (db) => {
       const q = c.req.query('q') || ''
       const limit = Math.min(
         parseInt(c.req.query('limit') || '20', 10) || 20,
         100,
       )
 
-      const items = await booksCollection
+      const items = await db
+        .collection('books')
         .find({
           $or: [
             { title: { $regex: q, $options: 'i' } },
@@ -240,21 +274,13 @@ app.get('/api/v1/books/search', async (c) => {
         .toArray()
 
       return c.json(items)
-    })
-  } catch (error) {
-    console.error(error)
-    const message =
-      error instanceof Error ? error.message : 'Search failed'
-    return c.json({ message }, 500)
-  }
-})
+    }),
+  ),
+)
 
-app.get('/api/v1/books/slug/:slug', async (c) => {
-  const proxied = await proxyToNest(c)
-  if (proxied) return proxied
-
-  try {
-    return await withDb(c, async (db) => {
+app.get('/api/v1/books/slug/:slug', (c) =>
+  tryMongoThenProxy(c, () =>
+    withDb(c, async (db) => {
       const slug = c.req.param('slug')
       const book = await db.collection('books').findOne({ slug })
 
@@ -263,21 +289,13 @@ app.get('/api/v1/books/slug/:slug', async (c) => {
       }
 
       return c.json(book)
-    })
-  } catch (error) {
-    console.error(error)
-    const message =
-      error instanceof Error ? error.message : 'Failed to fetch book by slug'
-    return c.json({ message }, 500)
-  }
-})
+    }),
+  ),
+)
 
-app.get('/api/v1/books/:id', async (c) => {
-  const proxied = await proxyToNest(c)
-  if (proxied) return proxied
-
-  try {
-    return await withDb(c, async (db) => {
+app.get('/api/v1/books/:id', (c) =>
+  tryMongoThenProxy(c, () =>
+    withDb(c, async (db) => {
       const id = c.req.param('id')
 
       if (!ObjectId.isValid(id)) {
@@ -293,13 +311,8 @@ app.get('/api/v1/books/:id', async (c) => {
       }
 
       return c.json(book)
-    })
-  } catch (error) {
-    console.error(error)
-    const message =
-      error instanceof Error ? error.message : 'Failed to fetch book'
-    return c.json({ message }, 500)
-  }
-})
+    }),
+  ),
+)
 
 export default app

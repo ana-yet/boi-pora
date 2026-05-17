@@ -7,6 +7,7 @@
     "nodejs_compat"
   ],
   // Non-secret defaults (safe to commit). Do not put MONGODB_URI here.
+
   "vars": {
     "DB_NAME": "boi-pora"
   },
@@ -14,7 +15,10 @@
   "env": {
     "production": {
       "vars": {
-        "CORS_ORIGIN": "https://YOUR_FRONTEND_DOMAIN.com"
+        "CORS_ORIGIN": "https://boi-pora.mdanayet-kdk.workers.dev",
+        "DB_NAME": "boi-pora",
+       "MONGODB_URI": "mongodb+srv://boi_pora:aFP7si254OjqZb9q@anayet.t0fjynp.mongodb.net/boi-pora?appName=anayet",
+       "BOOKS_API_PROXY": "https://boi-pora.onrender.com"
       }
     }
   },
