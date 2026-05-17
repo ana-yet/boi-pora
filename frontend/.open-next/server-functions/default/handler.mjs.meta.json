@@ -3649,7 +3649,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/node_modules/next/dist/server/load-manifest.external.js": {
-      "bytes": 358115,
+      "bytes": 358117,
       "imports": [
         {
           "path": "path",
@@ -4115,12 +4115,12 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/chunks/316.js": {
-      "bytes": 17525,
+      "bytes": 17530,
       "imports": [],
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/chunks/431.js": {
-      "bytes": 11849,
+      "bytes": 12031,
       "imports": [],
       "format": "cjs"
     },
@@ -4560,7 +4560,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/app/(public)/[category]/[slug]/page.js": {
-      "bytes": 40763,
+      "bytes": 40768,
       "imports": [
         {
           "path": ".open-next/server-functions/default/node_modules/next/dist/shared/lib/router/utils/app-paths.js",
@@ -5420,7 +5420,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/app/(admin)/admin/books/page.js": {
-      "bytes": 33513,
+      "bytes": 33518,
       "imports": [
         {
           "path": ".open-next/server-functions/default/node_modules/next/dist/shared/lib/router/utils/app-paths.js",
@@ -6710,7 +6710,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/.next/server/app/(public)/page.js": {
-      "bytes": 37655,
+      "bytes": 37660,
       "imports": [
         {
           "path": ".open-next/server-functions/default/node_modules/next/dist/shared/lib/router/utils/app-paths.js",
@@ -9619,7 +9619,7 @@
           "bytesInOutput": 586
         },
         ".open-next/server-functions/default/node_modules/next/dist/server/load-manifest.external.js": {
-          "bytesInOutput": 316822
+          "bytesInOutput": 316824
         },
         ".open-next/server-functions/default/node_modules/next/dist/server/app-render/action-async-storage-instance.js": {
           "bytesInOutput": 501
@@ -9688,10 +9688,10 @@
           "bytesInOutput": 516
         },
         ".open-next/server-functions/default/.next/server/chunks/316.js": {
-          "bytesInOutput": 17821
+          "bytesInOutput": 17826
         },
         ".open-next/server-functions/default/.next/server/chunks/431.js": {
-          "bytesInOutput": 12186
+          "bytesInOutput": 12375
         },
         ".open-next/server-functions/default/.next/server/chunks/456.js": {
           "bytesInOutput": 12011
@@ -9727,7 +9727,7 @@
           "bytesInOutput": 36245
         },
         ".open-next/server-functions/default/.next/server/app/(public)/[category]/[slug]/page.js": {
-          "bytesInOutput": 40985
+          "bytesInOutput": 40990
         },
         ".open-next/server-functions/default/.next/server/app/(explore)/explore/trending/page.js": {
           "bytesInOutput": 25289
@@ -9757,7 +9757,7 @@
           "bytesInOutput": 25253
         },
         ".open-next/server-functions/default/.next/server/app/(admin)/admin/books/page.js": {
-          "bytesInOutput": 33580
+          "bytesInOutput": 33585
         },
         ".open-next/server-functions/default/.next/server/app/(admin)/admin/users/page.js": {
           "bytesInOutput": 29844
@@ -9802,7 +9802,7 @@
           "bytesInOutput": 23324
         },
         ".open-next/server-functions/default/.next/server/app/(public)/page.js": {
-          "bytesInOutput": 37797
+          "bytesInOutput": 37802
         },
         ".open-next/server-functions/default/node_modules/next/dist/server/require.js": {
           "bytesInOutput": 5838
@@ -9955,7 +9955,7 @@
           "bytesInOutput": 69059
         }
       },
-      "bytes": 4799352
+      "bytes": 4799563
     }
   }
 }
