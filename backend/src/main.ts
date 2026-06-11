@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
-import { AppModule } from './app.module.js';
+import { AppModule } from './app.module';
 import { SanitizePipe } from './common/pipes/sanitize.pipe';
 import { json, urlencoded } from 'express';
 

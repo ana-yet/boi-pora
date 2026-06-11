@@ -16,7 +16,7 @@ import { ReadingModule } from './modules/reading/reading.module';
 import { TranslateModule } from './modules/translate/translate.module';
 import { MailModule } from './modules/mail/mail.module';
 import { ContactModule } from './modules/contact/contact.module';
-import { HealthController } from './health.controller.js';
+import { HealthController } from './health.controller';
 
 @Module({
   imports: [
