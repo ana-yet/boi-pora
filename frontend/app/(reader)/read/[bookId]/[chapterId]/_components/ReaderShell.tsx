@@ -92,6 +92,63 @@ function saveSettings(s: ReaderSettings) {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch {}
 }
 
+const WORDS_PER_MINUTE = 220;
+
+/** Scroll percent of the document, throttled to animation frames. */
+function useScrollPercent(): number {
+    const [percent, setPercent] = useState(0);
+    useEffect(() => {
+        let raf = 0;
+        const update = () => {
+            raf = 0;
+            const doc = document.documentElement;
+            const scrollable = doc.scrollHeight - window.innerHeight;
+            setPercent(
+                scrollable <= 0
+                    ? 100
+                    : Math.min(100, Math.max(0, (window.scrollY / scrollable) * 100)),
+            );
+        };
+        const onScroll = () => {
+            if (!raf) raf = requestAnimationFrame(update);
+        };
+        update();
+        window.addEventListener("scroll", onScroll, { passive: true });
+        return () => {
+            window.removeEventListener("scroll", onScroll);
+            if (raf) cancelAnimationFrame(raf);
+        };
+    }, []);
+    return percent;
+}
+
+/** Hide-on-scroll-down / show-on-scroll-up for the mobile header. */
+function useCollapsibleHeader(): boolean {
+    const [hidden, setHidden] = useState(false);
+    const lastYRef = useRef(0);
+    useEffect(() => {
+        const onScroll = () => {
+            if (window.matchMedia("(min-width: 768px)").matches) {
+                setHidden(false);
+                return;
+            }
+            const y = window.scrollY;
+            const delta = y - lastYRef.current;
+            if (y < 80) {
+                setHidden(false);
+            } else if (delta > 8) {
+                setHidden(true);
+            } else if (delta < -8) {
+                setHidden(false);
+            }
+            lastYRef.current = y;
+        };
+        window.addEventListener("scroll", onScroll, { passive: true });
+        return () => window.removeEventListener("scroll", onScroll);
+    }, []);
+    return hidden;
+}
+
 const FONT_MAP: Record<ReaderFont, string> = {
     serif: "var(--font-merriweather), ui-serif, Georgia, serif",
     sans: "var(--font-work-sans), ui-sans-serif, system-ui, sans-serif",
@@ -208,6 +265,18 @@ export function ReaderShell({
     const [settings, setSettings] = useState<ReaderSettings>(DEFAULTS);
     const [mounted, setMounted] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
+    const scrollPercent = useScrollPercent();
+    const headerHidden = useCollapsibleHeader();
+
+    const currentWordCount = useMemo(
+        () => chapters.find((ch) => ch.chapterId === currentChapterId)?.wordCount,
+        [chapters, currentChapterId],
+    );
+    const minutesLeft = useMemo(() => {
+        if (!currentWordCount || currentWordCount <= 0) return null;
+        const remainingWords = currentWordCount * (1 - scrollPercent / 100);
+        return Math.max(0, Math.ceil(remainingWords / WORDS_PER_MINUTE));
+    }, [currentWordCount, scrollPercent]);
 
     useEffect(() => {
         queueMicrotask(() => {
@@ -439,7 +508,9 @@ export function ReaderShell({
             {/* Top Bar */}
             <header
                 style={headerStyle}
-                className="fixed top-0 left-0 right-0 h-[3.75rem] pt-[env(safe-area-inset-top)] backdrop-blur-xl border-b z-40 flex items-center justify-between gap-3 px-3 sm:px-5 md:px-8 shadow-[0_1px_0_rgba(0,0,0,0.04)]"
+                className={`fixed top-0 left-0 right-0 h-[3.75rem] pt-[env(safe-area-inset-top)] backdrop-blur-xl border-b z-40 flex items-center justify-between gap-3 px-3 sm:px-5 md:px-8 shadow-[0_1px_0_rgba(0,0,0,0.04)] transition-transform duration-300 ${
+                    headerHidden ? "-translate-y-full md:translate-y-0" : "translate-y-0"
+                }`}
             >
                 <div className="flex items-center shrink-0 gap-0.5 rounded-2xl bg-black/[0.035] p-1 ring-1 ring-black/[0.05] dark:bg-white/[0.04] dark:ring-white/[0.08]">
                     <Link
@@ -586,6 +657,7 @@ export function ReaderShell({
                     {prevHref ? (
                         <Link
                             href={prevHref}
+                            prefetch
                             style={{ borderColor: c.border, color: c.text }}
                             className="flex items-center gap-1 min-h-[44px] px-3 sm:px-4 rounded-xl border bg-black/[0.03] dark:bg-white/[0.05] hover:border-primary/45 hover:text-primary text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 active:scale-[0.98]"
                         >
@@ -609,6 +681,11 @@ export function ReaderShell({
                                     · Ch {chapterPosition.current}/{chapterPosition.total}
                                 </span>
                             )}
+                            {minutesLeft != null && minutesLeft > 0 && (
+                                <span style={{ color: c.muted }} className="text-[10px] sm:text-xs opacity-75 tabular-nums">
+                                    · ~{minutesLeft} min left
+                                </span>
+                            )}
                         </div>
                         <div
                             className="w-full h-1.5 rounded-full overflow-hidden"
@@ -629,6 +706,7 @@ export function ReaderShell({
                     {nextHref ? (
                         <Link
                             href={nextHref}
+                            prefetch
                             className="flex items-center gap-1 min-h-[44px] px-4 sm:px-5 rounded-xl bg-primary text-white text-sm font-semibold shadow-md shadow-primary/25 hover:bg-primary-dark hover:shadow-lg hover:shadow-primary/30 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/55 active:scale-[0.98]"
                         >
                             <span className="hidden sm:inline">Next</span>

@@ -10,6 +10,11 @@ import { CreateChapterDto } from './dto/create-chapter.dto';
 import { UpdateChapterDto } from './dto/update-chapter.dto';
 import { ChapterSummaryService } from './chapter-summary.service';
 
+function countWords(content: string): number {
+  const words = content.trim().split(/\s+/).filter(Boolean);
+  return words.length;
+}
+
 @Injectable()
 export class ChaptersService {
   constructor(
@@ -56,6 +61,7 @@ export class ChaptersService {
     }
     return this.chapterModel.create({
       ...dto,
+      wordCount: dto.wordCount ?? countWords(dto.content),
       bookId,
     });
   }
@@ -78,6 +84,9 @@ export class ChaptersService {
     const updates = Object.fromEntries(
       Object.entries(dto).filter(([, v]) => v !== undefined),
     );
+    if (dto.content !== undefined && dto.wordCount === undefined) {
+      updates.wordCount = countWords(dto.content);
+    }
     Object.assign(chapter, updates);
     await chapter.save();
     if (dto.content !== undefined) {
