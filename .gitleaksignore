@@ -1,0 +1,3 @@
+# Known historical leaks (rotate credentials + purge history with git filter-repo).
+# If gitleaks flags an old commit that has already been rotated, add the reported
+# fingerprint here (format: <commit>:<file>:<rule>:<line>).
