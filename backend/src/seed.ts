@@ -11,21 +11,32 @@ const MONGODB_URI = process.env.MONGODB_URI;
 
 async function seed() {
   if (!MONGODB_URI) throw new Error('MONGODB_URI is not set');
+
+  const adminPassword = process.env.ADMIN_SEED_PASSWORD;
+  if (!adminPassword) {
+    console.error(
+      'ADMIN_SEED_PASSWORD is not set. Refusing to seed an admin with a default password.\n' +
+        'Set ADMIN_SEED_PASSWORD in your environment (or backend/.env) and re-run.',
+    );
+    process.exit(1);
+    return;
+  }
+  const adminEmail = process.env.ADMIN_SEED_EMAIL || 'admin@boipora.com';
+
   await mongoose.connect(MONGODB_URI);
   const db = mongoose.connection.db;
   if (!db) throw new Error('DB not connected');
   const users = db.collection('users');
-  const existing = await users.findOne({ email: 'admin@boipora.com' });
+  const existing = await users.findOne({ email: adminEmail });
   if (existing) {
     console.log('Admin user already exists');
     await mongoose.disconnect();
     process.exit(0);
     return;
   }
-  const adminPassword = process.env.ADMIN_SEED_PASSWORD || 'admin@anayet';
   const hash = await bcrypt.hash(adminPassword, 12);
   await users.insertOne({
-    email: 'admin@boipora.com',
+    email: adminEmail,
     passwordHash: hash,
     name: 'Admin',
     role: 'admin',
@@ -35,7 +46,7 @@ async function seed() {
     updatedAt: new Date(),
   });
   console.log(
-    'Admin user created: admin@boipora.com (password from env ADMIN_SEED_PASSWORD or default)',
+    `Admin user created: ${adminEmail} (password from ADMIN_SEED_PASSWORD)`,
   );
   await mongoose.disconnect();
   process.exit(0);

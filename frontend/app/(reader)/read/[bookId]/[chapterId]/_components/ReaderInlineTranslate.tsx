@@ -10,6 +10,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { api, ApiError } from "@/lib/api";
+import { useAuth } from "@/app/providers/AuthProvider";
 import { getLanguageLabel } from "@/lib/constants";
 import {
   apiSourceFromBookLanguage,
@@ -90,6 +91,7 @@ function resolveWordAtPoint(
  * @see https://langbly.com/docs/
  */
 export function ReaderInlineTranslate({ palette, bookLanguage, children }: Props) {
+  const { isAuthenticated } = useAuth();
   const rootRef = useRef<HTMLDivElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -173,6 +175,10 @@ export function ReaderInlineTranslate({ palette, bookLanguage, children }: Props
     async (text: string) => {
       const trimmed = text.trim();
       if (!trimmed) return;
+      if (!isAuthenticated) {
+        setError("Log in to use inline translation.");
+        return;
+      }
       if (apiSource !== "auto" && apiSource === targetLang) {
         setError("Pick another target language.");
         return;
@@ -194,7 +200,7 @@ export function ReaderInlineTranslate({ palette, bookLanguage, children }: Props
         setLoading(false);
       }
     },
-    [apiSource, persistTarget, targetLang],
+    [apiSource, persistTarget, targetLang, isAuthenticated],
   );
 
   const handlePointerDown = useCallback(

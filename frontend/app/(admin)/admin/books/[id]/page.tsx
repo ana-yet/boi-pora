@@ -98,7 +98,7 @@ export default function AdminBookEditPage() {
 
   useEffect(() => {
     Promise.all([
-      api.get<Book>(`/api/v1/books/${id}`),
+      api.get<Book>(`/api/v1/admin/books/${id}`),
       api.get<Chapter[]>(`/api/v1/chapters/book/${id}`),
     ])
       .then(([b, ch]) => {

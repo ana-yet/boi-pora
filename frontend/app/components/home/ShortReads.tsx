@@ -14,7 +14,7 @@ function formatDuration(min?: number) {
 }
 
 export function ShortReads() {
-    const { data, isLoading } = useBooks(1, 6, undefined, "published", "createdAt");
+    const { data, isLoading } = useBooks(1, 6, undefined, "createdAt");
 
     const allItems = data?.items ?? [];
     const shortItems = allItems.filter((b) => b.estimatedReadTimeMinutes && b.estimatedReadTimeMinutes < 120);

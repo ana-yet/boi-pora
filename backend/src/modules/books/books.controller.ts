@@ -29,7 +29,6 @@ export class BooksController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('category') category?: string,
-    @Query('status') status?: string,
     @Query('sort') sort?: string,
     @Query('search') search?: string,
   ) {
@@ -38,7 +37,6 @@ export class BooksController {
       parseInt(page ?? '1', 10) || 1,
       parsedLimit,
       category,
-      status,
       sort,
       search,
     );

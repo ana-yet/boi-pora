@@ -2,7 +2,7 @@
 
 import { useState, Suspense } from "react";
 import Link from "next/link";
-import { useBooks } from "@/lib/hooks/useBooks";
+import { useAdminBooks } from "@/lib/hooks/useAdminBooks";
 import { api } from "@/lib/api";
 import type { ApiBook } from "@/lib/types";
 import { getLanguageLabel } from "@/lib/constants";
@@ -20,7 +20,7 @@ function BooksPageInner() {
   const sort = get("sort", "title");
   const status = get("status");
 
-  const { data, error, isLoading, mutate } = useBooks(page, 20, undefined, status || undefined, sort, search || undefined);
+  const { data, error, isLoading, mutate } = useAdminBooks(page, 20, undefined, status || undefined, sort, search || undefined);
   const items = data?.items ?? [];
   const total = data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / 20));

@@ -6,6 +6,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserDocument } from '../../../schemas/user.schema';
 import { JwtPayload } from '../../../common/interfaces/jwt-payload.interface';
+import { DEV_JWT_FALLBACK_SECRET } from '../../../common/constants';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -17,8 +18,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
       secretOrKey:
-        configService.get<string>('JWT_SECRET') ||
-        'fallback-dev-secret-do-not-use-in-prod',
+        configService.get<string>('JWT_SECRET') || DEV_JWT_FALLBACK_SECRET,
     });
   }
 

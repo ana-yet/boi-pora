@@ -53,7 +53,7 @@ interface BookGridProps {
 }
 
 export function BookGrid({ sort, category, title = "Recommended for you", searchQuery, viewMode, onViewChange }: BookGridProps) {
-    const { data, error, isLoading } = useBooks(1, 20, category, undefined, sort);
+    const { data, error, isLoading } = useBooks(1, 20, category, sort);
 
     const allBooks = data?.items?.map(mapApiBookToBook) ?? [];
     const books = searchQuery

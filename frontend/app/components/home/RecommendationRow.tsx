@@ -14,7 +14,7 @@ function formatTime(min?: number) {
 }
 
 export function RecommendationRow() {
-  const { data, error, isLoading } = useBooks(1, 5, undefined, undefined, "rating");
+  const { data, error, isLoading } = useBooks(1, 5, undefined, "rating");
   const books = data?.items ?? [];
 
   if (isLoading && books.length === 0) {

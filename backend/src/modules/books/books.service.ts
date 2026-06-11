@@ -19,7 +19,46 @@ export class BooksService {
     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
+  private sortSpec(sort?: string): Record<string, 1 | -1> {
+    switch (sort) {
+      case 'rating':
+      case 'ratingCount':
+        return { [sort]: -1 };
+      case 'createdAt':
+        return { createdAt: -1 };
+      case 'oldest':
+        return { createdAt: 1 };
+      case 'title_desc':
+        return { title: -1 };
+      case 'title_asc':
+      default:
+        return { title: 1 };
+    }
+  }
+
+  /**
+   * Public listing: always restricted to published books.
+   * Client-supplied status is intentionally ignored.
+   */
   async findAll(
+    page = 1,
+    limit = 20,
+    category?: string,
+    sort?: string,
+    search?: string,
+  ) {
+    limit = Math.min(limit, 100);
+    const filter: FilterQuery<Book> = { status: BookStatus.PUBLISHED };
+    if (category) filter.category = category;
+    if (search?.trim()) {
+      const regex = new RegExp(this.escapeRegex(search.trim()), 'i');
+      filter.$or = [{ title: regex }, { author: regex }];
+    }
+    return this.paginate(filter, page, limit, this.sortSpec(sort));
+  }
+
+  /** Admin listing: full status filter (or all statuses when unset). */
+  async findAllAdmin(
     page = 1,
     limit = 20,
     category?: string,
@@ -37,17 +76,16 @@ export class BooksService {
       const regex = new RegExp(this.escapeRegex(search.trim()), 'i');
       filter.$or = [{ title: regex }, { author: regex }];
     }
+    return this.paginate(filter, page, limit, this.sortSpec(sort));
+  }
+
+  private async paginate(
+    filter: FilterQuery<Book>,
+    page: number,
+    limit: number,
+    sortSpec: Record<string, 1 | -1>,
+  ) {
     const skip = (page - 1) * limit;
-
-    let sortSpec: Record<string, 1 | -1>;
-    if (sort === 'rating' || sort === 'ratingCount') {
-      sortSpec = { [sort]: -1 };
-    } else if (sort === 'createdAt') {
-      sortSpec = { createdAt: -1 };
-    } else {
-      sortSpec = { title: 1 };
-    }
-
     const [items, total] = await Promise.all([
       this.bookModel
         .find(filter)
@@ -63,9 +101,10 @@ export class BooksService {
 
   async search(q: string, limit = 20) {
     limit = Math.min(limit, 100);
+    const published = { status: BookStatus.PUBLISHED };
     if (!q || q.trim().length === 0) {
       return this.bookModel
-        .find()
+        .find(published)
         .sort({ title: 1 })
         .limit(limit)
         .lean()
@@ -75,7 +114,7 @@ export class BooksService {
     if (trimmed.includes(' ') || trimmed.length >= 3) {
       const textResults = await this.bookModel
         .find(
-          { $text: { $search: trimmed } },
+          { $text: { $search: trimmed }, ...published },
           { score: { $meta: 'textScore' } },
         )
         .sort({ score: { $meta: 'textScore' } })
@@ -87,21 +126,27 @@ export class BooksService {
     const escaped = this.escapeRegex(trimmed);
     const regex = new RegExp(escaped, 'i');
     return this.bookModel
-      .find({ $or: [{ title: regex }, { author: regex }] })
+      .find({ $or: [{ title: regex }, { author: regex }], ...published })
       .limit(limit)
       .lean()
       .exec();
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, includeUnpublished = false) {
     const book = await this.bookModel.findById(id).lean().exec();
     if (!book) throw new NotFoundException('Book not found');
+    if (!includeUnpublished && book.status !== BookStatus.PUBLISHED) {
+      throw new NotFoundException('Book not found');
+    }
     return book;
   }
 
-  async findBySlug(slug: string) {
+  async findBySlug(slug: string, includeUnpublished = false) {
     const book = await this.bookModel.findOne({ slug }).lean().exec();
     if (!book) throw new NotFoundException('Book not found');
+    if (!includeUnpublished && book.status !== BookStatus.PUBLISHED) {
+      throw new NotFoundException('Book not found');
+    }
     return book;
   }
 

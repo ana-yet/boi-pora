@@ -7,6 +7,7 @@ import remarkGfm from "remark-gfm";
 import rehypeSanitize from "rehype-sanitize";
 import { defaultSchema } from "hast-util-sanitize";
 import { api, ApiError } from "@/lib/api";
+import { useAuth } from "@/app/providers/AuthProvider";
 import type { ReaderTheme } from "./ReaderShell";
 
 type ChapterSummaryResponse = { summary: string; cached: boolean };
@@ -35,6 +36,7 @@ export function ReaderChapterSummary({
   colors,
   theme,
 }: Props) {
+  const { isAuthenticated } = useAuth();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [summary, setSummary] = useState<string | null>(null);
@@ -79,9 +81,13 @@ export function ReaderChapterSummary({
 
   const handleOpen = useCallback(() => {
     setOpen(true);
+    if (!isAuthenticated) {
+      setError("Log in to use AI chapter summaries.");
+      return;
+    }
     if (summary !== null && !error) return;
     void loadSummary();
-  }, [loadSummary, summary, error]);
+  }, [loadSummary, summary, error, isAuthenticated]);
 
   const copyMarkdown = useCallback(async () => {
     if (!summary?.trim()) return;

@@ -7,6 +7,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { User, UserSchema } from '../../schemas/user.schema';
+import { DEV_JWT_FALLBACK_SECRET } from '../../common/constants';
 
 @Module({
   imports: [
@@ -15,10 +16,7 @@ import { User, UserSchema } from '../../schemas/user.schema';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
-        secret: config.get<string>(
-          'JWT_SECRET',
-          'boi-pora-secret-change-in-prod',
-        ),
+        secret: config.get<string>('JWT_SECRET', DEV_JWT_FALLBACK_SECRET),
         signOptions: { expiresIn: '7d' },
       }),
       inject: [ConfigService],

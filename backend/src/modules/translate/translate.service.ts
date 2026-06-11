@@ -91,15 +91,28 @@ export class TranslateService {
       body.source = source.toLowerCase();
     }
 
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        'X-API-Key': key,
-      },
-      body: JSON.stringify(body),
-    });
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+          'X-API-Key': key,
+        },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(30_000),
+      });
+    } catch (err) {
+      if (err instanceof Error && err.name === 'TimeoutError') {
+        throw new ServiceUnavailableException(
+          'The translation service is taking too long. Please try again later.',
+        );
+      }
+      throw new ServiceUnavailableException(
+        'Could not reach the translation service. Please try again later.',
+      );
+    }
 
     let parsed: unknown;
     try {
