@@ -1,2 +1,0 @@
-# Wrangler also supports .dev.vars natively (no --env-file flag needed).
-# This project uses .env instead — see .env.example and package.json "dev" script.

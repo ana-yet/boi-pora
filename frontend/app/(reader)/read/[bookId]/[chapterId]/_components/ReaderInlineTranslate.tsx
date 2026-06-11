@@ -3,7 +3,6 @@
 import {
   useCallback,
   useEffect,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -115,7 +114,10 @@ export function ReaderInlineTranslate({ palette, bookLanguage, children }: Props
     return READER_TRANSLATE_TARGET.filter((o) => o.code !== apiSource);
   }, [apiSource]);
 
-  useLayoutEffect(() => {
+  // Pick the target language when options change (render-time state adjustment).
+  const [prevTargetOptions, setPrevTargetOptions] = useState<typeof targetOptions | null>(null);
+  if (prevTargetOptions !== targetOptions) {
+    setPrevTargetOptions(targetOptions);
     let stored: string | null = null;
     try {
       stored = sessionStorage.getItem("boi_pora_reader_translate_tgt");
@@ -128,8 +130,8 @@ export function ReaderInlineTranslate({ palette, bookLanguage, children }: Props
       opts.find((o) => o.code === "bn")?.code ??
       opts[0]?.code ??
       "en";
-    setTargetLang((prev) => (prev === pick ? prev : pick));
-  }, [apiSource, targetOptions]);
+    if (targetLang !== pick) setTargetLang(pick);
+  }
 
   const clearLongPress = useCallback(() => {
     if (longPressTimerRef.current) {

@@ -1,15 +1,18 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useEffect, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 
 export function SearchForm({ initialQuery = "" }: { initialQuery?: string }) {
     const router = useRouter();
     const [q, setQ] = useState(initialQuery);
 
-    useEffect(() => {
+    // Sync when the URL-driven query changes (render-time state adjustment).
+    const [prevInitial, setPrevInitial] = useState(initialQuery);
+    if (prevInitial !== initialQuery) {
+        setPrevInitial(initialQuery);
         setQ(initialQuery);
-    }, [initialQuery]);
+    }
 
     function handleSubmit(e: FormEvent) {
         e.preventDefault();

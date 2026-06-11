@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { createPortal } from "react-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -46,13 +46,17 @@ export function ReaderChapterSummary({
     setOpen(false);
   }, []);
 
-  useEffect(() => {
+  // Reset summary state when the chapter changes (render-time state adjustment).
+  const chapterKey = `${bookId}/${chapterId}`;
+  const [prevChapterKey, setPrevChapterKey] = useState(chapterKey);
+  if (prevChapterKey !== chapterKey) {
+    setPrevChapterKey(chapterKey);
     setSummary(null);
     setError(null);
     setFromCache(false);
     setOpen(false);
     setCopyFeedback("idle");
-  }, [bookId, chapterId]);
+  }
 
   const loadSummary = useCallback(async () => {
     setLoading(true);

@@ -6,13 +6,7 @@ import type { BooksResponse } from "../types";
 
 export type { ApiBook, BooksResponse } from "../types";
 
-/**
- * Uses BOOKS API only
- * Example:
- * NEXT_PUBLIC_GET_API_URL=https://books.yourdomain.com
- */
-const fetcher = (url: string) =>
-  api.booksGet<BooksResponse>(url);
+const fetcher = (url: string) => api.get<BooksResponse>(url);
 
 export function useBooks(
   page = 1,

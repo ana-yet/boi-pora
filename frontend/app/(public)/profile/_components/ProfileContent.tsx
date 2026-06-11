@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { useLibrary } from "@/lib/hooks/useLibrary";
@@ -20,11 +20,12 @@ export function ProfileContent() {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{ message: string; variant: "success" | "error" } | null>(null);
 
-  useEffect(() => {
-    if (user) {
-      setName(user.name || "");
-    }
-  }, [user]);
+  // Sync form state when the user object changes (render-time state adjustment).
+  const [prevUser, setPrevUser] = useState(user);
+  if (prevUser !== user) {
+    setPrevUser(user);
+    if (user) setName(user.name || "");
+  }
 
   if (!user) return null;
 

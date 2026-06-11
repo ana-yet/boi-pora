@@ -1,13 +1,11 @@
 /**
  * Centralized API client for backend requests.
- * - Main API URL for auth/admin/update
- * - Separate Books API URL for public books GET
  * - Auth token injection
  * - Refresh token support
  * - Consistent error handling
  */
 
-import { getApiUrl, getBooksApiUrl } from "./env";
+import { getApiUrl } from "./env";
 
 export class ApiError extends Error {
   constructor(
@@ -56,14 +54,13 @@ export function getRefreshToken(): string | null {
 
 type ApiRequestInit = Omit<RequestInit, "body"> & {
   body?: Record<string, unknown> | FormData | null;
-  baseUrl?: string;
 };
 
 async function request<T>(
   path: string,
   options: ApiRequestInit = {}
 ): Promise<T> {
-  const base = options.baseUrl || getApiUrl();
+  const base = getApiUrl();
   const url = path.startsWith("/") ? `${base}${path}` : `${base}/${path}`;
 
   const headers: HeadersInit = {
@@ -75,14 +72,9 @@ async function request<T>(
       headers["Content-Type"] ?? "application/json";
   }
 
-  /**
-   * Only attach token for main API
-   * Skip token for books API if it's public/cache optimized
-   */
   const token = getToken();
-  const isBooksApi = base === getBooksApiUrl();
 
-  if (token && !isBooksApi) {
+  if (token) {
     headers["Authorization"] = `Bearer ${token}`;
   }
 
@@ -99,8 +91,7 @@ async function request<T>(
     ...options,
     headers,
     body,
-    /** Public books API (Hono) does not use cookies; include breaks CORS without Allow-Credentials. */
-    credentials: isBooksApi ? "omit" : "include",
+    credentials: "include",
   });
 
   let parsed: unknown;
@@ -118,11 +109,7 @@ async function request<T>(
   }
 
   if (!res.ok) {
-    /**
-     * Auto refresh token only for main API
-     */
     if (
-      !isBooksApi &&
       res.status === 401 &&
       !path.includes("/auth/refresh") &&
       !path.includes("/auth/login")
@@ -253,18 +240,5 @@ export const api = {
     request<T>(path, {
       ...init,
       method: "DELETE",
-    }),
-
-  /**
-   * BOOKS READ-ONLY API
-   */
-  booksGet: <T>(
-    path: string,
-    init?: Omit<RequestInit, "method" | "body">
-  ) =>
-    request<T>(path, {
-      ...init,
-      method: "GET",
-      baseUrl: getBooksApiUrl(),
     }),
 };

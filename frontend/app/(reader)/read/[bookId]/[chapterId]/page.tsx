@@ -145,9 +145,6 @@ export default async function ReaderPage({
   const ordinal = getOrdinal(chapter.chapterNumber);
   const useMd = isMarkdown(chapter.content);
 
-  // Pre-compute section headings on the server
-  const sectionHeadings = useMd ? extractChapterSectionHeadings(chapter.content) : [];
-
   // Serialize chapter data for client component
   const chapterArticle = {
     ordinalLine: `Chapter ${ordinal}`,
@@ -199,22 +196,4 @@ export default async function ReaderPage({
       />
     </>
   );
-}
-
-// Import this helper at the top
-function extractChapterSectionHeadings(content: string) {
-  // If you have this function in markdown-headings, import it instead
-  // This is a simple fallback
-  const headingRegex = /^(#{1,6})\s+(.+)$/gm;
-  const headings: Array<{ level: number; text: string; id: string }> = [];
-  let match;
-  
-  while ((match = headingRegex.exec(content)) !== null) {
-    const level = match[1].length;
-    const text = match[2].trim();
-    const id = text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-    headings.push({ level, text, id });
-  }
-  
-  return headings;
 }
