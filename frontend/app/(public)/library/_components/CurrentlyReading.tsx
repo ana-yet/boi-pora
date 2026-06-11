@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useReadingProgress } from "@/lib/hooks/useReadingProgress";
 import { ProgressBar } from "./ProgressBar";
 import { PLACEHOLDER_COVER as PLACEHOLDER } from "@/lib/format";
@@ -88,9 +89,11 @@ export function CurrentlyReading() {
         <div className="flex flex-col md:flex-row gap-8 relative z-10">
           <Link href={bookLink} className="flex-shrink-0">
             <div className="w-40 h-60 rounded-lg shadow-book overflow-hidden relative bg-neutral-200">
-              <img
+              <Image
                 alt={`${book.title} cover`}
-                className="w-full h-full object-cover"
+                className="object-cover"
+                fill
+                sizes="160px"
                 src={book.coverImageUrl || PLACEHOLDER}
               />
             </div>

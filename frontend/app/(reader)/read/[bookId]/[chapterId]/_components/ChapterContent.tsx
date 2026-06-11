@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 export interface Illustration {
     src: string;
     alt: string;
@@ -73,10 +75,11 @@ function ParagraphBlock({
             {illustration && (
                 <figure className="my-10">
                     <div className="w-full h-64 bg-linear-to-br from-primary/5 to-primary/20 rounded-xl overflow-hidden relative flex items-center justify-center">
-                        <img
+                        <Image
                             alt={illustration.alt}
-                            className="w-full h-full object-cover opacity-80 mix-blend-overlay hover:scale-105 transition-transform duration-700"
-                            loading="lazy"
+                            className="object-cover opacity-80 mix-blend-overlay hover:scale-105 transition-transform duration-700"
+                            fill
+                            sizes="(max-width: 768px) 100vw, 768px"
                             src={illustration.src}
                         />
                     </div>

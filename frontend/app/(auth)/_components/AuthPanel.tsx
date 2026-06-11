@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export function AuthPanel() {
     return (
@@ -60,8 +61,10 @@ export function AuthPanel() {
 
                 {/* Testimonial */}
                 <div className="flex items-center gap-4 bg-white/10 backdrop-blur-sm rounded-2xl p-4">
-                    <img
+                    <Image
                         alt="Testimonial avatar"
+                        width={48}
+                        height={48}
                         className="w-12 h-12 rounded-full object-cover ring-2 ring-white/20"
                         src="https://lh3.googleusercontent.com/aida-public/AB6AXuDhB1_eyG5dNlBp-E6g9G1nyom5cVNmkz802sNG9wM74qcsiOU2WzxG1--q6xYL2FfsoPJlowmqcWt-ULbZ-m-_kY621qrmJaJF8z0akNqegL--L4rJrYOMps1bIZhQ3Moc0NEtF3sbODwsNvFP4lKq6Lq9QxecojzKP7E5u4htLQ7uMf39CbY_rt_Xapy0Ret3mXx2qgklwGUP8xyKeiHbEUjwmUa51V_Avu9cb1UuUlynfKkmZLBlFpP37eXOdTgFT4p-k961qNkl"
                     />

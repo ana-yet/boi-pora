@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useBookSearch } from "@/lib/hooks/useBookSearch";
 import { PLACEHOLDER_COVER as PLACEHOLDER } from "@/lib/format";
 
@@ -55,10 +56,12 @@ export function SearchResults({ query }: { query: string }) {
                 href={`/${book.category || "fiction"}/${book.slug}`}
                 className="group flex gap-4 p-4 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:border-primary/30 hover:shadow-md transition-all"
               >
-                <div className="w-16 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-neutral-200 dark:bg-neutral-700">
-                  <img
+                <div className="relative w-16 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-neutral-200 dark:bg-neutral-700">
+                  <Image
                     alt={book.title}
-                    className="w-full h-full object-cover"
+                    className="object-cover"
+                    fill
+                    sizes="64px"
                     src={book.coverImageUrl || PLACEHOLDER}
                   />
                 </div>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { fetchBookBySlug, fetchChapters, fetchRelatedBooks } from "@/lib/server-fetch";
 import { absoluteUrl } from "@/lib/site";
@@ -121,9 +122,12 @@ export default async function BookDetailPage({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-20">
         <div className="lg:col-span-4 xl:col-span-3 flex flex-col items-center lg:items-start">
           <div className="relative group w-[280px] sm:w-[320px] lg:w-full aspect-2/3 rounded-xl shadow-2xl shadow-primary/10 overflow-hidden">
-            <img
+            <Image
               alt={`${book.title} cover`}
-              className="w-full h-full object-cover"
+              className="object-cover"
+              fill
+              priority
+              sizes="(max-width: 1024px) 320px, 25vw"
               src={book.coverImageUrl || PLACEHOLDER}
             />
           </div>
@@ -228,10 +232,12 @@ export default async function BookDetailPage({
                 key={b._id}
                 className="flex-none w-[180px] group"
               >
-                <div className="aspect-2/3 rounded-lg overflow-hidden shadow-md mb-3">
-                  <img
+                <div className="relative aspect-2/3 rounded-lg overflow-hidden shadow-md mb-3">
+                  <Image
                     alt={`${b.title} cover`}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                    className="object-cover group-hover:scale-105 transition-transform"
+                    fill
+                    sizes="180px"
                     src={b.coverImageUrl || PLACEHOLDER}
                   />
                 </div>

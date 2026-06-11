@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { api, ApiError } from "@/lib/api";
 import { LANGUAGES, getLanguageLabel } from "@/lib/constants";
 import { Button } from "@/app/components/ui/Button";
@@ -397,11 +398,13 @@ export default function AdminNewBookPage() {
         <div className="space-y-6">
           <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-6">
             <h3 className="font-semibold text-neutral-800 dark:text-white mb-4">Cover Preview</h3>
-            <div className="aspect-2/3 w-full rounded-lg overflow-hidden bg-neutral-100 dark:bg-neutral-700 shadow-md">
-              <img
+            <div className="relative aspect-2/3 w-full rounded-lg overflow-hidden bg-neutral-100 dark:bg-neutral-700 shadow-md">
+              <Image
                 alt="Cover preview"
                 src={form.coverImageUrl || PLACEHOLDER}
-                className="w-full h-full object-cover"
+                className="object-cover"
+                fill
+                sizes="(max-width: 1024px) 100vw, 33vw"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = PLACEHOLDER;
                 }}

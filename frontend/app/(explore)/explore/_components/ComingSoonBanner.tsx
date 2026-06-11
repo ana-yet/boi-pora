@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 export function ComingSoonBanner() {
     return (
         <section className="mt-8 mb-8 p-8 bg-primary/5 dark:bg-primary/10 rounded-3xl border border-primary/10">
@@ -19,9 +21,11 @@ export function ComingSoonBanner() {
                     </button>
                 </div>
                 <div className="w-full md:w-1/3 aspect-video rounded-2xl overflow-hidden bg-neutral-200 relative group">
-                    <img
+                    <Image
                         alt="AI Fiction Banner"
-                        className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-105"
+                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                        fill
+                        sizes="(max-width: 768px) 100vw, 33vw"
                         src="https://lh3.googleusercontent.com/aida-public/AB6AXuBXf1tvMebe61YBNsiotB4kX7EUCfPoIh0psxe4tI77ky4CoomTtcB1iP2es3y1v0D67XkWxEVS2srqOLeHsDVYyLv4IPqpFN1KzjowPVB0Px23NF7y47gSvaurCM7VtjW41N4N1CxSPssKs-lcl1zCpqol5EWf8WXOoX34E_CN0i17mN3_rrS9OQQc-wNBJMmxSWvdEK1HCukMCaGz7XJMotAW5Beg48saaYzqiGaUNcpjseAl0lH0GaBI0y9gVRlc9or4FKFR7Vmw"
                     />
                 </div>

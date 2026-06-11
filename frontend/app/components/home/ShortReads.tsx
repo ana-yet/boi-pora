@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { fetchBooks } from "@/lib/server-fetch";
 import { PLACEHOLDER_COVER as PLACEHOLDER, formatDuration } from "@/lib/format";
 
@@ -29,8 +30,8 @@ export async function ShortReads() {
                         href={`/${book.category || "fiction"}/${book.slug}`}
                         className={`bg-white dark:bg-surface-dark p-4 rounded-xl border border-neutral-100 dark:border-neutral-800 shadow-sm hover:shadow-md transition-shadow group cursor-pointer flex${idx >= 2 ? " hidden lg:flex" : ""}`}
                     >
-                        <div className="w-20 h-28 flex-shrink-0 rounded overflow-hidden shadow-sm mr-4">
-                            <img alt={`${book.title} book cover`} className="w-full h-full object-cover" src={book.coverImageUrl || PLACEHOLDER} />
+                        <div className="relative w-20 h-28 flex-shrink-0 rounded overflow-hidden shadow-sm mr-4">
+                            <Image alt={`${book.title} book cover`} className="object-cover" fill sizes="80px" src={book.coverImageUrl || PLACEHOLDER} />
                         </div>
                         <div className="flex flex-col justify-between py-1">
                             <div>

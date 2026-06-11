@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { useReadingProgress } from "@/lib/hooks/useReadingProgress";
 import { PLACEHOLDER_COVER as PLACEHOLDER } from "@/lib/format";
@@ -38,7 +39,7 @@ export function ContinueReading() {
         className="block bg-white dark:bg-surface-dark rounded-2xl shadow-card overflow-hidden border border-neutral-100 dark:border-neutral-800 flex flex-col md:flex-row max-w-4xl hover:shadow-lg transition-shadow"
       >
         <div className="w-full md:w-1/3 relative h-64 md:h-auto flex-shrink-0">
-          <img alt={`${book.title} cover`} className="absolute inset-0 w-full h-full object-cover" src={book.coverImageUrl || PLACEHOLDER} />
+          <Image alt={`${book.title} cover`} className="object-cover" fill sizes="(max-width: 768px) 100vw, 33vw" src={book.coverImageUrl || PLACEHOLDER} />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent md:bg-gradient-to-r md:from-transparent md:to-black/10" />
         </div>
         <div className="p-8 md:w-2/3 flex flex-col justify-center">

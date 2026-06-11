@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { api } from "@/lib/api";
 import { ProgressBar } from "./ProgressBar";
 import { PLACEHOLDER_COVER as PLACEHOLDER } from "@/lib/format";
@@ -50,11 +51,12 @@ export function SavedBookCard({ book, onRemove, view = "grid" }: SavedBookCardPr
                 href={href}
                 className="group flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-surface-dark border border-neutral-200 dark:border-neutral-800 hover:shadow-md hover:border-primary/30 transition-all"
             >
-                <div className="w-12 h-16 flex-shrink-0 rounded overflow-hidden bg-neutral-200 shadow-sm">
-                    <img
+                <div className="relative w-12 h-16 flex-shrink-0 rounded overflow-hidden bg-neutral-200 shadow-sm">
+                    <Image
                         alt={book.title}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
+                        className="object-cover"
+                        fill
+                        sizes="48px"
                         src={book.image || PLACEHOLDER}
                     />
                 </div>
@@ -92,10 +94,11 @@ export function SavedBookCard({ book, onRemove, view = "grid" }: SavedBookCardPr
     return (
         <Link href={href} className="group cursor-pointer block">
             <div className="relative aspect-[2/3] mb-3 rounded-lg shadow-md group-hover:shadow-xl transition-all duration-300 group-hover:-translate-y-1 overflow-hidden bg-neutral-200">
-                <img
+                <Image
                     alt={book.title}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
+                    className="object-cover"
+                    fill
+                    sizes="(max-width: 640px) 50vw, 200px"
                     src={book.image || PLACEHOLDER}
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />

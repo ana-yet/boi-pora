@@ -3,8 +3,7 @@
  * duration/relative-time formatting and the fallback book cover.
  */
 
-export const PLACEHOLDER_COVER =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='300' viewBox='0 0 200 300'%3E%3Crect fill='%23e5e7eb' width='200' height='300'/%3E%3Ctext fill='%239ca3af' font-family='sans-serif' font-size='14' x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle'%3EBook cover%3C/text%3E%3C/svg%3E";
+export const PLACEHOLDER_COVER = "/placeholder-cover.svg";
 
 export function formatDuration(minutes?: number): string {
   if (!minutes) return "—";

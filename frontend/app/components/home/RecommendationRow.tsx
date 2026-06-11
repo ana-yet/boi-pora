@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { fetchBooks } from "@/lib/server-fetch";
 import {
   PLACEHOLDER_COVER as PLACEHOLDER,
@@ -37,9 +38,11 @@ export async function RecommendationRow() {
             className="group block"
           >
             <div className="relative aspect-[2/3] rounded-lg overflow-hidden mb-3 shadow-md group-hover:shadow-xl transition-all duration-300 group-hover:-translate-y-1">
-              <img
+              <Image
                 alt={`${book.title} cover`}
-                className="w-full h-full object-cover"
+                className="object-cover"
+                fill
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
                 src={book.coverImageUrl || PLACEHOLDER}
               />
               {book.rating != null && (

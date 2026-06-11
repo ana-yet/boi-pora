@@ -5,6 +5,7 @@ import type { Book } from "./BookCard";
 import { ViewToggle, type ViewMode } from "./ViewToggle";
 import { useBooks } from "@/lib/hooks/useBooks";
 import Link from "next/link";
+import Image from "next/image";
 import { PLACEHOLDER_COVER, formatDuration } from "@/lib/format";
 
 function mapApiBookToBook(apiBook: {
@@ -104,9 +105,11 @@ export function BookGrid({ sort, category, title = "Recommended for you", search
                         <Link key={book.slug} href={`/${book.category}/${book.slug}`}
                             className="flex gap-4 p-4 rounded-xl bg-white dark:bg-surface-dark border border-neutral-200 dark:border-neutral-700 hover:shadow-md transition-all"
                         >
-                            <img
+                            <Image
                                 src={book.image}
                                 alt={book.title}
+                                width={64}
+                                height={96}
                                 className="w-16 h-24 object-cover rounded-lg flex-shrink-0"
                             />
                             <div className="flex-1 min-w-0">
