@@ -17,8 +17,7 @@
       "vars": {
         "CORS_ORIGIN": "https://boi-pora.mdanayet-kdk.workers.dev",
         "DB_NAME": "boi-pora",
-       "MONGODB_URI": "mongodb+srv://boi_pora:aFP7si254OjqZb9q@anayet.t0fjynp.mongodb.net/boi-pora?appName=anayet",
-       "BOOKS_API_PROXY": "https://boi-pora.onrender.com"
+        "BOOKS_API_PROXY": "https://boi-pora.onrender.com"
       }
     }
   },
