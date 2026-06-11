@@ -14,6 +14,8 @@ import { LibraryModule } from './modules/library/library.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
 import { ReadingModule } from './modules/reading/reading.module';
 import { TranslateModule } from './modules/translate/translate.module';
+import { MailModule } from './modules/mail/mail.module';
+import { ContactModule } from './modules/contact/contact.module';
 import { HealthController } from './health.controller.js';
 
 @Module({
@@ -46,6 +48,8 @@ import { HealthController } from './health.controller.js';
     ReviewsModule,
     ReadingModule,
     TranslateModule,
+    MailModule,
+    ContactModule,
   ],
   controllers: [HealthController],
   providers: [

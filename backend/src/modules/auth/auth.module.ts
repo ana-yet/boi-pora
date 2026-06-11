@@ -8,6 +8,7 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { User, UserSchema } from '../../schemas/user.schema';
 import { Session, SessionSchema } from '../../schemas/session.schema';
+import { MailModule } from '../mail/mail.module';
 import { DEV_JWT_FALLBACK_SECRET } from '../../common/constants';
 
 @Module({
@@ -17,6 +18,7 @@ import { DEV_JWT_FALLBACK_SECRET } from '../../common/constants';
       { name: Session.name, schema: SessionSchema },
     ]),
     PassportModule,
+    MailModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({

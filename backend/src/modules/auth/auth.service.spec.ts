@@ -4,6 +4,7 @@ import { getModelToken } from '@nestjs/mongoose';
 import { UnauthorizedException } from '@nestjs/common';
 import * as crypto from 'crypto';
 import { AuthService } from './auth.service';
+import { MailService } from '../mail/mail.service';
 import { User } from '../../schemas/user.schema';
 import { Session } from '../../schemas/session.schema';
 import { UserRole } from '../../common/enums';
@@ -106,6 +107,10 @@ describe('AuthService (sessions)', () => {
         {
           provide: JwtService,
           useValue: { sign: jest.fn().mockReturnValue('signed.jwt') },
+        },
+        {
+          provide: MailService,
+          useValue: { send: jest.fn().mockResolvedValue(undefined) },
         },
       ],
     }).compile();

@@ -12,8 +12,10 @@ import * as crypto from 'crypto';
 import { User, UserDocument } from '../../schemas/user.schema';
 import { Session, SessionDocument } from '../../schemas/session.schema';
 import { UserRole } from '../../common/enums';
+import { MailService } from '../mail/mail.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 export interface SessionContext {
   userAgent?: string;
@@ -39,6 +41,7 @@ export class AuthService {
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(Session.name) private sessionModel: Model<SessionDocument>,
     private jwtService: JwtService,
+    private mailService: MailService,
   ) {}
 
   private signAccessToken(userId: string, role: UserRole, sessionId: string) {
@@ -224,10 +227,19 @@ export class AuthService {
     user.resetPasswordToken = hashedToken;
     user.resetPasswordExpires = new Date(Date.now() + 3600000);
     await user.save();
-    // TODO: Send email with reset link
-    console.log(
-      `[DEV] Reset link: ${process.env.CORS_ORIGIN || 'http://localhost:3000'}/reset-password/${token}`,
-    );
+    const siteUrl = (process.env.CORS_ORIGIN || 'http://localhost:3000')
+      .split(',')[0]
+      .trim();
+    await this.mailService.send({
+      to: user.email,
+      subject: 'Reset your Boi Pora password',
+      html: `
+        <p>Hi${user.name ? ` ${user.name}` : ''},</p>
+        <p>We received a request to reset your Boi Pora password. The link below is valid for 1 hour:</p>
+        <p><a href="${siteUrl}/reset-password/${token}">Reset password</a></p>
+        <p>If you didn't request this, you can safely ignore this email.</p>
+      `,
+    });
     return { message: 'If an account exists, a reset link has been sent.' };
   }
 
@@ -249,6 +261,24 @@ export class AuthService {
     // Changing the password invalidates every existing session.
     await this.logoutAll(String(user._id));
     return { message: 'Password has been reset successfully' };
+  }
+
+  async updateProfile(userId: string, dto: UpdateProfileDto) {
+    const user = await this.userModel
+      .findByIdAndUpdate(
+        userId,
+        {
+          ...(dto.name !== undefined ? { name: dto.name } : {}),
+          ...(dto.avatarUrl !== undefined ? { avatarUrl: dto.avatarUrl } : {}),
+        },
+        { new: true },
+      )
+      .lean()
+      .exec();
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+    return this.me(userId);
   }
 
   async me(userId: string) {
