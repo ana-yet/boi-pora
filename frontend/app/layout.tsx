@@ -74,21 +74,12 @@ export const metadata: Metadata = {
     title: defaultTitle,
     description: defaultDescription,
     url: "/",
-    images: [
-      {
-        url: "/favicon.png",
-        width: 512,
-        height: 512,
-        type: "image/png",
-        alt: "Boi Pora",
-      },
-    ],
+    // OG image comes from app/opengraph-image.tsx (file convention).
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: defaultTitle,
     description: defaultDescription,
-    images: ["/favicon.png"],
   },
   robots: {
     index: true,
