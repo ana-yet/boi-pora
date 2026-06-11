@@ -3,9 +3,7 @@
 import Link from "next/link";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { useReadingProgress } from "@/lib/hooks/useReadingProgress";
-
-const PLACEHOLDER =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='600'%3E%3Crect fill='%23e5e7eb' width='400' height='600'/%3E%3C/svg%3E";
+import { PLACEHOLDER_COVER as PLACEHOLDER } from "@/lib/format";
 
 export function ContinueReading() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();

@@ -5,10 +5,10 @@ import Link from "next/link";
 import { useAdminUsers } from "@/lib/hooks/useAdminUsers";
 import { api } from "@/lib/api";
 import { Button } from "@/app/components/ui/Button";
-import { Toast } from "@/app/components/ui/Toast";
+import { useToast } from "@/app/providers/ToastProvider";
 import {
   AdminSearch, StatusBadge, BulkActionBar, Pagination,
-  ConfirmModal, useUrlParams, useToast,
+  ConfirmModal, useUrlParams,
 } from "../_components";
 
 function UsersPageInner() {
@@ -25,7 +25,7 @@ function UsersPageInner() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirm, setConfirm] = useState<{ action: string; ids: string[] } | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
-  const { toast, show, close } = useToast();
+  const { showToast: show } = useToast();
 
   const toggleSelect = (id: string) => {
     setSelected((prev) => {
@@ -167,7 +167,6 @@ function UsersPageInner() {
         variant="danger"
       />
 
-      <Toast message={toast.message} variant={toast.variant} open={toast.open} onClose={close} />
     </div>
   );
 }

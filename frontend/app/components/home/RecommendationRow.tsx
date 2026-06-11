@@ -2,16 +2,10 @@
 
 import Link from "next/link";
 import { useBooks } from "@/lib/hooks/useBooks";
-
-const PLACEHOLDER =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='300'%3E%3Crect fill='%23e5e7eb' width='200' height='300'/%3E%3C/svg%3E";
-
-function formatTime(min?: number) {
-  if (!min) return "—";
-  const h = Math.floor(min / 60);
-  const m = min % 60;
-  return m > 0 ? `${h}h ${m}m` : `${h}h`;
-}
+import {
+  PLACEHOLDER_COVER as PLACEHOLDER,
+  formatDuration as formatTime,
+} from "@/lib/format";
 
 export function RecommendationRow() {
   const { data, error, isLoading } = useBooks(1, 5, undefined, "rating");

@@ -8,6 +8,7 @@ import { LANGUAGES } from "@/lib/constants";
 import { Button } from "@/app/components/ui/Button";
 import { Input } from "@/app/components/ui/Input";
 import { MarkdownEditor } from "@/app/components/ui/MarkdownEditor";
+import { PLACEHOLDER_COVER as PLACEHOLDER } from "@/lib/format";
 
 const CATEGORIES = [
   { value: "fiction", label: "Fiction" },
@@ -27,9 +28,6 @@ const CATEGORIES = [
   { value: "children", label: "Children" },
   { value: "other", label: "Other" },
 ] as const;
-
-const PLACEHOLDER =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='300'%3E%3Crect fill='%23e5e7eb' width='200' height='300'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23a3a3a3' font-size='14'%3ENo Cover%3C/text%3E%3C/svg%3E";
 
 const selectClass =
   "w-full px-3 py-2 rounded-lg border text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-neutral-900 dark:text-neutral-100 bg-white dark:bg-neutral-800 border-neutral-300 dark:border-neutral-600 hover:border-neutral-400 dark:hover:border-neutral-500";

@@ -3,10 +3,9 @@
 import Link from "next/link";
 import { useReadingProgress } from "@/lib/hooks/useReadingProgress";
 import { ProgressBar } from "./ProgressBar";
+import { PLACEHOLDER_COVER as PLACEHOLDER } from "@/lib/format";
 
-const PLACEHOLDER =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='240'%3E%3Crect fill='%23e5e7eb' width='160' height='240'/%3E%3C/svg%3E";
-
+/** Differs from lib/format timeAgo: falls back to a locale date after 7 days. */
 function formatTimeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);

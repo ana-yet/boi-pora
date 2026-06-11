@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { ProgressBar } from "./ProgressBar";
+import { PLACEHOLDER_COVER as PLACEHOLDER } from "@/lib/format";
 
 export interface SavedBook {
     title: string;
@@ -15,9 +16,6 @@ export interface SavedBook {
     progress?: number;
     addedAt?: string;
 }
-
-const PLACEHOLDER =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='300'%3E%3Crect fill='%23e5e7eb' width='200' height='300'/%3E%3C/svg%3E";
 
 interface SavedBookCardProps {
     book: SavedBook;

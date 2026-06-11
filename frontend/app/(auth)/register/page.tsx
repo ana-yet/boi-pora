@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { SocialButtons } from "../_components";
 import { RegisterForm } from "./_components";
 
 export const metadata: Metadata = {
@@ -30,18 +29,6 @@ export default function RegisterPage() {
                 <p className="text-neutral-600 dark:text-neutral-400">
                     Create a free account and discover thousands of books.
                 </p>
-            </div>
-
-            {/* Social Buttons */}
-            <SocialButtons action="register" />
-
-            {/* Divider */}
-            <div className="flex items-center gap-4">
-                <div className="flex-1 h-px bg-neutral-200 dark:bg-neutral-700" />
-                <span className="text-xs font-medium text-neutral-400 uppercase tracking-wider">
-                    or register with email
-                </span>
-                <div className="flex-1 h-px bg-neutral-200 dark:bg-neutral-700" />
             </div>
 
             {/* Register Form */}

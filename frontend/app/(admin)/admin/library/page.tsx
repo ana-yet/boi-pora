@@ -4,9 +4,9 @@ import { Suspense } from "react";
 import { useAdminLibrary } from "@/lib/hooks/useAdminLibrary";
 import { api } from "@/lib/api";
 import { Button } from "@/app/components/ui/Button";
-import { Toast } from "@/app/components/ui/Toast";
+import { useToast } from "@/app/providers/ToastProvider";
 import {
-  AdminSearch, Pagination, useUrlParams, useToast,
+  AdminSearch, Pagination, useUrlParams,
 } from "../_components";
 
 function LibraryPageInner() {
@@ -19,7 +19,7 @@ function LibraryPageInner() {
   const items = data?.items ?? [];
   const total = data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / 20));
-  const { toast, show, close } = useToast();
+  const { showToast: show } = useToast();
 
   const handleStatusChange = async (id: string, newStatus: string) => {
     try {
@@ -145,7 +145,6 @@ function LibraryPageInner() {
         )}
       </div>
 
-      <Toast message={toast.message} variant={toast.variant} open={toast.open} onClose={close} />
     </div>
   );
 }

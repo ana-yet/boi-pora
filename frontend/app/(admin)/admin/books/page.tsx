@@ -7,10 +7,10 @@ import { api } from "@/lib/api";
 import type { ApiBook } from "@/lib/types";
 import { getLanguageLabel } from "@/lib/constants";
 import { Button } from "@/app/components/ui/Button";
-import { Toast } from "@/app/components/ui/Toast";
+import { useToast } from "@/app/providers/ToastProvider";
 import {
   AdminSearch, BulkActionBar, Pagination,
-  ConfirmModal, useUrlParams, useToast,
+  ConfirmModal, useUrlParams,
 } from "../_components";
 
 function BooksPageInner() {
@@ -28,7 +28,7 @@ function BooksPageInner() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirm, setConfirm] = useState<{ action: string; ids: string[] } | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
-  const { toast, show, close } = useToast();
+  const { showToast: show } = useToast();
 
   const toggleSelect = (id: string) => {
     setSelected((prev) => {
@@ -242,8 +242,6 @@ function BooksPageInner() {
         confirmLabel={confirm?.action === "delete" ? "Delete" : confirm?.action === "publish" ? "Publish" : "Archive"}
         variant={confirm?.action === "delete" ? "danger" : "primary"}
       />
-
-      <Toast message={toast.message} variant={toast.variant} open={toast.open} onClose={close} />
     </div>
   );
 }

@@ -11,6 +11,10 @@ out/
 **/out/
 build/
 **/build/
+.open-next/
+**/.open-next/
+.wrangler/
+**/.wrangler/
 
 # Environment (keep .env.example)
 .env
@@ -20,6 +24,7 @@ build/
 .env.production.local
 .env*.local
 !.env.example
+frontend/.env.production
 
 # Logs
 *.log
