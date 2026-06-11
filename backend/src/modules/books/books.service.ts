@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   ConflictException,
   BadRequestException,
@@ -13,6 +14,10 @@ import { UpdateBookDto } from './dto/update-book.dto';
 
 @Injectable()
 export class BooksService {
+  private readonly logger = new Logger(BooksService.name);
+  /** Flips after the first $search failure so we stop retrying per request. */
+  private atlasSearchAvailable = true;
+
   constructor(@InjectModel(Book.name) private bookModel: Model<BookDocument>) {}
 
   private escapeRegex(str: string): string {
@@ -111,6 +116,60 @@ export class BooksService {
         .exec();
     }
     const trimmed = q.trim();
+
+    if (this.atlasSearchAvailable) {
+      try {
+        const results: unknown[] = await this.bookModel
+          .aggregate([
+            {
+              $search: {
+                index: 'default',
+                compound: {
+                  should: [
+                    {
+                      text: {
+                        query: trimmed,
+                        path: 'title',
+                        score: { boost: { value: 3 } },
+                        fuzzy: { maxEdits: 1 },
+                      },
+                    },
+                    {
+                      text: {
+                        query: trimmed,
+                        path: 'author',
+                        score: { boost: { value: 2 } },
+                        fuzzy: { maxEdits: 1 },
+                      },
+                    },
+                    { text: { query: trimmed, path: 'description' } },
+                  ],
+                  minimumShouldMatch: 1,
+                },
+              },
+            },
+            { $match: { status: BookStatus.PUBLISHED } },
+            { $limit: limit },
+          ])
+          .exec();
+        return results;
+      } catch (err) {
+        // Index missing (local Mongo / Docker) — degrade to legacy search.
+        this.atlasSearchAvailable = false;
+        this.logger.warn(
+          `Atlas $search unavailable, using legacy search: ${String(err)}`,
+        );
+      }
+    }
+    return this.legacySearch(trimmed, limit, published);
+  }
+
+  /** $text + regex search for environments without Atlas Search. */
+  private async legacySearch(
+    trimmed: string,
+    limit: number,
+    published: FilterQuery<Book>,
+  ) {
     if (trimmed.includes(' ') || trimmed.length >= 3) {
       const textResults = await this.bookModel
         .find(
@@ -127,6 +186,53 @@ export class BooksService {
     const regex = new RegExp(escaped, 'i');
     return this.bookModel
       .find({ $or: [{ title: regex }, { author: regex }], ...published })
+      .limit(limit)
+      .lean()
+      .exec();
+  }
+
+  /** Title autocomplete for the search-as-you-type dropdown. */
+  async autocomplete(q: string, limit = 8) {
+    const trimmed = q?.trim();
+    if (!trimmed) return [];
+    limit = Math.min(limit, 10);
+    const projection = {
+      _id: 1,
+      title: 1,
+      slug: 1,
+      author: 1,
+      coverImageUrl: 1,
+      category: 1,
+    };
+
+    if (this.atlasSearchAvailable) {
+      try {
+        const results: unknown[] = await this.bookModel
+          .aggregate([
+            {
+              $search: {
+                index: 'default',
+                autocomplete: { query: trimmed, path: 'title' },
+              },
+            },
+            { $match: { status: BookStatus.PUBLISHED } },
+            { $limit: limit },
+            { $project: projection },
+          ])
+          .exec();
+        return results;
+      } catch (err) {
+        this.atlasSearchAvailable = false;
+        this.logger.warn(
+          `Atlas autocomplete unavailable, using regex: ${String(err)}`,
+        );
+      }
+    }
+    const regex = new RegExp('^' + this.escapeRegex(trimmed), 'i');
+    return this.bookModel
+      .find({ title: regex, status: BookStatus.PUBLISHED })
+      .select(projection)
+      .sort({ title: 1 })
       .limit(limit)
       .lean()
       .exec();
