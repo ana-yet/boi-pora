@@ -1,31 +1,13 @@
-"use client";
-
 import Link from "next/link";
-import { useBooks } from "@/lib/hooks/useBooks";
+import { fetchBooks } from "@/lib/server-fetch";
 import { PLACEHOLDER_COVER as PLACEHOLDER, formatDuration } from "@/lib/format";
 
-export function ShortReads() {
-    const { data, isLoading } = useBooks(1, 6, undefined, "createdAt");
+export async function ShortReads() {
+    const data = await fetchBooks({ page: 1, limit: 6, sort: "createdAt" });
 
     const allItems = data?.items ?? [];
     const shortItems = allItems.filter((b) => b.estimatedReadTimeMinutes && b.estimatedReadTimeMinutes < 120);
     const books = (shortItems.length > 0 ? shortItems : allItems).slice(0, 3);
-
-    if (isLoading) {
-        return (
-            <section className="mb-12">
-                <div className="mb-6">
-                    <h2 className="text-2xl font-bold text-neutral-800 dark:text-white">Short reads under 2 hours</h2>
-                    <p className="text-neutral-500 dark:text-neutral-400 text-sm mt-1">Perfect for your commute</p>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {[1, 2, 3].map((i) => (
-                        <div key={i} className="h-36 rounded-xl bg-neutral-200 dark:bg-neutral-700 animate-pulse" />
-                    ))}
-                </div>
-            </section>
-        );
-    }
 
     if (books.length === 0) return null;
 

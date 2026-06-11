@@ -1,32 +1,15 @@
-"use client";
-
 import Link from "next/link";
-import { useBooks } from "@/lib/hooks/useBooks";
+import { fetchBooks } from "@/lib/server-fetch";
 import {
   PLACEHOLDER_COVER as PLACEHOLDER,
   formatDuration as formatTime,
 } from "@/lib/format";
 
-export function RecommendationRow() {
-  const { data, error, isLoading } = useBooks(1, 5, undefined, "rating");
+export async function RecommendationRow() {
+  const data = await fetchBooks({ page: 1, limit: 5, sort: "rating" });
   const books = data?.items ?? [];
 
-  if (isLoading && books.length === 0) {
-    return (
-      <section className="mb-16">
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-neutral-800 dark:text-white">Recommended for you</h2>
-          <p className="text-neutral-500 dark:text-neutral-400 text-sm mt-1">Top rated books</p>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="aspect-[2/3] rounded-lg bg-neutral-200 dark:bg-neutral-700 animate-pulse" />
-          ))}
-        </div>
-      </section>
-    );
-  }
-  if (error || books.length === 0) return null;
+  if (books.length === 0) return null;
 
   return (
     <section className="mb-16">
@@ -47,7 +30,7 @@ export function RecommendationRow() {
         </Link>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-        {books.map((book: { _id: string; title: string; author: string; slug: string; category?: string; coverImageUrl?: string; rating?: number; estimatedReadTimeMinutes?: number }) => (
+        {books.map((book) => (
           <Link
             key={book._id}
             href={`/${book.category || "fiction"}/${book.slug}`}

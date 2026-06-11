@@ -1,43 +1,28 @@
-"use client";
+import type { Metadata } from "next";
+import { Suspense } from "react";
+import { ExploreView } from "../_components/ExploreView";
 
-import { useState } from "react";
-import { SearchBar } from "../_components/SearchBar";
-import { BookGrid } from "../_components/BookGrid";
-import type { ViewMode } from "../_components/ViewToggle";
+export const metadata: Metadata = {
+  title: "New arrivals",
+  description: "Fresh titles recently added to Boi Pora.",
+  alternates: { canonical: "/explore/new" },
+};
 
 export default function NewArrivalsPage() {
-    const [searchQuery, setSearchQuery] = useState("");
-    const [viewMode, setViewMode] = useState<ViewMode>("grid");
-
-    return (
-        <>
-            <header className="flex-shrink-0 px-8 pt-8 pb-4 bg-background-light dark:bg-background-dark z-10">
-                <div className="max-w-7xl mx-auto">
-                    <div className="flex items-center justify-between mb-8">
-                        <div>
-                            <h1 className="text-3xl md:text-4xl font-bold text-neutral-800 dark:text-white tracking-tight mb-2">
-                                New Arrivals
-                            </h1>
-                            <p className="text-neutral-600 dark:text-neutral-400">
-                                Fresh titles added recently.
-                            </p>
-                        </div>
-                    </div>
-                    <SearchBar query={searchQuery} onQueryChange={setSearchQuery} />
-                </div>
-            </header>
-
-            <div className="flex-1 overflow-y-auto px-8 pb-12">
-                <div className="max-w-7xl mx-auto">
-                    <BookGrid
-                        sort="createdAt"
-                        title="New Arrivals"
-                        searchQuery={searchQuery}
-                        viewMode={viewMode}
-                        onViewChange={setViewMode}
-                    />
-                </div>
-            </div>
-        </>
-    );
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center py-24">
+          <span className="inline-block h-8 w-8 border-2 border-primary border-r-transparent rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <ExploreView
+        title="New Arrivals"
+        subtitle="Fresh titles added recently."
+        sort="createdAt"
+        gridTitle="New Arrivals"
+      />
+    </Suspense>
+  );
 }
