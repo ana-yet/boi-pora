@@ -1,81 +1,111 @@
-"use client";
-
-import { useState, useEffect } from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { useAuth } from "@/app/providers/AuthProvider";
-import { useBookBySlug } from "@/lib/hooks/useBook";
-import { useBooks } from "@/lib/hooks/useBooks";
-import { useChapters } from "@/lib/hooks/useChapters";
-import { api } from "@/lib/api";
+import { notFound } from "next/navigation";
+import { fetchBookBySlug, fetchChapters, fetchRelatedBooks } from "@/lib/server-fetch";
+import { absoluteUrl } from "@/lib/site";
 import { getLanguageLabel } from "@/lib/constants";
-import { ReviewsSection } from "./_components/ReviewsSection";
-import { Toast } from "@/app/components/ui/Toast";
 import { PLACEHOLDER_COVER as PLACEHOLDER, formatDuration } from "@/lib/format";
+import { ReviewsSection } from "./_components/ReviewsSection";
+import { BookActions } from "./_components/BookActions";
 
-export default function BookDetailPage() {
-  const params = useParams();
-  const slug = params.slug as string;
-  const { isAuthenticated } = useAuth();
-  const { data: book, error, isLoading } = useBookBySlug(slug);
-  const { data: relatedData } = useBooks(1, 6, book?.category || undefined);
-  const relatedBooks = (relatedData?.items ?? []).filter((b: { _id: string }) => b._id !== book?._id).slice(0, 6);
-  const { data: chapters } = useChapters(book?._id ?? null);
-  const sortedChapters = [...(chapters || [])].sort((a, b) => a.chapterNumber - b.chapterNumber);
+export const revalidate = 120;
+
+type PageParams = { category: string; slug: string };
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<PageParams>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const book = await fetchBookBySlug(slug);
+
+  if (!book) {
+    return { title: "Book not found", robots: { index: false, follow: true } };
+  }
+
+  const title = `${book.title} by ${book.author}`;
+  const description =
+    book.description?.slice(0, 160) ||
+    `Read ${book.title} by ${book.author} on Boi Pora — digital reading companion.`;
+  const canonicalPath = `/${book.category || "fiction"}/${book.slug}`;
+
+  const cover = book.coverImageUrl?.trim();
+  const ogImages = cover
+    ? [{ url: cover, alt: `${book.title} cover` }]
+    : [{ url: absoluteUrl("/favicon.png"), alt: "Boi Pora", width: 512, height: 512 }];
+
+  return {
+    title,
+    description,
+    alternates: { canonical: canonicalPath },
+    openGraph: {
+      title,
+      description,
+      type: "book",
+      images: ogImages,
+      siteName: "Boi Pora",
+      url: absoluteUrl(canonicalPath),
+    },
+    twitter: {
+      card: cover ? "summary_large_image" : "summary",
+      title,
+      description,
+      images: ogImages.map((i) => i.url),
+    },
+  };
+}
+
+export default async function BookDetailPage({
+  params,
+}: {
+  params: Promise<PageParams>;
+}) {
+  const { slug } = await params;
+  const book = await fetchBookBySlug(slug);
+
+  if (!book) {
+    notFound();
+  }
+
+  const [chapters, relatedBooks] = await Promise.all([
+    fetchChapters(book._id),
+    fetchRelatedBooks(book.category, book._id),
+  ]);
+
+  const sortedChapters = [...chapters].sort((a, b) => a.chapterNumber - b.chapterNumber);
   const firstChapter = sortedChapters[0];
-  const startReadingHref = firstChapter ? `/read/${book?._id}/${firstChapter.chapterId}` : book ? `/read/${book._id}/chapter-1` : "#";
+  const startReadingHref = firstChapter
+    ? `/read/${book._id}/${firstChapter.chapterId}`
+    : `/read/${book._id}/chapter-1`;
 
-  const [inLibrary, setInLibrary] = useState(false);
-  const [libraryLoading, setLibraryLoading] = useState(false);
-  const [toast, setToast] = useState<{ message: string; variant: "success" | "error" } | null>(null);
-
-  useEffect(() => {
-    if (!book || !isAuthenticated) return;
-    api.get<{ inLibrary: boolean }>(`/api/v1/library/status/${book._id}`)
-      .then((res) => setInLibrary(res.inLibrary))
-      .catch(() => {});
-  }, [book, isAuthenticated]);
-
-  async function toggleLibrary() {
-    if (!book || libraryLoading) return;
-    setLibraryLoading(true);
-    try {
-      if (inLibrary) {
-        await api.delete(`/api/v1/library/${book._id}`);
-        setInLibrary(false);
-        setToast({ message: "Removed from library", variant: "success" });
-      } else {
-        await api.post(`/api/v1/library/${book._id}`);
-        setInLibrary(true);
-        setToast({ message: "Added to library", variant: "success" });
-      }
-    } catch {
-      setToast({ message: "Failed to update library", variant: "error" });
-    }
-    setLibraryLoading(false);
-  }
-
-  if (error) {
-    return (
-      <div className="flex flex-1 flex-col py-12 text-center">
-        <p className="text-red-500">Book not found.</p>
-        <Link href="/explore" className="text-primary hover:underline mt-4 inline-block">
-          Browse books
-        </Link>
-      </div>
-    );
-  }
-
-  if (isLoading || !book) {
-    return (
-      <div className="flex flex-1 flex-col py-12 w-full">
-        <div className="animate-pulse h-96 max-w-4xl mx-auto w-full bg-neutral-200 dark:bg-neutral-700 rounded-xl shrink-0" />
-      </div>
-    );
-  }
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Book",
+    name: book.title,
+    author: { "@type": "Person", name: book.author },
+    ...(book.description && { description: book.description }),
+    ...(book.coverImageUrl && { image: book.coverImageUrl }),
+    ...(book.language && { inLanguage: book.language }),
+    ...(book.rating != null &&
+      (book.ratingCount ?? 0) > 0 && {
+        aggregateRating: {
+          "@type": "AggregateRating",
+          ratingValue: book.rating,
+          ratingCount: book.ratingCount,
+          bestRating: 5,
+          worstRating: 1,
+        },
+      }),
+    url: absoluteUrl(`/${book.category || "fiction"}/${book.slug}`),
+  };
 
   return (
     <div className="w-full">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="flex items-center text-sm text-slate-500 dark:text-slate-400 mb-8">
         <Link className="hover:text-primary transition-colors" href="/">
           Home
@@ -184,44 +214,7 @@ export default function BookDetailPage() {
             </div>
           )}
 
-          <div className="flex flex-col sm:flex-row gap-4">
-            {startReadingHref !== "#" ? (
-              <Link
-                href={startReadingHref}
-                className="flex items-center justify-center gap-3 px-8 py-4 bg-primary hover:bg-primary-dark text-white rounded-lg font-semibold shadow-lg shadow-primary/30 transition-all"
-              >
-                <span className="material-icons">play_arrow</span>
-                Start Reading
-              </Link>
-            ) : (
-              <span className="flex items-center justify-center gap-3 px-8 py-4 bg-neutral-300 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400 rounded-lg font-semibold cursor-not-allowed">
-                <span className="material-icons">hourglass_empty</span>
-                Coming Soon
-              </span>
-            )}
-            {isAuthenticated ? (
-              <button
-                onClick={toggleLibrary}
-                disabled={libraryLoading}
-                className={`flex items-center justify-center gap-3 px-8 py-4 border-2 rounded-lg font-semibold transition-all ${
-                  inLibrary
-                    ? "border-green-500 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400"
-                    : "border-neutral-200 dark:border-neutral-700 hover:border-primary/50 hover:bg-primary/5 text-neutral-700 dark:text-neutral-200 hover:text-primary"
-                }`}
-              >
-                <span className="material-icons">{inLibrary ? "bookmark" : "bookmark_add"}</span>
-                {libraryLoading ? "Updating..." : inLibrary ? "In Library" : "Add to Library"}
-              </button>
-            ) : (
-              <Link
-                href="/login"
-                className="flex items-center justify-center gap-3 px-8 py-4 border-2 border-neutral-200 dark:border-neutral-700 hover:border-primary/50 hover:bg-primary/5 text-neutral-700 dark:text-neutral-200 hover:text-primary rounded-lg font-semibold transition-all"
-              >
-                <span className="material-icons">bookmark_add</span>
-                Add to Library
-              </Link>
-            )}
-          </div>
+          <BookActions bookId={book._id} startReadingHref={startReadingHref} />
         </div>
       </div>
 
@@ -229,7 +222,7 @@ export default function BookDetailPage() {
         <div className="mt-24 border-t border-slate-200 dark:border-slate-800 pt-12">
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-8">Related Books</h2>
           <div className="flex overflow-x-auto gap-6 pb-8">
-            {relatedBooks.map((b: { _id: string; title: string; author: string; slug: string; category?: string; coverImageUrl?: string }) => (
+            {relatedBooks.map((b) => (
               <Link
                 href={`/${b.category || "fiction"}/${b.slug}`}
                 key={b._id}
@@ -237,7 +230,7 @@ export default function BookDetailPage() {
               >
                 <div className="aspect-2/3 rounded-lg overflow-hidden shadow-md mb-3">
                   <img
-                    alt={b.title}
+                    alt={`${b.title} cover`}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                     src={b.coverImageUrl || PLACEHOLDER}
                   />
@@ -251,15 +244,6 @@ export default function BookDetailPage() {
       )}
 
       <ReviewsSection bookId={book._id} />
-
-      {toast && (
-        <Toast
-          message={toast.message}
-          variant={toast.variant}
-          open={!!toast}
-          onClose={() => setToast(null)}
-        />
-      )}
     </div>
   );
 }
