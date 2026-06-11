@@ -2,13 +2,13 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { api, ApiError, setToken } from "@/lib/api";
+import { ApiError } from "@/lib/api";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { PasswordInput } from "../../_components/PasswordInput";
 
 export function RegisterForm() {
     const router = useRouter();
-    const { refetchUser } = useAuth();
+    const { register } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [name, setName] = useState("");
@@ -28,13 +28,7 @@ export function RegisterForm() {
         setError(null);
         setIsLoading(true);
         try {
-            const res = await api.post<{ accessToken: string }>("/api/v1/auth/register", {
-                name,
-                email,
-                password,
-            });
-            setToken(res.accessToken);
-            await refetchUser();
+            await register(name, email, password);
             router.push("/");
         } catch (err) {
             setError(err instanceof ApiError ? err.message : "Registration failed. Please try again.");
