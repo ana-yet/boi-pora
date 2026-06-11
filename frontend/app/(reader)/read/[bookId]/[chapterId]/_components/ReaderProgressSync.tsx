@@ -32,6 +32,33 @@ function currentScrollPercent(): number {
 }
 
 const SCROLL_SYNC_MS = 5000;
+const PENDING_KEY = "bp-pending-progress";
+
+type ProgressPayload = {
+  bookId: string;
+  chapterId: string;
+  percentComplete: number;
+  scrollPercent: number;
+};
+
+/** Persist the latest unsent progress so it survives offline navigation. */
+function queuePending(payload: ProgressPayload) {
+  try {
+    localStorage.setItem(PENDING_KEY, JSON.stringify(payload));
+  } catch {}
+}
+
+function flushPending() {
+  try {
+    const raw = localStorage.getItem(PENDING_KEY);
+    if (!raw) return;
+    const payload = JSON.parse(raw) as ProgressPayload;
+    localStorage.removeItem(PENDING_KEY);
+    api.post("/api/v1/reading/progress", payload).catch(() => {
+      queuePending(payload);
+    });
+  } catch {}
+}
 
 /**
  * Syncs chapter position + in-chapter scroll percentage, and offers a
@@ -59,14 +86,19 @@ export function ReaderProgressSync({
         return;
       if (scrollPercent === lastSentScrollRef.current) return;
       lastSentScrollRef.current = scrollPercent;
-      api
-        .post("/api/v1/reading/progress", {
-          bookId,
-          chapterId: chapterMongoId,
-          percentComplete: percentage,
-          scrollPercent,
-        })
-        .catch(() => {});
+      const payload: ProgressPayload = {
+        bookId,
+        chapterId: chapterMongoId,
+        percentComplete: percentage,
+        scrollPercent,
+      };
+      if (!navigator.onLine) {
+        queuePending(payload);
+        return;
+      }
+      api.post("/api/v1/reading/progress", payload).catch(() => {
+        queuePending(payload);
+      });
     },
     [isAuthenticated, bookId, chapterMongoId, percentage, totalChapters]
   );
@@ -98,6 +130,10 @@ export function ReaderProgressSync({
   useEffect(() => {
     if (!isAuthenticated) return;
 
+    // Progress recorded while offline syncs once connectivity returns.
+    flushPending();
+    window.addEventListener("online", flushPending);
+
     intervalRef.current = setInterval(() => {
       sync(currentScrollPercent());
     }, SCROLL_SYNC_MS);
@@ -106,6 +142,15 @@ export function ReaderProgressSync({
       const scrollPercent = currentScrollPercent();
       if (scrollPercent === lastSentScrollRef.current) return;
       lastSentScrollRef.current = scrollPercent;
+      if (!navigator.onLine) {
+        queuePending({
+          bookId,
+          chapterId: chapterMongoId,
+          percentComplete: percentage,
+          scrollPercent,
+        });
+        return;
+      }
       const token = getAccessToken();
       void fetch(`${getApiUrl()}/api/v1/reading/progress`, {
         method: "POST",
@@ -132,6 +177,7 @@ export function ReaderProgressSync({
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
       window.removeEventListener("pagehide", flush);
+      window.removeEventListener("online", flushPending);
       document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [isAuthenticated, sync, bookId, chapterMongoId, percentage]);

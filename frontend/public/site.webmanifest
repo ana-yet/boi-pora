@@ -1,17 +1,33 @@
 {
+  "id": "/",
   "name": "Boi Pora — বই পড়া",
   "short_name": "Boi Pora",
   "description": "Discover books, read chapters, and track your library.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#fdfcfb",
   "theme_color": "#ec7f13",
+  "categories": ["books", "education"],
   "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "/favicon.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

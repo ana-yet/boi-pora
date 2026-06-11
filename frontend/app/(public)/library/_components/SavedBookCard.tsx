@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { api } from "@/lib/api";
 import { ProgressBar } from "./ProgressBar";
+import { OfflineButton } from "./OfflineButton";
 import { PLACEHOLDER_COVER as PLACEHOLDER } from "@/lib/format";
 
 export interface SavedBook {
@@ -79,6 +80,11 @@ export function SavedBookCard({ book, onRemove, view = "grid" }: SavedBookCardPr
                         {new Date(book.addedAt).toLocaleDateString()}
                     </span>
                 )}
+                <OfflineButton
+                    bookId={book.bookId}
+                    title={book.title}
+                    className="p-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 flex-shrink-0"
+                />
                 <button
                     onClick={handleRemove}
                     disabled={removing}
@@ -102,6 +108,11 @@ export function SavedBookCard({ book, onRemove, view = "grid" }: SavedBookCardPr
                     src={book.image || PLACEHOLDER}
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                <OfflineButton
+                    bookId={book.bookId}
+                    title={book.title}
+                    className="absolute top-2 left-2 w-7 h-7 bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm rounded-full shadow"
+                />
                 <button
                     onClick={handleRemove}
                     disabled={removing}

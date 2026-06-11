@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Merriweather, Work_Sans } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "./providers/ToastProvider";
 import { AuthProvider } from "./providers/AuthProvider";
+import { PwaRegistrar } from "./components/shared/PwaRegistrar";
 import { getSiteUrl } from "@/lib/site";
 
 const geistSans = Geist({
@@ -143,6 +144,7 @@ export default function RootLayout({
         <AuthProvider>
           <ToastProvider>{children}</ToastProvider>
         </AuthProvider>
+        <PwaRegistrar />
       </body>
     </html>
   );
