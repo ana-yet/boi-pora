@@ -4,3 +4,4 @@ export * from './chapter.schema';
 export * from './library-item.schema';
 export * from './reading-progress.schema';
 export * from './review.schema';
+export * from './session.schema';
