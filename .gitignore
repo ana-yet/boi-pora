@@ -62,3 +62,6 @@ next-env.d.ts
 
 # Docker
 *.log
+
+# Cursor IDE state
+.cursor/
