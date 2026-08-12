@@ -4,9 +4,9 @@ import { useState, Suspense } from "react";
 import { useAdminReviews } from "@/lib/hooks/useAdminReviews";
 import { api } from "@/lib/api";
 import { Button } from "@/app/components/ui/Button";
-import { Toast } from "@/app/components/ui/Toast";
+import { useToast } from "@/app/providers/ToastProvider";
 import {
-  AdminSearch, BulkActionBar, Pagination, ConfirmModal, useUrlParams, useToast,
+  AdminSearch, BulkActionBar, Pagination, ConfirmModal, useUrlParams,
 } from "../_components";
 
 const RATING_STARS = [1, 2, 3, 4, 5];
@@ -31,7 +31,7 @@ function ReviewsPageInner() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirm, setConfirm] = useState<{ action: string; ids: string[] } | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
-  const { toast, show, close } = useToast();
+  const { showToast: show } = useToast();
 
   const toggleSelect = (id: string) => {
     setSelected((prev) => {
@@ -239,7 +239,6 @@ function ReviewsPageInner() {
         variant={confirm?.action === "delete" ? "danger" : "primary"}
       />
 
-      <Toast message={toast.message} variant={toast.variant} open={toast.open} onClose={close} />
     </div>
   );
 }

@@ -1,15 +1,19 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useEffect, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
+import { BookSearchInput } from "@/app/components/shared/BookSearchInput";
 
 export function SearchForm({ initialQuery = "" }: { initialQuery?: string }) {
     const router = useRouter();
     const [q, setQ] = useState(initialQuery);
 
-    useEffect(() => {
+    // Sync when the URL-driven query changes (render-time state adjustment).
+    const [prevInitial, setPrevInitial] = useState(initialQuery);
+    if (prevInitial !== initialQuery) {
+        setPrevInitial(initialQuery);
         setQ(initialQuery);
-    }, [initialQuery]);
+    }
 
     function handleSubmit(e: FormEvent) {
         e.preventDefault();
@@ -27,13 +31,10 @@ export function SearchForm({ initialQuery = "" }: { initialQuery?: string }) {
                 <span className="material-icons text-neutral-400 ml-2 text-2xl">
                     search
                 </span>
-                <input
-                    type="search"
-                    name="q"
-                    value={q}
-                    onChange={(e) => setQ(e.target.value)}
-                    placeholder="Search by title, author, or keyword..."
-                    className="flex-1 px-2 py-3 bg-transparent border-none focus:outline-none focus:ring-0 text-lg text-neutral-800 dark:text-white placeholder-neutral-400"
+                <BookSearchInput
+                    initialValue={initialQuery}
+                    onValueChange={setQ}
+                    inputClassName="w-full px-2 py-3 bg-transparent border-none focus:outline-none focus:ring-0 text-lg text-neutral-800 dark:text-white placeholder-neutral-400"
                 />
                 <button
                     type="submit"

@@ -13,4 +13,11 @@ export class UpsertProgressDto {
   @Min(0)
   @Max(100)
   percentComplete?: number;
+
+  /** How far down the current chapter the reader scrolled (0–100). */
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  scrollPercent?: number;
 }

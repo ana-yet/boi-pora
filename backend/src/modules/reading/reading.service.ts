@@ -27,7 +27,11 @@ export class ReadingService {
   async upsert(
     userId: string,
     bookId: string,
-    data: { chapterId?: string; percentComplete?: number },
+    data: {
+      chapterId?: string;
+      percentComplete?: number;
+      scrollPercent?: number;
+    },
   ) {
     const uid = new Types.ObjectId(userId);
     const bid = new Types.ObjectId(bookId);
@@ -38,6 +42,7 @@ export class ReadingService {
     if (data.chapterId) update.chapterId = new Types.ObjectId(data.chapterId);
     if (data.percentComplete != null)
       update.percentComplete = data.percentComplete;
+    if (data.scrollPercent != null) update.scrollPercent = data.scrollPercent;
 
     return this.progressModel
       .findOneAndUpdate(

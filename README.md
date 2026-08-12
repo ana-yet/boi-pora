@@ -1,149 +1,163 @@
 # Boi Pora (বই পড়া)
 
-A full-stack digital reading platform: browse books, read chapters in a focused reader, manage your library and progress, and run an admin workspace for catalog content. The stack is **Next.js** (App Router) on the frontend and **NestJS** with **MongoDB** on the backend.
+A full-stack digital reading platform: browse a book catalog, read chapters in
+a focused, themeable reader, build a personal library with cross-device
+progress sync, read offline as an installable PWA, and manage the catalog from
+an admin workspace.
 
-## Repository layout
+> **Screenshots** — _coming soon: home, reader (dark), library, admin._
+
+## Architecture
+
+```mermaid
+flowchart LR
+    B[Browser / PWA] --> FE[Next.js 16<br/>Cloudflare Workers]
+    FE -- "RSC + ISR (120s)" --> API[NestJS 11<br/>Render]
+    B -- "SWR + in-memory token" --> API
+    API --> DB[(MongoDB Atlas<br/>+ Atlas Search)]
+    API --> RS[Resend]
+    API --> GQ[Groq]
+    API --> LB[Langbly]
+```
+
+Details in [`docs/architecture.md`](docs/architecture.md). Key decisions are
+recorded as ADRs in [`docs/decisions/`](docs/decisions/); scaling plan in
+[`docs/scaling.md`](docs/scaling.md).
 
 ```
 boi-pora/
-├── frontend/          # Next.js 16 — public site, reader, library, admin UI
-├── backend/           # NestJS 11 API — auth, books, chapters, reviews, etc.
+├── frontend/          # Next.js 16 — public site, reader, library, admin UI, PWA
+├── backend/           # NestJS 11 API — auth, catalog, reading, reviews, AI, mail
+├── docs/              # Architecture, ADRs, scaling seams
 ├── docker-compose.yml # Optional local MongoDB
-├── package.json       # Root scripts (installs both apps on postinstall)
-└── README.md
+└── package.json       # Root scripts (postinstall installs both apps)
 ```
 
 ## Features
 
-- **Catalog** — Books with metadata (language, category, cover, slug), chapter list, book detail and reviews.
-- **Reader** — Themed reading view, TOC and section navigation, fullscreen, typography settings.
-- **Inline translation** — Press-and-hold a word; server calls [Langbly](https://langbly.com/docs/) (Google Translate v2–compatible). Source language follows the book’s catalog language; target is user-selectable.
-- **Chapter AI summary** — Optional Groq-powered summary per chapter, cached in MongoDB and reused for all users until chapter body changes. Copy-as-Markdown in the reader UI.
-- **Accounts** — JWT auth, roles (including admin), library and reading progress APIs.
+- **Catalog & search** — Published books with metadata, Atlas Search-powered
+  relevance + typo-tolerant search and autocomplete (regex fallback off-Atlas).
+- **Reader** — Themes, typography settings, TOC, fullscreen, time-left-in-chapter,
+  collapsing mobile header, scroll-position restore ("continue where you left off").
+- **Library & progress** — Save books, track per-chapter progress and scroll
+  position, synced across devices (and queued while offline).
+- **Offline PWA** — Installable; download any saved book for full offline
+  reading; offline fallback page; user-prompted service worker updates.
+- **Accounts & sessions** — Short-lived access tokens in memory + rotating
+  HttpOnly refresh cookies with reuse detection; devices UI to revoke sessions;
+  password reset email via Resend.
+- **AI extras** — Optional Groq chapter summaries (cached) and Langbly
+  press-and-hold inline translation.
+- **Admin** — Role-gated workspace for books, chapters (auto word count),
+  users, and review moderation.
+- **SEO** — RSC + ISR public pages, dynamic sitemap, robots, OG images, JSON-LD.
 
-## Prerequisites
+## Quick start
 
-- **Node.js** 20 or newer  
-- **MongoDB** 6+ (local, Docker, or Atlas)
-
-## Quick start (local)
-
-### 1. MongoDB
-
-Either install MongoDB locally, or start the bundled Compose service:
+Prerequisites: **Node.js 20+** and **MongoDB 6+** (local, Docker, or Atlas).
 
 ```bash
+# 1. MongoDB (skip if you have one)
 docker compose up -d
+
+# 2. Everything else
+npm install                                  # installs root + frontend + backend
+cp backend/.env.example backend/.env         # then set ADMIN_SEED_PASSWORD at minimum
+npm run seed -- --with-fixtures              # admin + 20 demo books + demo user
 ```
 
-This exposes MongoDB on `localhost:27017` (database name `boi-pora`).
-
-### 2. Backend API
+Then in two terminals:
 
 ```bash
-cd backend
-cp .env.example .env
-# Edit .env — at minimum MONGODB_URI, JWT_SECRET, CORS_ORIGIN (see below)
-npm install
-npm run seed    # Creates admin user (see seed output for credentials)
-npm run start:dev
+npm run dev:api    # NestJS on http://localhost:4000
+npm run dev        # Next.js on http://localhost:3000
 ```
 
-API listens on **http://localhost:4000** by default (`PORT` in `.env`).
-
-### 3. Frontend
-
-In a second terminal:
-
-```bash
-cd frontend
-# Optional: copy .env.local.example → .env.local and set API URL, site URL for OG tags
-# NEXT_PUBLIC_API_URL=http://localhost:4000
-# NEXT_PUBLIC_SITE_URL=http://localhost:3000
-npm install
-npm run dev
-```
-
-Add your branding asset **`public/favicon.png`** (used as the favicon, PWA manifest icon, and default Open Graph / Twitter image until a page supplies its own image).
-
-Open **http://localhost:3000**. The browser calls the API using `NEXT_PUBLIC_API_URL` (defaults to `http://localhost:4000`).
-
-### One-shot install from repo root
-
-```bash
-npm install          # postinstall installs frontend + backend dependencies
-```
-
-Then configure `backend/.env`, run `npm run seed --prefix backend`, and start `npm run dev:api` and `npm run dev` in two terminals (or use the `cd` flows above).
+The seed prints credentials: admin from `ADMIN_SEED_PASSWORD`, demo user
+`demo@boipora.com` (password from `DEMO_SEED_PASSWORD`, defaults shown in the
+seed output). Plain `npm run seed` creates only the admin.
 
 ## Environment variables
 
 ### Backend (`backend/.env`)
 
-| Variable | Purpose |
-|----------|---------|
-| `MONGODB_URI` | Mongo connection string |
-| `JWT_SECRET` | Signing secret for access tokens |
-| `CORS_ORIGIN` | Allowed browser origin(s), comma-separated (e.g. `http://localhost:3000`) |
-| `PORT` | API port (default `4000`) |
-| `ADMIN_SEED_PASSWORD` | Password for the seeded admin user |
-| `LANGBLY_API_KEY` | Optional — enables reader inline translation ([Langbly](https://langbly.com/docs/)) |
-| `LANGBLY_API_BASE_URL` | Optional Langbly base URL |
-| `GROQ_API_KEY` | Optional — enables AI chapter summaries ([Groq](https://console.groq.com/)) |
-| `GROQ_MODEL` | Optional Groq chat model id (default `llama-3.3-70b-versatile`) |
-
-See `backend/.env.example` for comments and deployment notes.
+| Variable | Required | Purpose |
+|----------|----------|---------|
+| `MONGODB_URI` | yes | Mongo connection string |
+| `JWT_SECRET` | yes | Access-token signing secret (32+ chars in prod) |
+| `CORS_ORIGIN` | yes | Allowed origin(s), comma-separated |
+| `ADMIN_SEED_PASSWORD` | for seed | Seeded admin password (no default — seed refuses) |
+| `PORT` | no | API port (default `4000`) |
+| `COOKIE_SAMESITE` | no | `lax` (same-site deploys) or `none` (cross-site, e.g. pages.dev + onrender.com) |
+| `ADMIN_SEED_EMAIL` | no | Seed admin email (default `admin@boipora.com`) |
+| `DEMO_SEED_PASSWORD` | no | Demo user password for `--with-fixtures` |
+| `RESEND_API_KEY` | no | Password reset + contact emails (skipped in dev without it) |
+| `MAIL_FROM` / `CONTACT_TO` | no | Email sender / contact-form recipient |
+| `GROQ_API_KEY` / `GROQ_MODEL` | no | AI chapter summaries |
+| `LANGBLY_API_KEY` / `LANGBLY_API_BASE_URL` | no | Inline translation |
 
 ### Frontend (`frontend/.env.local`)
 
-| Variable | Purpose |
-|----------|---------|
-| `NEXT_PUBLIC_API_URL` | Public API base URL (no trailing slash). Defaults to `http://localhost:4000` if unset. |
-| `NEXT_PUBLIC_SITE_URL` | Public **site** URL (no trailing slash) for Open Graph, Twitter cards, and JSON-LD. Defaults to `http://localhost:3000`. Set to your production domain at build time. |
+| Variable | Required | Purpose |
+|----------|----------|---------|
+| `NEXT_PUBLIC_API_URL` | no | API base URL (default `http://localhost:4000`) |
+| `NEXT_PUBLIC_SITE_URL` | no | Canonical site URL for OG/sitemap (default `http://localhost:3000`; set to the production domain at build time) |
 
-## Root npm scripts
+## Testing
 
-| Script | Description |
-|--------|-------------|
-| `npm install` | Installs root, then `frontend` and `backend` (postinstall) |
-| `npm run dev` | Next.js dev server (`frontend`) |
-| `npm run dev:api` | NestJS watch mode (`backend`) |
-| `npm run build` | Production build of the frontend |
-| `npm run build:api` | Compile the backend to `backend/dist` |
-| `npm run start` | Start Next.js production server |
-| `npm run start:api` | Run compiled Nest app |
-| `npm run seed` | Run backend seed (admin user, etc.) |
-| `npm run lint` | Frontend lint |
+```bash
+# Backend — unit + integration (mongodb-memory-server, no DB needed)
+cd backend
+npm test
+npm run test:e2e
+
+# Frontend — typecheck, lint, Playwright E2E (needs both apps running)
+cd frontend
+npx tsc --noEmit && npm run lint
+npm run test:e2e
+```
+
+CI (`.github/workflows/ci.yml`) runs lint, typecheck, backend unit +
+integration tests, and gitleaks secret scanning on every push/PR.
+
+## Deployment
+
+- **Frontend → Cloudflare Workers** via `@opennextjs/cloudflare`: from
+  `frontend/`, `npm run deploy` (see `wrangler.jsonc`). Set
+  `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_SITE_URL` for the build.
+- **Backend → Render**: build `npm run build`, start `npm run start:prod`. Set
+  `MONGODB_URI`, `JWT_SECRET`, `CORS_ORIGIN` (your frontend URL), and
+  `COOKIE_SAMESITE=none` for cross-site cookie delivery. A scheduled ping to
+  `GET /health` keeps the free instance warm.
+- **MongoDB Atlas**: create the database, then add the **Atlas Search index**
+  on `books` (dynamic mapping is sufficient; used by search + autocomplete —
+  without it the API silently uses the regex fallback).
 
 ## API overview
 
-Base path: **`/api/v1`**.
+Base path **`/api/v1`** — global JWT guard, `@Public()` for open routes,
+throttled, validated DTOs.
 
-- **Auth** — `POST /auth/login`, `POST /auth/refresh`, `GET /auth/me` (JWT for protected routes).
-- **Books & chapters** — Public reads for lists, by slug/id, and chapter payloads used by the reader.
-- **Chapter summary** — `POST /chapters/book/:bookId/:chapterId/summary` (public, throttled) — returns cached Markdown summary or generates via Groq when configured.
-- **Translate** — `POST /translate` (public, throttled) — Langbly-backed text translation.
-- **Library, reviews, reading progress** — Authenticated user flows.
-- **Admin** — JWT + admin role for users, books, chapters, moderation-style listings.
-
-For a longer endpoint list, see `backend/README.md`.
-
-## Production notes
-
-- Set **`CORS_ORIGIN`** to your real frontend URL (multiple values allowed, comma-separated).
-- Set **`NEXT_PUBLIC_API_URL`** on the frontend build to the public API URL.
-- Use a strong **`JWT_SECRET`** and secure **`MONGODB_URI`** (e.g. Atlas with TLS).
-- Optional features: without **`LANGBLY_API_KEY`**, inline translate fails gracefully; without **`GROQ_API_KEY`**, chapter summary returns a clear “not configured” response.
+| Area | Endpoints (selected) |
+|------|----------------------|
+| Auth | `POST /auth/register · /auth/login · /auth/refresh · /auth/logout · /auth/logout-all`, `GET /auth/me · /auth/sessions`, `DELETE /auth/sessions/:id`, `PUT /auth/me` |
+| Books | `GET /books · /books/:id · /books/slug/:slug · /books/search · /books/autocomplete` (public, published-only) |
+| Chapters | `GET /chapters/book/:bookId · /chapters/book/:bookId/:chapterId` (public), `POST /chapters/book/:bookId/:chapterId/summary` (Groq, cached) |
+| Reading | `GET/POST /reading/progress` (incl. `scrollPercent`) |
+| Library / Reviews | Authenticated CRUD; reviews update book rating aggregates |
+| Translate / Contact | `POST /translate`, `POST /contact` (throttled) |
+| Admin | Role-gated users, books, chapters, moderation |
 
 ## Tech stack
 
 | Area | Choices |
 |------|---------|
-| Frontend | Next.js 16, React 19, Tailwind CSS 4, SWR, react-markdown |
-| Backend | NestJS 11, Mongoose, Passport JWT, class-validator, throttling |
-| Data | MongoDB |
-| External | Langbly (translation), Groq OpenAI-compatible chat (summaries) |
+| Frontend | Next.js 16 (App Router, RSC + ISR), React 19, Tailwind CSS 4, SWR, Playwright |
+| Backend | NestJS 11, Mongoose, Passport JWT, class-validator, Jest + supertest |
+| Data | MongoDB Atlas (+ Atlas Search), TTL-indexed sessions |
+| Platform | Cloudflare Workers (`@opennextjs/cloudflare`), Render, GitHub Actions |
+| External | Resend (email), Groq (summaries), Langbly (translation) |
 
 ---
 
-**Boi Pora** — built for reading and managing books in one place.
+**Boi Pora** — built for reading, and for learning how to build well.

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { getLanguageLabel } from "@/lib/constants";
 
 export interface Book {
@@ -22,9 +23,11 @@ export function BookCard({ book }: { book: Book }) {
     return (
         <div className="group relative flex flex-col bg-white dark:bg-surface-dark rounded-2xl border border-neutral-200 dark:border-neutral-800 hover:shadow-xl hover:shadow-neutral-200/50 dark:hover:shadow-black/30 transition-all duration-300 hover:-translate-y-1">
             <div className="relative aspect-[3/4] overflow-hidden rounded-t-2xl bg-neutral-100 dark:bg-neutral-800">
-                <img
+                <Image
                     alt={`${book.title} cover`}
-                    className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    fill
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                     src={book.image}
                 />
                 <div className="absolute top-3 right-3 bg-white/90 dark:bg-black/80 backdrop-blur-sm px-2 py-1 rounded-lg flex items-center gap-1 shadow-sm">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { api, ApiError } from "@/lib/api";
 
 const SUBJECTS = [
   { value: "", label: "Select a subject" },
@@ -18,6 +19,8 @@ export default function ContactPage() {
     message: "",
   });
   const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -25,9 +28,23 @@ export default function ContactPage() {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setSubmitted(true);
+    if (sending) return;
+    setSending(true);
+    setError(null);
+    try {
+      await api.post("/api/v1/contact", form);
+      setSubmitted(true);
+    } catch (err) {
+      setError(
+        err instanceof ApiError && err.status === 429
+          ? "Too many messages — please try again later."
+          : "Failed to send your message. Please try again."
+      );
+    } finally {
+      setSending(false);
+    }
   }
 
   if (submitted) {
@@ -150,11 +167,18 @@ export default function ContactPage() {
             />
           </div>
 
+          {error && (
+            <p className="text-sm text-red-500" role="alert">
+              {error}
+            </p>
+          )}
+
           <button
             type="submit"
-            className="w-full sm:w-auto px-8 py-3 bg-primary text-white rounded-xl font-medium hover:bg-primary-dark transition-colors shadow-lg shadow-primary/20"
+            disabled={sending}
+            className="w-full sm:w-auto px-8 py-3 bg-primary text-white rounded-xl font-medium hover:bg-primary-dark transition-colors shadow-lg shadow-primary/20 disabled:opacity-60"
           >
-            Send Message
+            {sending ? "Sending..." : "Send Message"}
           </button>
         </form>
       </div>

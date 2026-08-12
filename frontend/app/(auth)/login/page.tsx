@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { SocialButtons } from "../_components";
 import { LoginForm } from "./_components";
 
 export const metadata: Metadata = {
@@ -30,18 +29,6 @@ export default function LoginPage() {
                 <p className="text-neutral-600 dark:text-neutral-400">
                     Sign in to pick up where you left off.
                 </p>
-            </div>
-
-            {/* Social Buttons */}
-            <SocialButtons action="login" />
-
-            {/* Divider */}
-            <div className="flex items-center gap-4">
-                <div className="flex-1 h-px bg-neutral-200 dark:bg-neutral-700" />
-                <span className="text-xs font-medium text-neutral-400 uppercase tracking-wider">
-                    or continue with email
-                </span>
-                <div className="flex-1 h-px bg-neutral-200 dark:bg-neutral-700" />
             </div>
 
             {/* Login Form */}

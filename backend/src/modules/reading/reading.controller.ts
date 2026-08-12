@@ -31,6 +31,7 @@ export class ReadingController {
     return this.readingService.upsert(userId, dto.bookId, {
       chapterId: dto.chapterId,
       percentComplete: dto.percentComplete,
+      scrollPercent: dto.scrollPercent,
     });
   }
 
@@ -39,6 +40,7 @@ export class ReadingController {
     return this.readingService.upsert(userId, dto.bookId, {
       chapterId: dto.chapterId,
       percentComplete: dto.percentComplete,
+      scrollPercent: dto.scrollPercent,
     });
   }
 }

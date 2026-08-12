@@ -20,6 +20,10 @@ export class ReadingProgress {
   @Prop()
   percentComplete?: number;
 
+  /** Scroll position within the last-read chapter (0–100). */
+  @Prop()
+  scrollPercent?: number;
+
   @Prop()
   lastReadAt?: Date;
 }

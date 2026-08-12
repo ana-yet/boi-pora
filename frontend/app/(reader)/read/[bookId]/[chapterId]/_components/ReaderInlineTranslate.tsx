@@ -3,7 +3,6 @@
 import {
   useCallback,
   useEffect,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -11,6 +10,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { api, ApiError } from "@/lib/api";
+import { useAuth } from "@/app/providers/AuthProvider";
 import { getLanguageLabel } from "@/lib/constants";
 import {
   apiSourceFromBookLanguage,
@@ -91,6 +91,7 @@ function resolveWordAtPoint(
  * @see https://langbly.com/docs/
  */
 export function ReaderInlineTranslate({ palette, bookLanguage, children }: Props) {
+  const { isAuthenticated } = useAuth();
   const rootRef = useRef<HTMLDivElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -115,7 +116,10 @@ export function ReaderInlineTranslate({ palette, bookLanguage, children }: Props
     return READER_TRANSLATE_TARGET.filter((o) => o.code !== apiSource);
   }, [apiSource]);
 
-  useLayoutEffect(() => {
+  // Pick the target language when options change (render-time state adjustment).
+  const [prevTargetOptions, setPrevTargetOptions] = useState<typeof targetOptions | null>(null);
+  if (prevTargetOptions !== targetOptions) {
+    setPrevTargetOptions(targetOptions);
     let stored: string | null = null;
     try {
       stored = sessionStorage.getItem("boi_pora_reader_translate_tgt");
@@ -128,8 +132,8 @@ export function ReaderInlineTranslate({ palette, bookLanguage, children }: Props
       opts.find((o) => o.code === "bn")?.code ??
       opts[0]?.code ??
       "en";
-    setTargetLang((prev) => (prev === pick ? prev : pick));
-  }, [apiSource, targetOptions]);
+    if (targetLang !== pick) setTargetLang(pick);
+  }
 
   const clearLongPress = useCallback(() => {
     if (longPressTimerRef.current) {
@@ -171,6 +175,10 @@ export function ReaderInlineTranslate({ palette, bookLanguage, children }: Props
     async (text: string) => {
       const trimmed = text.trim();
       if (!trimmed) return;
+      if (!isAuthenticated) {
+        setError("Log in to use inline translation.");
+        return;
+      }
       if (apiSource !== "auto" && apiSource === targetLang) {
         setError("Pick another target language.");
         return;
@@ -192,7 +200,7 @@ export function ReaderInlineTranslate({ palette, bookLanguage, children }: Props
         setLoading(false);
       }
     },
-    [apiSource, persistTarget, targetLang],
+    [apiSource, persistTarget, targetLang, isAuthenticated],
   );
 
   const handlePointerDown = useCallback(

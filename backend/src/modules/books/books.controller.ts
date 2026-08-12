@@ -9,7 +9,9 @@ import {
   Param,
   Query,
   UseGuards,
+  Header,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { BooksService } from './books.service';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
@@ -29,7 +31,6 @@ export class BooksController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('category') category?: string,
-    @Query('status') status?: string,
     @Query('sort') sort?: string,
     @Query('search') search?: string,
   ) {
@@ -38,7 +39,6 @@ export class BooksController {
       parseInt(page ?? '1', 10) || 1,
       parsedLimit,
       category,
-      status,
       sort,
       search,
     );
@@ -49,6 +49,15 @@ export class BooksController {
   search(@Query('q') q?: string, @Query('limit') limit?: string) {
     const parsedLimit = Math.min(parseInt(limit ?? '20', 10) || 20, 100);
     return this.booksService.search(q ?? '', parsedLimit);
+  }
+
+  @Public()
+  @Throttle({ default: { limit: 60, ttl: 60000 } })
+  @Get('autocomplete')
+  @Header('Cache-Control', 'public, s-maxage=60')
+  autocomplete(@Query('q') q?: string, @Query('limit') limit?: string) {
+    const parsedLimit = Math.min(parseInt(limit ?? '8', 10) || 8, 10);
+    return this.booksService.autocomplete(q ?? '', parsedLimit);
   }
 
   @Public()

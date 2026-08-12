@@ -2,15 +2,15 @@
 
 import { useState, Suspense } from "react";
 import Link from "next/link";
-import { useBooks } from "@/lib/hooks/useBooks";
+import { useAdminBooks } from "@/lib/hooks/useAdminBooks";
 import { api } from "@/lib/api";
 import type { ApiBook } from "@/lib/types";
 import { getLanguageLabel } from "@/lib/constants";
 import { Button } from "@/app/components/ui/Button";
-import { Toast } from "@/app/components/ui/Toast";
+import { useToast } from "@/app/providers/ToastProvider";
 import {
   AdminSearch, BulkActionBar, Pagination,
-  ConfirmModal, useUrlParams, useToast,
+  ConfirmModal, useUrlParams,
 } from "../_components";
 
 function BooksPageInner() {
@@ -20,7 +20,7 @@ function BooksPageInner() {
   const sort = get("sort", "title");
   const status = get("status");
 
-  const { data, error, isLoading, mutate } = useBooks(page, 20, undefined, status || undefined, sort, search || undefined);
+  const { data, error, isLoading, mutate } = useAdminBooks(page, 20, undefined, status || undefined, sort, search || undefined);
   const items = data?.items ?? [];
   const total = data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / 20));
@@ -28,7 +28,7 @@ function BooksPageInner() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirm, setConfirm] = useState<{ action: string; ids: string[] } | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
-  const { toast, show, close } = useToast();
+  const { showToast: show } = useToast();
 
   const toggleSelect = (id: string) => {
     setSelected((prev) => {
@@ -242,8 +242,6 @@ function BooksPageInner() {
         confirmLabel={confirm?.action === "delete" ? "Delete" : confirm?.action === "publish" ? "Publish" : "Archive"}
         variant={confirm?.action === "delete" ? "danger" : "primary"}
       />
-
-      <Toast message={toast.message} variant={toast.variant} open={toast.open} onClose={close} />
     </div>
   );
 }

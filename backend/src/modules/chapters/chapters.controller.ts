@@ -32,8 +32,10 @@ export class ChaptersController {
     return this.chaptersService.findByBook(bookId);
   }
 
-  /** Must be registered before `book/:bookId/:chapterId` so `chapterId` is not captured as `summary`. */
-  @Public()
+  /**
+   * Must be registered before `book/:bookId/:chapterId` so `chapterId` is not captured as `summary`.
+   * Auth required (global JwtAuthGuard): AI usage costs money, never expose anonymously.
+   */
   @Throttle({ default: { limit: 20, ttl: 60_000 } })
   @Post('book/:bookId/:chapterId/summary')
   getOrCreateChapterSummary(

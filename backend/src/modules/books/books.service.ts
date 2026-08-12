@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   ConflictException,
   BadRequestException,
@@ -13,13 +14,56 @@ import { UpdateBookDto } from './dto/update-book.dto';
 
 @Injectable()
 export class BooksService {
+  private readonly logger = new Logger(BooksService.name);
+  /** Flips after the first $search failure so we stop retrying per request. */
+  private atlasSearchAvailable = true;
+
   constructor(@InjectModel(Book.name) private bookModel: Model<BookDocument>) {}
 
   private escapeRegex(str: string): string {
     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
+  private sortSpec(sort?: string): Record<string, 1 | -1> {
+    switch (sort) {
+      case 'rating':
+      case 'ratingCount':
+        return { [sort]: -1 };
+      case 'createdAt':
+        return { createdAt: -1 };
+      case 'oldest':
+        return { createdAt: 1 };
+      case 'title_desc':
+        return { title: -1 };
+      case 'title_asc':
+      default:
+        return { title: 1 };
+    }
+  }
+
+  /**
+   * Public listing: always restricted to published books.
+   * Client-supplied status is intentionally ignored.
+   */
   async findAll(
+    page = 1,
+    limit = 20,
+    category?: string,
+    sort?: string,
+    search?: string,
+  ) {
+    limit = Math.min(limit, 100);
+    const filter: FilterQuery<Book> = { status: BookStatus.PUBLISHED };
+    if (category) filter.category = category;
+    if (search?.trim()) {
+      const regex = new RegExp(this.escapeRegex(search.trim()), 'i');
+      filter.$or = [{ title: regex }, { author: regex }];
+    }
+    return this.paginate(filter, page, limit, this.sortSpec(sort));
+  }
+
+  /** Admin listing: full status filter (or all statuses when unset). */
+  async findAllAdmin(
     page = 1,
     limit = 20,
     category?: string,
@@ -37,17 +81,16 @@ export class BooksService {
       const regex = new RegExp(this.escapeRegex(search.trim()), 'i');
       filter.$or = [{ title: regex }, { author: regex }];
     }
+    return this.paginate(filter, page, limit, this.sortSpec(sort));
+  }
+
+  private async paginate(
+    filter: FilterQuery<Book>,
+    page: number,
+    limit: number,
+    sortSpec: Record<string, 1 | -1>,
+  ) {
     const skip = (page - 1) * limit;
-
-    let sortSpec: Record<string, 1 | -1>;
-    if (sort === 'rating' || sort === 'ratingCount') {
-      sortSpec = { [sort]: -1 };
-    } else if (sort === 'createdAt') {
-      sortSpec = { createdAt: -1 };
-    } else {
-      sortSpec = { title: 1 };
-    }
-
     const [items, total] = await Promise.all([
       this.bookModel
         .find(filter)
@@ -63,19 +106,74 @@ export class BooksService {
 
   async search(q: string, limit = 20) {
     limit = Math.min(limit, 100);
+    const published = { status: BookStatus.PUBLISHED };
     if (!q || q.trim().length === 0) {
       return this.bookModel
-        .find()
+        .find(published)
         .sort({ title: 1 })
         .limit(limit)
         .lean()
         .exec();
     }
     const trimmed = q.trim();
+
+    if (this.atlasSearchAvailable) {
+      try {
+        const results: unknown[] = await this.bookModel
+          .aggregate([
+            {
+              $search: {
+                index: 'default',
+                compound: {
+                  should: [
+                    {
+                      text: {
+                        query: trimmed,
+                        path: 'title',
+                        score: { boost: { value: 3 } },
+                        fuzzy: { maxEdits: 1 },
+                      },
+                    },
+                    {
+                      text: {
+                        query: trimmed,
+                        path: 'author',
+                        score: { boost: { value: 2 } },
+                        fuzzy: { maxEdits: 1 },
+                      },
+                    },
+                    { text: { query: trimmed, path: 'description' } },
+                  ],
+                  minimumShouldMatch: 1,
+                },
+              },
+            },
+            { $match: { status: BookStatus.PUBLISHED } },
+            { $limit: limit },
+          ])
+          .exec();
+        return results;
+      } catch (err) {
+        // Index missing (local Mongo / Docker) — degrade to legacy search.
+        this.atlasSearchAvailable = false;
+        this.logger.warn(
+          `Atlas $search unavailable, using legacy search: ${String(err)}`,
+        );
+      }
+    }
+    return this.legacySearch(trimmed, limit, published);
+  }
+
+  /** $text + regex search for environments without Atlas Search. */
+  private async legacySearch(
+    trimmed: string,
+    limit: number,
+    published: FilterQuery<Book>,
+  ) {
     if (trimmed.includes(' ') || trimmed.length >= 3) {
       const textResults = await this.bookModel
         .find(
-          { $text: { $search: trimmed } },
+          { $text: { $search: trimmed }, ...published },
           { score: { $meta: 'textScore' } },
         )
         .sort({ score: { $meta: 'textScore' } })
@@ -87,21 +185,74 @@ export class BooksService {
     const escaped = this.escapeRegex(trimmed);
     const regex = new RegExp(escaped, 'i');
     return this.bookModel
-      .find({ $or: [{ title: regex }, { author: regex }] })
+      .find({ $or: [{ title: regex }, { author: regex }], ...published })
       .limit(limit)
       .lean()
       .exec();
   }
 
-  async findOne(id: string) {
+  /** Title autocomplete for the search-as-you-type dropdown. */
+  async autocomplete(q: string, limit = 8) {
+    const trimmed = q?.trim();
+    if (!trimmed) return [];
+    limit = Math.min(limit, 10);
+    const projection = {
+      _id: 1,
+      title: 1,
+      slug: 1,
+      author: 1,
+      coverImageUrl: 1,
+      category: 1,
+    };
+
+    if (this.atlasSearchAvailable) {
+      try {
+        const results: unknown[] = await this.bookModel
+          .aggregate([
+            {
+              $search: {
+                index: 'default',
+                autocomplete: { query: trimmed, path: 'title' },
+              },
+            },
+            { $match: { status: BookStatus.PUBLISHED } },
+            { $limit: limit },
+            { $project: projection },
+          ])
+          .exec();
+        return results;
+      } catch (err) {
+        this.atlasSearchAvailable = false;
+        this.logger.warn(
+          `Atlas autocomplete unavailable, using regex: ${String(err)}`,
+        );
+      }
+    }
+    const regex = new RegExp('^' + this.escapeRegex(trimmed), 'i');
+    return this.bookModel
+      .find({ title: regex, status: BookStatus.PUBLISHED })
+      .select(projection)
+      .sort({ title: 1 })
+      .limit(limit)
+      .lean()
+      .exec();
+  }
+
+  async findOne(id: string, includeUnpublished = false) {
     const book = await this.bookModel.findById(id).lean().exec();
     if (!book) throw new NotFoundException('Book not found');
+    if (!includeUnpublished && book.status !== BookStatus.PUBLISHED) {
+      throw new NotFoundException('Book not found');
+    }
     return book;
   }
 
-  async findBySlug(slug: string) {
+  async findBySlug(slug: string, includeUnpublished = false) {
     const book = await this.bookModel.findOne({ slug }).lean().exec();
     if (!book) throw new NotFoundException('Book not found');
+    if (!includeUnpublished && book.status !== BookStatus.PUBLISHED) {
+      throw new NotFoundException('Book not found');
+    }
     return book;
   }
 

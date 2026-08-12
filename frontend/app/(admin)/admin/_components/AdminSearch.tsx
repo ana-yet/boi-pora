@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 interface AdminSearchProps {
   value: string;
@@ -18,7 +18,12 @@ export function AdminSearch({
   const [local, setLocal] = useState(value);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => { setLocal(value); }, [value]);
+  // Sync external value changes during render (React's "adjust state on prop change" pattern).
+  const [prevValue, setPrevValue] = useState(value);
+  if (prevValue !== value) {
+    setPrevValue(value);
+    setLocal(value);
+  }
 
   const handleChange = (v: string) => {
     setLocal(v);

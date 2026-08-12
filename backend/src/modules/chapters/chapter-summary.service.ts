@@ -117,8 +117,45 @@ export class ChapterSummaryService {
   }
 
   private async callGroq(apiKey: string, userPrompt: string): Promise<string> {
-    const res = await fetch(GROQ_CHAT_URL, {
+    let res: Response;
+    try {
+      res = await this.fetchGroq(apiKey, userPrompt);
+    } catch (err) {
+      if (err instanceof Error && err.name === 'TimeoutError') {
+        throw new ServiceUnavailableException(
+          'The summary service is taking too long. Please try again later.',
+        );
+      }
+      throw new ServiceUnavailableException(
+        'Could not reach the summary service. Please try again later.',
+      );
+    }
+
+    const raw = await res.text();
+    if (!res.ok) {
+      throw new BadGatewayException(
+        this.friendlyGroqFailureMessage(res.status, raw),
+      );
+    }
+
+    let data: { choices?: Array<{ message?: { content?: string } }> };
+    try {
+      data = JSON.parse(raw) as typeof data;
+    } catch {
+      throw new BadGatewayException('Invalid response from summary provider');
+    }
+
+    const text = data.choices?.[0]?.message?.content?.trim();
+    if (!text) {
+      throw new BadGatewayException('Empty summary from provider');
+    }
+    return text.length > 32_000 ? text.slice(0, 32_000) : text;
+  }
+
+  private fetchGroq(apiKey: string, userPrompt: string): Promise<Response> {
+    return fetch(GROQ_CHAT_URL, {
       method: 'POST',
+      signal: AbortSignal.timeout(30_000),
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${apiKey}`,
@@ -192,26 +229,6 @@ export class ChapterSummaryService {
         max_tokens: 3072,
       }),
     });
-
-    const raw = await res.text();
-    if (!res.ok) {
-      throw new BadGatewayException(
-        this.friendlyGroqFailureMessage(res.status, raw),
-      );
-    }
-
-    let data: { choices?: Array<{ message?: { content?: string } }> };
-    try {
-      data = JSON.parse(raw) as typeof data;
-    } catch {
-      throw new BadGatewayException('Invalid response from summary provider');
-    }
-
-    const text = data.choices?.[0]?.message?.content?.trim();
-    if (!text) {
-      throw new BadGatewayException('Empty summary from provider');
-    }
-    return text.length > 32_000 ? text.slice(0, 32_000) : text;
   }
 
   /**

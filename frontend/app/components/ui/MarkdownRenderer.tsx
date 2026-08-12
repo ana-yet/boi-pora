@@ -1,6 +1,11 @@
 "use client";
 
-import {  type CSSProperties } from "react";
+import {
+  isValidElement,
+  type CSSProperties,
+  type ComponentPropsWithoutRef,
+  type ReactNode,
+} from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
@@ -59,7 +64,7 @@ export function MarkdownRenderer({ content, className = "" }: MarkdownRendererPr
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeRaw, rehypeSlug, rehypeSanitize]}
         components={{
-          pre({ children, ...props }: any) {
+          pre({ children, ...props }: ComponentPropsWithoutRef<"pre">) {
             const codeString = extractCodeFromChildren(children);
             
             return (
@@ -77,13 +82,15 @@ export function MarkdownRenderer({ content, className = "" }: MarkdownRendererPr
   );
 }
 
-function extractCodeFromChildren(children: any): string {
+function extractCodeFromChildren(children: ReactNode): string {
   try {
     if (typeof children === "string") return children;
-    if (children?.props?.children) {
-      const code = children.props.children;
-      if (Array.isArray(code)) return code.join("");
-      return String(code);
+    if (isValidElement(children)) {
+      const code = (children.props as { children?: ReactNode }).children;
+      if (code != null) {
+        if (Array.isArray(code)) return code.join("");
+        return String(code);
+      }
     }
     return "";
   } catch {

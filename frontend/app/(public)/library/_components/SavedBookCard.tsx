@@ -2,8 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { api } from "@/lib/api";
 import { ProgressBar } from "./ProgressBar";
+import { OfflineButton } from "./OfflineButton";
+import { PLACEHOLDER_COVER as PLACEHOLDER } from "@/lib/format";
 
 export interface SavedBook {
     title: string;
@@ -15,9 +18,6 @@ export interface SavedBook {
     progress?: number;
     addedAt?: string;
 }
-
-const PLACEHOLDER =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='300'%3E%3Crect fill='%23e5e7eb' width='200' height='300'/%3E%3C/svg%3E";
 
 interface SavedBookCardProps {
     book: SavedBook;
@@ -52,11 +52,12 @@ export function SavedBookCard({ book, onRemove, view = "grid" }: SavedBookCardPr
                 href={href}
                 className="group flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-surface-dark border border-neutral-200 dark:border-neutral-800 hover:shadow-md hover:border-primary/30 transition-all"
             >
-                <div className="w-12 h-16 flex-shrink-0 rounded overflow-hidden bg-neutral-200 shadow-sm">
-                    <img
+                <div className="relative w-12 h-16 flex-shrink-0 rounded overflow-hidden bg-neutral-200 shadow-sm">
+                    <Image
                         alt={book.title}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
+                        className="object-cover"
+                        fill
+                        sizes="48px"
                         src={book.image || PLACEHOLDER}
                     />
                 </div>
@@ -79,6 +80,11 @@ export function SavedBookCard({ book, onRemove, view = "grid" }: SavedBookCardPr
                         {new Date(book.addedAt).toLocaleDateString()}
                     </span>
                 )}
+                <OfflineButton
+                    bookId={book.bookId}
+                    title={book.title}
+                    className="p-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 flex-shrink-0"
+                />
                 <button
                     onClick={handleRemove}
                     disabled={removing}
@@ -94,13 +100,19 @@ export function SavedBookCard({ book, onRemove, view = "grid" }: SavedBookCardPr
     return (
         <Link href={href} className="group cursor-pointer block">
             <div className="relative aspect-[2/3] mb-3 rounded-lg shadow-md group-hover:shadow-xl transition-all duration-300 group-hover:-translate-y-1 overflow-hidden bg-neutral-200">
-                <img
+                <Image
                     alt={book.title}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
+                    className="object-cover"
+                    fill
+                    sizes="(max-width: 640px) 50vw, 200px"
                     src={book.image || PLACEHOLDER}
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                <OfflineButton
+                    bookId={book.bookId}
+                    title={book.title}
+                    className="absolute top-2 left-2 w-7 h-7 bg-white/90 dark:bg-neutral-800/90 backdrop-blur-sm rounded-full shadow"
+                />
                 <button
                     onClick={handleRemove}
                     disabled={removing}

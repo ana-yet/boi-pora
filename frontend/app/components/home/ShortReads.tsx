@@ -1,40 +1,14 @@
-"use client";
-
 import Link from "next/link";
-import { useBooks } from "@/lib/hooks/useBooks";
+import Image from "next/image";
+import { fetchBooks } from "@/lib/server-fetch";
+import { PLACEHOLDER_COVER as PLACEHOLDER, formatDuration } from "@/lib/format";
 
-const PLACEHOLDER =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='300'%3E%3Crect fill='%23e5e7eb' width='200' height='300'/%3E%3C/svg%3E";
-
-function formatDuration(min?: number) {
-  if (!min) return "—";
-  const h = Math.floor(min / 60);
-  const m = min % 60;
-  return m > 0 ? `${h}h ${m}m` : `${h}h`;
-}
-
-export function ShortReads() {
-    const { data, isLoading } = useBooks(1, 6, undefined, "published", "createdAt");
+export async function ShortReads() {
+    const data = await fetchBooks({ page: 1, limit: 6, sort: "createdAt" });
 
     const allItems = data?.items ?? [];
     const shortItems = allItems.filter((b) => b.estimatedReadTimeMinutes && b.estimatedReadTimeMinutes < 120);
     const books = (shortItems.length > 0 ? shortItems : allItems).slice(0, 3);
-
-    if (isLoading) {
-        return (
-            <section className="mb-12">
-                <div className="mb-6">
-                    <h2 className="text-2xl font-bold text-neutral-800 dark:text-white">Short reads under 2 hours</h2>
-                    <p className="text-neutral-500 dark:text-neutral-400 text-sm mt-1">Perfect for your commute</p>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {[1, 2, 3].map((i) => (
-                        <div key={i} className="h-36 rounded-xl bg-neutral-200 dark:bg-neutral-700 animate-pulse" />
-                    ))}
-                </div>
-            </section>
-        );
-    }
 
     if (books.length === 0) return null;
 
@@ -56,8 +30,8 @@ export function ShortReads() {
                         href={`/${book.category || "fiction"}/${book.slug}`}
                         className={`bg-white dark:bg-surface-dark p-4 rounded-xl border border-neutral-100 dark:border-neutral-800 shadow-sm hover:shadow-md transition-shadow group cursor-pointer flex${idx >= 2 ? " hidden lg:flex" : ""}`}
                     >
-                        <div className="w-20 h-28 flex-shrink-0 rounded overflow-hidden shadow-sm mr-4">
-                            <img alt={`${book.title} book cover`} className="w-full h-full object-cover" src={book.coverImageUrl || PLACEHOLDER} />
+                        <div className="relative w-20 h-28 flex-shrink-0 rounded overflow-hidden shadow-sm mr-4">
+                            <Image alt={`${book.title} book cover`} className="object-cover" fill sizes="80px" src={book.coverImageUrl || PLACEHOLDER} />
                         </div>
                         <div className="flex flex-col justify-between py-1">
                             <div>

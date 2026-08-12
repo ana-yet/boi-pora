@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Merriweather, Work_Sans } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "./providers/ToastProvider";
 import { AuthProvider } from "./providers/AuthProvider";
+import { PwaRegistrar } from "./components/shared/PwaRegistrar";
 import { getSiteUrl } from "@/lib/site";
 
 const geistSans = Geist({
@@ -74,21 +75,12 @@ export const metadata: Metadata = {
     title: defaultTitle,
     description: defaultDescription,
     url: "/",
-    images: [
-      {
-        url: "/favicon.png",
-        width: 512,
-        height: 512,
-        type: "image/png",
-        alt: "Boi Pora",
-      },
-    ],
+    // OG image comes from app/opengraph-image.tsx (file convention).
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: defaultTitle,
     description: defaultDescription,
-    images: ["/favicon.png"],
   },
   robots: {
     index: true,
@@ -131,8 +123,14 @@ export default function RootLayout({
   return (
     <html lang="bn" suppressHydrationWarning>
       <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
-          href="https://fonts.googleapis.com/icon?family=Material+Icons"
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          href="https://fonts.googleapis.com/icon?family=Material+Icons&display=block"
           rel="stylesheet"
         />
         <script
@@ -146,6 +144,7 @@ export default function RootLayout({
         <AuthProvider>
           <ToastProvider>{children}</ToastProvider>
         </AuthProvider>
+        <PwaRegistrar />
       </body>
     </html>
   );

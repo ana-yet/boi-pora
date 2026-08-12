@@ -5,6 +5,8 @@ import { RecommendationRow } from "../components/home/RecommendationRow";
 import { CategoryGrid } from "../components/home/CategoryGrid";
 import { ShortReads } from "../components/home/ShortReads";
 
+export const revalidate = 120;
+
 export const metadata: Metadata = {
   title: "Discover books",
   description:

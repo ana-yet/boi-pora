@@ -50,7 +50,6 @@ export class Book {
 }
 
 export const BookSchema = SchemaFactory.createForClass(Book);
-BookSchema.index({ slug: 1 }, { unique: true });
 BookSchema.index({ category: 1 });
 BookSchema.index({ status: 1 });
 BookSchema.index(

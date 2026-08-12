@@ -148,7 +148,7 @@ export class ReviewsService {
 
   private async recalculateBookRating(bookId: Types.ObjectId) {
     const raw: unknown = await this.reviewModel.aggregate([
-      { $match: { bookId } },
+      { $match: { bookId, isPublic: true } },
       {
         $group: {
           _id: null,

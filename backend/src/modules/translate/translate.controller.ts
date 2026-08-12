@@ -1,6 +1,5 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import { Public } from '../../common/decorators/public.decorator';
 import { TranslateTextDto } from './dto/translate-text.dto';
 import { TranslateService } from './translate.service';
 
@@ -8,7 +7,7 @@ import { TranslateService } from './translate.service';
 export class TranslateController {
   constructor(private readonly translateService: TranslateService) {}
 
-  @Public()
+  /** Auth required (global JwtAuthGuard): AI usage costs money, never expose anonymously. */
   @Throttle({ default: { limit: 30, ttl: 60_000 } })
   @Post()
   translate(@Body() dto: TranslateTextDto) {

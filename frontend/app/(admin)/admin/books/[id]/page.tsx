@@ -3,11 +3,13 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { api, ApiError } from "@/lib/api";
 import { LANGUAGES } from "@/lib/constants";
 import { Button } from "@/app/components/ui/Button";
 import { Input } from "@/app/components/ui/Input";
 import { MarkdownEditor } from "@/app/components/ui/MarkdownEditor";
+import { PLACEHOLDER_COVER as PLACEHOLDER } from "@/lib/format";
 
 const CATEGORIES = [
   { value: "fiction", label: "Fiction" },
@@ -27,9 +29,6 @@ const CATEGORIES = [
   { value: "children", label: "Children" },
   { value: "other", label: "Other" },
 ] as const;
-
-const PLACEHOLDER =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='300'%3E%3Crect fill='%23e5e7eb' width='200' height='300'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23a3a3a3' font-size='14'%3ENo Cover%3C/text%3E%3C/svg%3E";
 
 const selectClass =
   "w-full px-3 py-2 rounded-lg border text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-neutral-900 dark:text-neutral-100 bg-white dark:bg-neutral-800 border-neutral-300 dark:border-neutral-600 hover:border-neutral-400 dark:hover:border-neutral-500";
@@ -98,7 +97,7 @@ export default function AdminBookEditPage() {
 
   useEffect(() => {
     Promise.all([
-      api.get<Book>(`/api/v1/books/${id}`),
+      api.get<Book>(`/api/v1/admin/books/${id}`),
       api.get<Chapter[]>(`/api/v1/chapters/book/${id}`),
     ])
       .then(([b, ch]) => {
@@ -456,11 +455,13 @@ export default function AdminBookEditPage() {
           {/* Cover preview */}
           <div className="rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 p-6">
             <h3 className="font-semibold text-neutral-800 dark:text-white mb-4">Cover Preview</h3>
-            <div className="aspect-2/3 w-full rounded-lg overflow-hidden bg-neutral-100 dark:bg-neutral-700 shadow-md">
-              <img
+            <div className="relative aspect-2/3 w-full rounded-lg overflow-hidden bg-neutral-100 dark:bg-neutral-700 shadow-md">
+              <Image
                 alt="Cover preview"
                 src={form.coverImageUrl || PLACEHOLDER}
-                className="w-full h-full object-cover"
+                className="object-cover"
+                fill
+                sizes="(max-width: 1024px) 100vw, 33vw"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = PLACEHOLDER;
                 }}

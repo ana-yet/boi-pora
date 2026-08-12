@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
+import { BooksModule } from '../books/books.module';
 import { User, UserSchema } from '../../schemas/user.schema';
 import { Book, BookSchema } from '../../schemas/book.schema';
 import { Chapter, ChapterSchema } from '../../schemas/chapter.schema';
@@ -20,6 +21,7 @@ import { Review, ReviewSchema } from '../../schemas/review.schema';
       { name: LibraryItem.name, schema: LibraryItemSchema },
       { name: Review.name, schema: ReviewSchema },
     ]),
+    BooksModule,
   ],
   controllers: [AdminController],
   providers: [AdminService],
